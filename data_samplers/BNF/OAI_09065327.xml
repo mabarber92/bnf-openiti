@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2026-03-24T04:34:34Z</responseDate><request verb="GetRecord" metadataPrefix="oai_dc" identifier="ark:/12148/btv1b90653276">http://oaifnr.bnf.fr/oai2/OAIHandler</request><GetRecord><record><header><identifier>oai:bnf.fr:gallica/ark:/12148/btv1b90653276</identifier><datestamp>2025-02-14</datestamp><setSpec>gallica:corpus:RfnEns0</setSpec><setSpec>gallica:corpus:RfnHist1</setSpec><setSpec>gallica:typedoc:manuscrits</setSpec></header><metadata><oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+<dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">http://gallica.bnf.fr/ark:/12148/btv1b90653276</dc:identifier>
+<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">MUḤAMMAD IBN AḤMAD MAYYĀRA</dc:title>
+<dc:relation xmlns:dc="http://purl.org/dc/elements/1.1/">Notice du catalogue : http://archivesetmanuscrits.bnf.fr/ark:/12148/cc20395x</dc:relation>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Numérisation effectuée à partir d'un document de substitution.</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Appartient à l'ensemble documentaire : RfnEns0</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Appartient à l'ensemble documentaire : RfnHist1</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Commentaire Fiqh. Commentaire sur le poème de ʿAlī ibn Qāsim al-Zaqqāq (la fonction de qāḍī) 1065 A.H. / 1654-1655 1178 A.H. / 1764-1765 ; Copiste : ʿAlī ibn Muḥammad al-Falāwī</dc:description>
+<dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">133 f. - Ecriture à l’encre noire et rouge. - sur. - papier vergé avec filigranes : lettres C (f. 2), MI (f. 4), armoiries ( f. 54, 55, 59 ), autres armoiries ( f. 125, 126). - Fins de ligne à l'encre rouge. - Reliure plein cuir</dc:format>
+<dc:source xmlns:dc="http://purl.org/dc/elements/1.1/">Bibliothèque nationale de France. Département des Manuscrits. Arabe 5307</dc:source>
+<dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="fre">domaine public</dc:rights>
+<dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="eng">public domain</dc:rights>
+<dc:date xmlns:dc="http://purl.org/dc/elements/1.1/">1764-1765</dc:date>
+<dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">ara</dc:language>
+<dc:type xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="eng">manuscript</dc:type>
+<dc:type xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="fre">manuscrit</dc:type>
+<dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">MUḤAMMAD IBN AḤMAD MAYYĀRA. Auteur du texte</dc:creator>
+<dc:contributor xmlns:dc="http://purl.org/dc/elements/1.1/">ʿAlī ibn Muḥammad al-Falāwī. Copiste</dc:contributor>
+<dc:contributor xmlns:dc="http://purl.org/dc/elements/1.1/">Bibliothèque de Ségou. Ancien possesseur</dc:contributor>
+<dc:contributor xmlns:dc="http://purl.org/dc/elements/1.1/">Tāl, ʿUmar ibn Saʿīd (1797-1864). Ancien possesseur</dc:contributor>
+<dc:contributor xmlns:dc="http://purl.org/dc/elements/1.1/">Amadou Tall (1833?-1898). Ancien possesseur</dc:contributor>
+</oai_dc:dc>
+</metadata></record></GetRecord></OAI-PMH>

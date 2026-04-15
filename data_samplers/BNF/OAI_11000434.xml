@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2026-03-26T02:15:11Z</responseDate><request verb="GetRecord" metadataPrefix="oai_dc" identifier="ark:/12148/btv1b11000434f">http://oaifnr.bnf.fr/oai2/OAIHandler</request><GetRecord><record><header><identifier>oai:bnf.fr:gallica/ark:/12148/btv1b11000434f</identifier><datestamp>2022-11-25</datestamp><setSpec>gallica:typedoc:manuscrits</setSpec></header><metadata><oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+<dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">http://gallica.bnf.fr/ark:/12148/btv1b11000434f</dc:identifier>
+<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">ʿABD ALLĀH IBN ʿUMAR AL-BAYḌĀWĪ. Anwār al-tanzīl wa-asrār al-taʾwīl (Coran I-XVIII).</dc:title>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Anwār al-tanzīl wa-asrār al-taʾwīl</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">أنوار التنزيل واسرار التاويل</dc:description>
+<dc:relation xmlns:dc="http://purl.org/dc/elements/1.1/">Notice du catalogue : http://archivesetmanuscrits.bnf.fr/ark:/12148/cc898434</dc:relation>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Numérisation effectuée à partir d'un document de substitution.</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Cf. ms. Arabe 627.Copie anonyme et non datée.</dc:description>
+<dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">Écriture orientale. — Texte du Coran écrit à l'encre rouge. — Réclames. — Gloses marginales. - 413 fol. (fol. 1 et 413 refaits en papier occidental). — 250 × 180 mm. — 21 lignes à la page. — Surface écrite 190 × 120 mm. - Papier oriental. - Reliure orientale, veau grenat ; plaque centrale et fleurons des deux plats estampés à froid, doublée de papier marbré</dc:format>
+<dc:subject xmlns:dc="http://purl.org/dc/elements/1.1/">Coran. Commentaire (Tafsīr)</dc:subject>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">ʿAbd Allāh ibn ʿUmar al-Bayḍāwī. </dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">عبد الله بن عمر البيضاوي. </dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Anwār al-tanzīl wa-asrār al-taʾwīl</dc:description>
+<dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">أنوار التنزيل واسرار التاويل</dc:description>
+<dc:source xmlns:dc="http://purl.org/dc/elements/1.1/">Bibliothèque nationale de France. Département des Manuscrits. Arabe 631</dc:source>
+<dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="fre">domaine public</dc:rights>
+<dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="eng">public domain</dc:rights>
+<dc:date xmlns:dc="http://purl.org/dc/elements/1.1/">1501-1600</dc:date>
+<dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">ara</dc:language>
+<dc:type xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="eng">manuscript</dc:type>
+<dc:type xmlns:dc="http://purl.org/dc/elements/1.1/" xml:lang="fre">manuscrit</dc:type>
+<dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">ʿAbd Allāh ibn ʿUmar al-Bayḍāwī. Auteur du texte</dc:creator>
+<dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">عبد الله بن عمر البيضاوي. Auteur du texte</dc:creator>
+</oai_dc:dc>
+</metadata></record></GetRecord></OAI-PMH>
