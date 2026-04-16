@@ -1,0 +1,80 @@
+# BNF–OpenITI Pipeline Configuration
+# ------------------------------------
+# Copy this file to config.yml and fill in your local paths.
+# config.yml is gitignored — never commit it (may contain absolute paths).
+
+# ---------------------------------------------------------------------------
+# Data sources
+# ---------------------------------------------------------------------------
+
+# Absolute path to your local BNF OAI-PMH XML directory
+bnf_data_path:
+
+# Absolute path to your local OpenITI data directory
+openiti_data_path:
+
+# ---------------------------------------------------------------------------
+# Pipeline outputs
+# ---------------------------------------------------------------------------
+
+# Root directory for all pipeline artifacts.
+# Relative paths are resolved from the project root.
+# Use an absolute path outside the repo to keep large files off disk entirely.
+pipeline_out_dir: outputs
+
+# BNF survey output directory (summary, ngrams, boilerplate, review CSV).
+# Defaults to <pipeline_out_dir>/bnf_survey if not set.
+# bnf_survey_dir:
+
+# ---------------------------------------------------------------------------
+# Survey settings
+# ---------------------------------------------------------------------------
+
+survey:
+  # Largest n-gram size to compute (2 = bigrams only, 4 = bigrams–quadgrams)
+  max_n: 4
+  # Retain trailing dots on abbreviation tokens (e.g. "cf.", "ms.")
+  # so abbreviation phrases form distinct n-grams
+  keep_abbrev_dots: true
+
+# ---------------------------------------------------------------------------
+# Boilerplate detection thresholds
+# (used by `survey build` to generate the review CSV)
+# ---------------------------------------------------------------------------
+
+boilerplate:
+  # Minimum percentage of records an n-gram must appear in to be a candidate
+  min_doc_freq_pct: 5.0
+  # Maximum average occurrences per record (true boilerplate appears ~once;
+  # name fragments appear more often as records contain multiple authors)
+  max_repeats_per_doc: 1.4
+
+# ---------------------------------------------------------------------------
+# Parsing
+# ---------------------------------------------------------------------------
+
+parsing:
+  # If a parsed JSON store already exists, skip re-parsing.
+  # Set to true to force overwrite.
+  overwrite_existing: false
+
+# ---------------------------------------------------------------------------
+# Matching
+# ---------------------------------------------------------------------------
+
+matching:
+  surface_form:
+    # Minimum fuzzy match ratio (0–1) for surface-form candidate acceptance
+    fuzzy_threshold: 0.8
+  embedding:
+    # Sentence-transformers model for embedding-based matching
+    model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    batch_size: 32
+
+# ---------------------------------------------------------------------------
+# Clustering
+# ---------------------------------------------------------------------------
+
+clustering:
+  algorithm: hdbscan
+  min_cluster_size: 2
