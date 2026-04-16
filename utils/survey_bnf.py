@@ -453,7 +453,7 @@ def build(
         "parameters": {
             "max_n": max_n, "keep_abbrev_dots": abbrev,
             "min_doc_freq_pct": df_pct, "max_repeats_per_doc": repeats,
-            "sample": sample, "seed": seed,
+            "sample": sample, "seed": seed if sample is not None else None,
         },
         "outputs": ["summary.json", "ngrams.json", "boilerplate_review.csv"],
     }
