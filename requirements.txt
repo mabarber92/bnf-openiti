@@ -1,0 +1,18 @@
+# BNF–OpenITI Pipeline Dependencies
+# Install with: pip install -r requirements.txt
+
+# --- Current pipeline stages ---
+pyyaml>=6.0          # config.yml loading
+tqdm>=4.0            # progress bars during XML scan
+
+# --- Planned: surface-form matching (Stage 5) ---
+# rapidfuzz>=3.0     # fast fuzzy string matching
+
+# --- Planned: embedding matching (Stage 5) ---
+# sentence-transformers>=2.0
+# faiss-cpu>=1.7     # ANN index (use faiss-gpu if GPU available)
+# torch>=2.0         # required by sentence-transformers
+
+# --- Planned: clustering (Stage 6) ---
+# hdbscan>=0.8
+# numpy>=1.24
