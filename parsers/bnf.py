@@ -197,12 +197,22 @@ def load_boilerplate_ngrams(
 
 
 def load_boilerplate_file(boilerplate_path: str) -> frozenset[str]:
-    """Load a curated boilerplate list from boilerplate.json.
+    """Load the curated boilerplate n-gram set from boilerplate.json.
 
-    boilerplate.json is a flat JSON array of strings produced by
-    ``survey_bnf.py apply-review`` after manual review of the CSV.
-    Use this in production runs; use load_boilerplate_ngrams() for
-    threshold experimentation.
+    boilerplate.json is produced by ``survey_bnf.py apply-review`` after
+    manual review of the CSV.  Format::
+
+        {
+            "boilerplate": ["numérisation effectuée", ...],
+            "signals": [{"ngram": "lieu de copie", "signal_type": "agent:copyist"}, ...]
+        }
+
+    Returns only the ``boilerplate`` list as a frozenset — phrases to strip
+    entirely from descriptions.  Use load_signal_ngrams() separately to
+    retrieve the signal phrases for relation detection.
+
+    Use this in production runs; use load_boilerplate_ngrams() for threshold
+    experimentation against the raw ngrams.json vocabulary.
 
     Typical use::
 
@@ -213,8 +223,38 @@ def load_boilerplate_file(boilerplate_path: str) -> frozenset[str]:
         metadata = BNFMetadata(directory)
     """
     with open(boilerplate_path, encoding="utf-8") as fh:
-        items = _json.load(fh)
-    return frozenset(items)
+        data = _json.load(fh)
+    # Handle legacy flat-list format
+    if isinstance(data, list):
+        return frozenset(data)
+    return frozenset(data.get("boilerplate", []))
+
+
+def load_signal_ngrams(boilerplate_path: str) -> list[dict]:
+    """Load signal n-grams from boilerplate.json.
+
+    Signal n-grams are phrases that mark a structural role or textual
+    relationship rather than pure boilerplate.  Each entry has the form::
+
+        {"ngram": "lieu de copie", "signal_type": "agent:copyist"}
+
+    Valid signal_type values:
+        agent:copyist        — phrase marks a copyist name
+        agent:commentator    — phrase marks a commentator name
+        agent:owner          — phrase marks a previous owner name
+        relation:commentary  — phrase marks "this text IS a commentary on X"
+        relation:abridgement — phrase marks abridgement of source work X
+        relation:continuation — phrase marks continuation of source work X
+
+    These are used by the parser to populate BNFRecord.detected_relations
+    and to annotate matching candidates in matching_data() with their
+    evidential role.
+    """
+    with open(boilerplate_path, encoding="utf-8") as fh:
+        data = _json.load(fh)
+    if isinstance(data, list):
+        return []
+    return data.get("signals", [])
 
 
 def _strip_ns(tag: str) -> str:

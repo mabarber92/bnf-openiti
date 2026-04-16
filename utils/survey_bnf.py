@@ -367,6 +367,7 @@ def _suggest_boilerplate(
                         "doc_freq_pct":    df_pct,
                         "repeats_per_doc": repeats,
                         "keep":            "yes",
+                        "signal_type":     "",
                     })
 
     return sorted(candidates, key=lambda x: x["repeats_per_doc"])
@@ -438,11 +439,20 @@ def build(
     with review_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
-            fieldnames=["ngram", "script", "n", "doc_freq_pct", "repeats_per_doc", "keep"],
+            fieldnames=[
+                "ngram", "script", "n", "doc_freq_pct", "repeats_per_doc",
+                "keep", "signal_type",
+            ],
         )
         writer.writeheader()
         writer.writerows(candidates)
     print(f"  boilerplate_review.csv → {review_path}  ({len(candidates)} candidates)")
+    print(f"  Review instructions:")
+    print(f"    keep=yes, signal_type=''            → pure boilerplate (discarded)")
+    print(f"    keep=yes, signal_type=agent:copyist → signal phrase (routed to relations)")
+    print(f"    keep=no                             → content, left in descriptions")
+    print(f"  Valid signal_type values: agent:copyist, agent:commentator, agent:owner,")
+    print(f"                            relation:commentary, relation:abridgement, relation:continuation")
 
     # Update manifest
     manifest = _load_manifest(out_dir)
@@ -483,25 +493,40 @@ def apply_review(
             f"{review_path} not found. Run `build` first."
         )
 
-    kept: list[str] = []
+    boilerplate: list[str]  = []
+    signals:     list[dict] = []
+
     with review_path.open(encoding="utf-8", newline="") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            if row.get("keep", "yes").strip().lower() != "no":
-                kept.append(row["ngram"])
+            if row.get("keep", "yes").strip().lower() == "no":
+                continue
+            signal_type = row.get("signal_type", "").strip()
+            if signal_type:
+                signals.append({"ngram": row["ngram"], "signal_type": signal_type})
+            else:
+                boilerplate.append(row["ngram"])
 
     boilerplate_path = out_dir / "boilerplate.json"
     boilerplate_path.write_text(
-        json.dumps(kept, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(
+            {"boilerplate": boilerplate, "signals": signals},
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
     )
-    print(f"boilerplate.json → {boilerplate_path}  ({len(kept)} entries)")
+    print(f"boilerplate.json → {boilerplate_path}")
+    print(f"  {len(boilerplate)} boilerplate phrases")
+    print(f"  {len(signals)} signal phrases")
 
     manifest = _load_manifest(out_dir)
     manifest["stages"]["apply_review"] = {
-        "completed":  True,
-        "timestamp":  _now(),
-        "kept_count": len(kept),
-        "outputs":    ["boilerplate.json"],
+        "completed":       True,
+        "timestamp":       _now(),
+        "boilerplate_count": len(boilerplate),
+        "signal_count":      len(signals),
+        "outputs":         ["boilerplate.json"],
     }
     _save_manifest(out_dir, manifest)
 
