@@ -1,20 +1,24 @@
 """
 utils/tokens.py
 
-Shared tokenisation and script-detection utilities for BNF OAI-PMH metadata.
+Shared tokenisation and script-detection utilities.
 
 Used by both utils/survey_bnf.py (n-gram analysis) and parsers/bnf.py
-(boilerplate filtering).  Centralised here so that the same normalisation
-logic is applied on both sides of every comparison.
+(boilerplate filtering), and by the matching pipeline for OpenITI slug
+normalisation.  Centralised here so that the same normalisation logic is
+applied on both sides of every comparison.
 
 Exports
 -------
-    ARABIC_RE       — compiled regex matching any Arabic-script character
-    has_arabic      — True if text contains any Arabic-script character
-    has_latin       — True if text contains any basic Latin letter
-    tokenize_lat    — Latin-script word tokeniser (with optional abbrev-dot mode)
-    tokenize_ar     — Arabic-script word tokeniser
-    make_ngrams     — Produce a list of n-gram strings from a token list
+    ARABIC_RE           — compiled regex matching any Arabic-script character
+    has_arabic          — True if text contains any Arabic-script character
+    has_latin           — True if text contains any basic Latin letter
+    tokenize_lat        — Latin-script word tokeniser (with optional abbrev-dot mode)
+    tokenize_ar         — Arabic-script word tokeniser
+    make_ngrams         — Produce a list of n-gram strings from a token list
+    split_camel         — Split a CamelCase OpenITI URI slug into word tokens
+    normalise_ayn       — Normalise Unicode ʿayn variants to canonical ʿ (U+02BF)
+    openiti_slug_tokens — Split a slug and apply the OpenITI C/c → ʿ convention
 """
 
 from __future__ import annotations
@@ -124,3 +128,70 @@ def tokenize_ar(text: str) -> list[str]:
 def make_ngrams(tokens: list[str], n: int) -> list[str]:
     """Return all n-grams (as space-joined strings) from *tokens*."""
     return [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
+
+
+# ---------------------------------------------------------------------------
+# OpenITI slug normalisation
+# ---------------------------------------------------------------------------
+
+# Split on camelCase boundaries:
+#   lower→upper:  "NasirDin" → "Nasir" | "Din"
+#   upper+lower:  "AHMad"    → "AH"   | "Mad"  (handles acronym-like prefixes)
+_CAMEL_RE = re.compile(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+
+def split_camel(slug: str) -> list[str]:
+    """Split an OpenITI CamelCase URI slug into word tokens.
+
+    Splits on camelCase boundaries only — no other transformation applied.
+
+        "NasirDinBaydawi" → ["Nasir", "Din", "Baydawi"]
+        "FadailMakka"     → ["Fadail", "Makka"]
+        "IbnCali"         → ["Ibn", "Cali"]
+
+    For matching-ready tokens with ʿayn conversion applied, use
+    openiti_slug_tokens() instead.
+    """
+    return [t for t in _CAMEL_RE.split(slug) if t]
+
+
+# ʿayn Unicode variants → canonical ALA-LC form ʿ (U+02BF).
+# Does NOT include hamza variants (ʾ U+02BE) — hamza and ʿayn are distinct.
+_AYN_TABLE = str.maketrans({
+    "\u02BB": "\u02BF",   # ʻ modifier letter turned comma
+    "\u2018": "\u02BF",   # ' left single quotation mark
+    "\u02BC": "\u02BF",   # ʼ modifier letter apostrophe
+    "\u0060": "\u02BF",   # ` grave accent (rare)
+})
+
+
+def normalise_ayn(text: str) -> str:
+    """Normalise Unicode ʿayn variants to the canonical ALA-LC form ʿ (U+02BF).
+
+    Collapses ʻ (U+02BB), ' (U+2018), ʼ (U+02BC), and ` (U+0060) into ʿ.
+    Hamza (ʾ U+02BE) is left unchanged — it is phonetically distinct.
+
+    Use this on BNF transliterated text before comparing against OpenITI data.
+    """
+    return text.translate(_AYN_TABLE)
+
+
+def openiti_slug_tokens(slug: str) -> list[str]:
+    """Split an OpenITI slug and apply the C/c → ʿ ʿayn convention.
+
+    In OpenITI URIs, a capital C before a lowercase letter represents ʿayn:
+
+        "CamrIbnKulthum"    → ["ʿamr", "ibn", "kulthum"]
+        "AbuTalibCabdManaf" → ["abu", "talib", "ʿabd", "manaf"]
+        "NasirDinBaydawi"   → ["nasir", "din", "baydawi"]
+
+    Returns lowercase tokens suitable for case-insensitive matching.
+    Apply normalise_ayn() to BNF text before comparing against these tokens.
+    """
+    result = []
+    for token in split_camel(slug):
+        if len(token) >= 2 and token[0] == "C" and token[1].islower():
+            result.append("\u02BF" + token[1:].lower())
+        else:
+            result.append(token.lower())
+    return result
