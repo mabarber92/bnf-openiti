@@ -2,8 +2,16 @@
 
 End-to-end pipeline for matching BNF Gallica manuscript records against
 OpenITI corpus entries.  Each stage produces artifact files that are consumed
-by the next stage.  All artifact directories are outside the repo (or
-gitignored) — see **Setup** below.
+by the next stage.
+
+The pipeline is split into two tracks:
+
+- **OpenITI preparation (Stages 1–2)** — shared infrastructure, run once
+  per corpus version.  Outputs live in `data/` and are committed to the
+  repo so any new manuscript library can skip these steps.
+- **Manuscript library preparation (Stages 3–5)** — library-specific.
+  Run for each new collection (BNF, or any future library).
+- **Matching and resolution (Stages 6–7)** — produces the final output.
 
 ---
 
@@ -30,24 +38,143 @@ pip install -r requirements.txt
 ## Stage overview
 
 ```
-Stage 1  survey build     →  summary.json, ngrams.json, boilerplate_review.csv
+── OpenITI preparation (one-off per corpus version; outputs committed to repo) ──
+
+Stage 1  parse OpenITI    →  data/openiti_parsed_<version>.json    [not yet implemented]
+         ↓
+Stage 2  enrich WorldCat  →  data/openiti_worldcat_<version>.json  [optional]
+
+── Manuscript library preparation (per collection) ──────────────────────────────
+
+Stage 3  survey build     →  outputs/bnf_survey/summary.json
+                             outputs/bnf_survey/ngrams.json
+                             outputs/bnf_survey/boilerplate_review.csv
          ↓
          [MANUAL REVIEW: boilerplate_review.csv]
          ↓
-Stage 2  apply-review     →  boilerplate.json
+Stage 4  apply-review     →  outputs/bnf_survey/boilerplate.json
          ↓
-Stage 3  parse BNF        →  bnf_parsed.json
+Stage 5  parse BNF        →  outputs/bnf_parsed.json               [not yet implemented]
+
+── Matching and resolution ───────────────────────────────────────────────────────
+
+Stage 6  match            →  outputs/matches.json                   [not yet implemented]
          ↓
-Stage 4  parse OpenITI    →  openiti_parsed.json   [not yet implemented]
-         ↓
-Stage 5  match            →  matches.json          [not yet implemented]
-         ↓
-Stage 6  cluster/resolve  →  resolutions.json      [not yet implemented]
+Stage 7  cluster/resolve  →  outputs/resolutions.json               [not yet implemented]
 ```
 
 ---
 
-## Stage 1 — Survey build
+## Stage 1 — Parse OpenITI
+
+**Not yet implemented** — will produce `data/openiti_parsed_<corpus_version>.json`
+and be committed to the repo.
+
+---
+
+## Stage 2 — WorldCat enrichment (optional)
+
+> **Most users:** check `data/` for an existing
+> `openiti_worldcat_<corpus_version>.json`.  If it is present, skip to
+> **Update** below.  The file is committed to the repo so you should not
+> need to run `build` unless you are working with a new corpus version.
+
+**Why it exists:**  
+Only ~13 % of OpenITI book YMLs have a `TITLEA` field.  The remaining
+87 % carry only a CamelCase URI slug (e.g. `DalalatHairin`).  WorldCat
+provides Arabic-script titles and ALA-LC transliterations for ~18 % of
+books, improving Arabic-script matching coverage for that subset.
+
+---
+
+### Build (first-time / new corpus version)
+
+```bash
+python utils/enrich_worldcat.py build
+python utils/enrich_worldcat.py build --delay 2.0   # more conservative
+```
+
+Fetches WorldCat data for all ~1,300 books with OCLC links in the current
+corpus.  At 1 req/s this takes ~25 minutes.  Safe to interrupt — re-running
+resumes from where it stopped.  Commit the output to `data/` once complete.
+
+---
+
+### Update (after a corpus version bump or new YML links)
+
+```bash
+python utils/enrich_worldcat.py update
+```
+
+Loads the existing enrichment file and fetches **only**:
+- Books not yet in the file (new OCLC links added in a corpus update)
+- Books whose OCLC ID in the YML has changed since last fetch
+
+The stored `oclc_id` per record is the canonical change key — if it
+matches the current YML link, no fetch is made even if the previous fetch
+errored.  To retry errors for a specific book, remove that URI from the
+JSON and re-run `update`.
+
+---
+
+**Rate limiting:**  
+Default: 1 req/s.  Do not set `--delay` below 1.0.  The User-Agent
+header identifies this as a research tool.
+
+**Output:**
+
+| file | contents |
+|---|---|
+| `data/openiti_worldcat_<corpus_version>.json` | WorldCat title/author data keyed by book URI; committed to repo |
+
+**Output format:**
+
+```json
+{
+  "_meta": {
+    "schema_version": 1,
+    "corpus_version": "corpus_2025_1_9",
+    "generated_at": "...",
+    "total_records": 1283,
+    "total_fetched": 1278,
+    "total_failed": 5
+  },
+  "records": {
+    "0110HasanBasri.FadailMakka": {
+      "oclc_id":          "8850761",
+      "title_ar":         "فضائل مكة والسكن فيها",
+      "title_lat":        null,
+      "author_names_ar":  ["الحسن البصري", "حسن البصري"],
+      "author_names_lat": ["Ḥasan al-Baṣrī"],
+      "language":         "ara",
+      "fetched_at":       "..."
+    },
+    "0601MusaIbnMaymun.DalalatHairin": {
+      "oclc_id":    "...",
+      "error":      "HTTP 404: Not Found",
+      "fetched_at": "..."
+    }
+  }
+}
+```
+
+Records with an `"error"` key are retained so `update` skips them unless
+the OCLC ID changes.
+
+**Loading in downstream stages:**
+
+```python
+from utils.enrich_worldcat import load_worldcat_enrichment
+
+wc = load_worldcat_enrichment("data/openiti_worldcat_corpus_2025_1_9.json")
+rec = wc.get("0110HasanBasri.FadailMakka")
+if rec and not rec.get("error"):
+    arabic_title = rec["title_ar"]   # "فضائل مكة والسكن فيها"
+```
+
+---
+
+## Stage 3 — Survey build
 
 **Command:**
 ```bash
@@ -56,8 +183,9 @@ python utils/survey_bnf.py build
 
 **What it does:**  
 Scans all `OAI_*.xml` files in `bnf_data_path`, computes field coverage
-statistics and n-gram frequencies across `dc:description` text, then applies
-threshold criteria to generate a list of boilerplate candidates for review.
+statistics and n-gram frequencies across configured DC fields, then applies
+per-field threshold criteria to generate a list of boilerplate candidates
+for review.
 
 **Parameters (set in `config.yml`, override with CLI flags):**
 
@@ -68,9 +196,10 @@ threshold criteria to generate a list of boilerplate candidates for review.
 
 **Per-field boilerplate thresholds (set in `config.yml` only):**
 
-N-gram scanning and boilerplate candidate generation is now per-field.  Each
+N-gram scanning and boilerplate candidate generation is per-field.  Each
 field in `boilerplate.fields` is scanned independently and applies its own
-mode and thresholds.
+mode and thresholds.  Both Latin-script and Arabic-script n-grams are
+detected independently for every listed field.
 
 | mode | criteria applied | suitable for |
 |---|---|---|
@@ -84,18 +213,13 @@ boilerplate:
       mode: full
       min_doc_freq_pct: 2.0
       max_repeats_per_doc: 1.1
-    format:
+    creator:
       mode: freq_only
       min_doc_freq_pct: 10.0
     subject:
       mode: freq_only
       min_doc_freq_pct: 15.0
-    rights:
-      mode: freq_only
-      min_doc_freq_pct: 50.0
-    source:
-      mode: freq_only
-      min_doc_freq_pct: 50.0
+    # --- further fields are available; see config.example.yml ---
 ```
 
 **Sampling (experimentation only — do not use for production runs):**
@@ -115,33 +239,33 @@ python utils/survey_bnf.py build --print-ngrams --top-n 30
 | file | contents |
 |---|---|
 | `summary.json` | field coverage statistics (records present, script breakdown, samples) |
-| `ngrams.json` | full n-gram vocabulary — term_freq, doc_freq, TF-IDF for every observed n-gram; untruncated so threshold filtering can be applied downstream |
+| `ngrams.json` | full n-gram vocabulary — term_freq, doc_freq, TF-IDF for every observed n-gram per field; untruncated |
 | `boilerplate_review.csv` | candidate boilerplate phrases for manual review |
 | `manifest.json` | run record: timestamp, config snapshot, parameters used |
 
 **Re-running:**  
 Re-running `build` overwrites all four files and clears the `apply_review`
 stage entry from the manifest (since the review CSV has changed).  If you
-change only the boilerplate thresholds (`min_doc_freq_pct` /
-`max_repeats_per_doc`), `ngrams.json` contains the full vocabulary — you can
-regenerate the review CSV without re-scanning by calling
-`_suggest_boilerplate()` directly in a script rather than re-running `build`.
+change only the boilerplate thresholds, `ngrams.json` contains the full
+vocabulary — you can regenerate the review CSV without re-scanning by
+calling `_suggest_boilerplate()` directly in a script rather than
+re-running `build`.
 
 ---
 
 ## Manual review — `boilerplate_review.csv`
 
 Open `outputs/bnf_survey/boilerplate_review.csv` in a spreadsheet tool.
-Rows are sorted by `repeats_per_doc` ascending — true boilerplate clusters
-at 1.0 (appears exactly once per record) and name/content fragments appear
-further down with higher values.
+Rows are sorted by `source_field` then `repeats_per_doc` ascending — true
+boilerplate clusters at 1.0 (appears exactly once per record) and
+name/content fragments appear further down with higher values.
 
 **Columns:**
 
 | column | description |
 |---|---|
 | `ngram` | the phrase |
-| `source_field` | DC field the phrase was found in (`description`, `format`, `subject`, etc.) |
+| `source_field` | DC field the phrase was found in (`description`, `creator`, `subject`, etc.) |
 | `script` | `latin` or `arabic` |
 | `n` | n-gram size (2=bigram, 3=trigram, 4=quadgram) |
 | `doc_freq_pct` | % of records containing this phrase |
@@ -150,7 +274,7 @@ further down with higher values.
 | `signal_type` | if non-empty, phrase is a structural signal rather than pure noise (see below) |
 
 **`keep` column:**
-- `yes` — phrase is boilerplate or a signal; will be filtered from descriptions
+- `yes` — phrase is boilerplate or a signal; will be filtered from field text
 - `no` — phrase is content (e.g. a name fragment that slipped through); leave it in
 
 **`signal_type` column (optional):**
@@ -178,7 +302,7 @@ discarded:
 
 ---
 
-## Stage 2 — Apply review
+## Stage 4 — Apply review
 
 **Command:**
 ```bash
@@ -194,7 +318,7 @@ with two sections:
   "boilerplate": [
     {"ngram": "numérisation effectuée", "field": "description"},
     {"ngram": "effectuée partir",       "field": "description"},
-    {"ngram": "naskhi maghribi",        "field": "format"},
+    {"ngram": "auteur du texte",        "field": "creator"},
     ...
   ],
   "signals": [
@@ -205,7 +329,7 @@ with two sections:
 }
 ```
 
-- `boilerplate` — n-grams stripped from descriptions during parsing
+- `boilerplate` — n-grams stripped from the specified field during parsing
 - `signals` — n-grams that trigger relation detection; forwarded to
   `BNFRecord.detected_relations` and annotated in `matching_data()`
 
@@ -215,7 +339,7 @@ manifest in place.
 
 ---
 
-## Stage 3 — Parse BNF records
+## Stage 5 — Parse BNF records
 
 **Not yet a CLI stage** — called programmatically.
 
@@ -252,13 +376,14 @@ bnf.BOILERPLATE_NGRAMS = bnf.load_boilerplate_ngrams(
 
 | file | contents |
 |---|---|
-| `outputs/bnf_survey/bnf_parsed.json` | all parsed BNF records as JSON; reused across matching runs to avoid re-parsing |
+| `outputs/bnf_parsed.json` | all parsed BNF records as JSON; reused across matching runs to avoid re-parsing |
 
 ---
 
 ## Manifest and audit trail
 
-Each stage writes its completion record to `outputs/bnf_survey/manifest.json`:
+Each BNF survey stage writes its completion record to
+`outputs/bnf_survey/manifest.json`:
 
 ```json
 {
@@ -281,15 +406,15 @@ before overwriting.
 
 ---
 
-## Adding a new collection
+## Adding a new manuscript library
 
-1. Set `bnf_data_path` (or the equivalent path key) in `config.yml` to point
-   at the new collection's XML directory.
+1. Set the appropriate data path key in `config.yml` (e.g. `bnf_data_path`).
 2. Set `bnf_survey_dir` to a new output directory
-   (e.g. `outputs/new_collection_survey/`) so BNF artifacts are not overwritten.
-3. Run `build` → review → `apply-review` as above.
-4. The new `boilerplate.json` is independent of the BNF one — pass it
-   separately to the parser for that collection.
+   (e.g. `outputs/new_collection_survey/`) so artifacts are not overwritten.
+3. Run Stage 3 (survey build) → review → Stage 4 (apply-review) → Stage 5 (parse).
+4. The `boilerplate.json` produced is independent of any other collection.
+5. Stages 1–2 (OpenITI parse and WorldCat enrichment) do **not** need to be
+   repeated — the committed `data/` files are reused directly.
 
 ---
 
@@ -299,11 +424,15 @@ before overwriting.
 |---|---|---|
 | `config.yml` | no (gitignored) | local paths and pipeline parameters |
 | `config.example.yml` | yes | template — copy to `config.yml` |
-| `requirements.txt` | yes | Python dependencies; planned future deps listed as comments |
+| `requirements.txt` | yes | Python dependencies |
 | `utils/config.py` | yes | typed config loader; all defaults defined here |
-| `utils/tokens.py` | yes | shared tokenisation (Latin + Arabic); used by survey and parser |
-| `utils/survey_bnf.py` | yes | survey pipeline: `build` and `apply-review` subcommands |
+| `utils/tokens.py` | yes | shared tokenisation (Latin + Arabic) |
+| `utils/survey_bnf.py` | yes | BNF survey pipeline: `build` and `apply-review` subcommands |
+| `utils/enrich_worldcat.py` | yes | WorldCat enrichment: `build` and `update` subcommands |
 | `parsers/bnf.py` | yes | BNF XML parser: `BNFXml`, `BNFMetadata`, `BNFRecord` |
+| `parsers/openiti.py` | yes | OpenITI YML parser: `OpenITIMetaYmls`, `OpenITIBookData`, etc. |
+| `data/openiti_worldcat_<version>.json` | yes | WorldCat enrichment; committed, version-stamped |
+| `data/openiti_parsed_<version>.json` | yes (planned) | Parsed OpenITI corpus; committed, version-stamped |
 | `outputs/bnf_survey/summary.json` | no | field coverage report |
 | `outputs/bnf_survey/ngrams.json` | no | full n-gram vocabulary (~250 MB for 7,825 records) |
 | `outputs/bnf_survey/boilerplate_review.csv` | no | manual review artifact |
