@@ -42,33 +42,71 @@ survey:
 # (used by `survey build` to generate the review CSV)
 # ---------------------------------------------------------------------------
 #
+# Only fields listed here are scanned for n-grams.
+# Delete any field you do not want scanned; add any DC field that exists
+# in your collection (e.g. contributor, type, publisher).
+#
 # mode: "full"      — apply both doc_freq_pct AND max_repeats_per_doc.
-#                     Use for mixed-content fields (dc:description).
+#                     Use for mixed-content fields (dc:description) where
+#                     boilerplate and real content coexist.
 # mode: "freq_only" — apply only doc_freq_pct.
-#                     Use for predominantly-boilerplate fields.
+#                     Use for fields that are predominantly boilerplate
+#                     (role labels, physical descriptions, rights notices).
 #
 # min_doc_freq_pct:    minimum % of records an n-gram must appear in
 # max_repeats_per_doc: max avg occurrences per record (full mode only)
 #                      ~1.0 = structural template; higher = content/names
+#
+# Both Latin-script and Arabic-script n-grams are detected independently
+# for every field listed — Arabic boilerplate is surfaced if it clears
+# the threshold, even if the field is primarily Latin-script.
 
 boilerplate:
   fields:
+    # dc:description — mixed content; boilerplate and real text coexist.
+    # Lower threshold to surface rarer structural phrases.
     description:
       mode: full
       min_doc_freq_pct: 2.0
       max_repeats_per_doc: 1.1
-    format:
+
+    # dc:creator — role labels ("Auteur du texte", "Copiste") appear on
+    # almost every record. Keep threshold low enough to catch rarer roles.
+    creator:
       mode: freq_only
       min_doc_freq_pct: 10.0
+
+    # dc:subject — controlled-vocabulary terms repeated across many records.
     subject:
       mode: freq_only
       min_doc_freq_pct: 15.0
-    rights:
-      mode: freq_only
-      min_doc_freq_pct: 50.0
-    source:
-      mode: freq_only
-      min_doc_freq_pct: 50.0
+
+    # --- Optional fields — uncomment to scan ---
+
+    # dc:contributor — role labels ("Ancien possesseur") on contributor names.
+    # contributor:
+    #   mode: freq_only
+    #   min_doc_freq_pct: 10.0
+
+    # dc:format — physical description templates (script style, material, size).
+    # format:
+    #   mode: freq_only
+    #   min_doc_freq_pct: 10.0
+
+    # dc:rights — digitisation/copyright notices (near-universal boilerplate).
+    # rights:
+    #   mode: freq_only
+    #   min_doc_freq_pct: 50.0
+
+    # dc:source — shelfmark prefix ("Bibliothèque nationale de France. …").
+    # source:
+    #   mode: freq_only
+    #   min_doc_freq_pct: 50.0
+
+    # dc:type — record type labels ("Manuscrit", "Texte imprimé", …).
+    # type:
+    #   mode: freq_only
+    #   min_doc_freq_pct: 50.0
 
 # ---------------------------------------------------------------------------
 # Parsing

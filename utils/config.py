@@ -68,17 +68,11 @@ def _default_boilerplate_fields() -> dict[str, FieldBoilerplateConfig]:
         "description": FieldBoilerplateConfig(
             mode="full", min_doc_freq_pct=2.0, max_repeats_per_doc=1.1,
         ),
-        "format": FieldBoilerplateConfig(
+        "creator": FieldBoilerplateConfig(
             mode="freq_only", min_doc_freq_pct=10.0,
         ),
         "subject": FieldBoilerplateConfig(
             mode="freq_only", min_doc_freq_pct=15.0,
-        ),
-        "rights": FieldBoilerplateConfig(
-            mode="freq_only", min_doc_freq_pct=50.0,
-        ),
-        "source": FieldBoilerplateConfig(
-            mode="freq_only", min_doc_freq_pct=50.0,
         ),
     }
 
@@ -98,7 +92,7 @@ class BoilerplateConfig:
               mode: full
               min_doc_freq_pct: 2.0
               max_repeats_per_doc: 1.1
-            format:
+            creator:
               mode: freq_only
               min_doc_freq_pct: 10.0
     """
