@@ -59,7 +59,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from utils.config import load_config
+from utils.config import load_config, load_openiti_config
 from utils.tokens import has_arabic as _has_arabic
 
 # ---------------------------------------------------------------------------
@@ -202,6 +202,7 @@ def _fetch_targets(
     existing: dict[str, dict],
     delay: float,
     label: str,
+    timeout: int = 12,
 ) -> tuple[dict[str, dict], int]:
     """Fetch WorldCat data for the given targets and merge with existing records.
 
@@ -212,7 +213,7 @@ def _fetch_targets(
     now_iso = lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     for uri, oclc_id in tqdm(targets, desc=label):
-        status, body = _fetch_oclc(oclc_id)
+        status, body = _fetch_oclc(oclc_id, timeout=timeout)
 
         if status != 200:
             records[uri] = {
@@ -242,10 +243,15 @@ def _fetch_targets(
 # Public pipeline functions
 # ---------------------------------------------------------------------------
 
-def _resolve_output_path(output_path: str | None, corpus_path: str) -> Path:
-    corpus_version = Path(corpus_path).name
+def _resolve_output_path(output_path: str | None, corpus_version: str) -> Path:
     if output_path:
         return Path(output_path)
+    if not corpus_version:
+        raise ValueError(
+            "corpus_version is not set in openiti.yml — cannot name output file.\n"
+            "Set corpus_version to the name of your OpenITI corpus snapshot "
+            "(e.g. corpus_2025_1_9)."
+        )
     return _ROOT / "data" / f"openiti_worldcat_{corpus_version}.json"
 
 
@@ -272,7 +278,7 @@ def _collect_oclc_targets(corpus) -> dict[str, str]:
 
 def build(
     output_path:  str | None = None,
-    delay:        float = 1.0,
+    delay:        float | None = None,
     config_path:  str | None = None,
 ) -> Path:
     """First-time fetch: retrieve WorldCat data for all books with OCLC links.
@@ -281,11 +287,16 @@ def build(
     an interruption).  To start completely fresh, delete the output file or
     pass a new --output path.
 
+    delay defaults to openiti.yml worldcat.request_delay if not supplied.
+
     Returns the output Path.
     """
-    cfg      = load_config(config_path)
+    cfg          = load_config(config_path)
+    openiti_cfg  = load_openiti_config()
+    effective_delay = max(delay if delay is not None else openiti_cfg.worldcat.request_delay, 1.0)
+
     corpus   = _load_corpus(cfg)
-    out_path = _resolve_output_path(output_path, cfg.openiti_data_path)
+    out_path = _resolve_output_path(output_path, openiti_cfg.corpus_version)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Load existing for resume
@@ -306,9 +317,10 @@ def build(
         return out_path
 
     records, n_failed = _fetch_targets(
-        list(pending.items()), existing, delay, "Fetching"
+        list(pending.items()), existing, effective_delay, "Fetching",
+        timeout=openiti_cfg.worldcat.timeout,
     )
-    _write_output(out_path, records, cfg.openiti_data_path)
+    _write_output(out_path, records, cfg.openiti_data_path, openiti_cfg.corpus_version)
 
     n_ok = len(records) - n_failed - len(existing)
     print(f"\nDone.  Fetched OK: {n_ok}  Failed: {n_failed}  Output: {out_path}")
@@ -317,7 +329,7 @@ def build(
 
 def update(
     output_path:  str | None = None,
-    delay:        float = 1.0,
+    delay:        float | None = None,
     config_path:  str | None = None,
 ) -> Path:
     """Incremental update: fetch only new or changed entries.
@@ -331,9 +343,12 @@ def update(
 
     Returns the output Path.
     """
-    cfg      = load_config(config_path)
+    cfg          = load_config(config_path)
+    openiti_cfg  = load_openiti_config()
+    effective_delay = max(delay if delay is not None else openiti_cfg.worldcat.request_delay, 1.0)
+
     corpus   = _load_corpus(cfg)
-    out_path = _resolve_output_path(output_path, cfg.openiti_data_path)
+    out_path = _resolve_output_path(output_path, openiti_cfg.corpus_version)
 
     if not out_path.exists():
         print(
@@ -361,17 +376,19 @@ def update(
         print("Nothing to fetch.")
         return out_path
 
-    records, n_failed = _fetch_targets(pending, existing, delay, "Updating")
-    _write_output(out_path, records, cfg.openiti_data_path)
+    records, n_failed = _fetch_targets(
+        pending, existing, effective_delay, "Updating",
+        timeout=openiti_cfg.worldcat.timeout,
+    )
+    _write_output(out_path, records, cfg.openiti_data_path, openiti_cfg.corpus_version)
 
     print(f"\nDone.  Fetched: {len(pending) - n_failed}  Failed: {n_failed}  Output: {out_path}")
     return out_path
 
 
-def _write_output(path: Path, records: dict, corpus_path: str) -> None:
+def _write_output(path: Path, records: dict, corpus_path: str, corpus_version: str) -> None:
     """Write the enrichment JSON with metadata header."""
     n_failed = sum(1 for r in records.values() if "error" in r)
-    corpus_version = Path(corpus_path).name
     output = {
         "_meta": {
             "schema_version":  _SCHEMA_VERSION,

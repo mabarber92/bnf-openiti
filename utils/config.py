@@ -30,7 +30,8 @@ from typing import Optional
 
 import yaml
 
-_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yml"
+_CONFIG_PATH        = Path(__file__).resolve().parent.parent / "config.yml"
+_OPENITI_CONFIG_PATH = Path(__file__).resolve().parent.parent / "openiti.yml"
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +128,32 @@ class MatchingConfig:
 class ClusteringConfig:
     algorithm:        str = "hdbscan"
     min_cluster_size: int = 2
+
+
+@dataclass
+class WorldCatConfig:
+    """HTTP settings for the WorldCat enrichment stage."""
+    request_delay: float = 1.0   # seconds between requests (minimum 1.0)
+    timeout:       int   = 12    # HTTP timeout in seconds
+
+
+@dataclass
+class OpenITICorpusConfig:
+    """OpenITI corpus configuration.
+
+    Read from openiti.yml (committed to the repo).  Controls the corpus
+    version identifier used to name data/ output files and recorded in
+    pipeline manifests, plus HTTP settings for the WorldCat enrichment stage.
+
+    corpus_version
+        The version string for the current OpenITI corpus snapshot
+        (e.g. "corpus_2025_1_9").  This names the output files:
+          data/openiti_parsed_<corpus_version>.json
+          data/openiti_worldcat_<corpus_version>.json
+        Update this field when downloading a new corpus release.
+    """
+    corpus_version: str          = ""
+    worldcat:       WorldCatConfig = field(default_factory=WorldCatConfig)
 
 
 # ---------------------------------------------------------------------------
@@ -262,5 +289,37 @@ def load_config(path: str | None = None) -> PipelineConfig:
         clustering = ClusteringConfig(
             algorithm        = str(clustering_raw.get("algorithm", "hdbscan")),
             min_cluster_size = int(clustering_raw.get("min_cluster_size", 2)),
+        ),
+    )
+
+
+def load_openiti_config(path: str | None = None) -> OpenITICorpusConfig:
+    """Load openiti.yml and return an OpenITICorpusConfig.
+
+    openiti.yml is committed to the repo (no local paths; safe to share).
+    It controls the corpus version identifier used to name data/ files and
+    recorded in pipeline manifests.
+
+    Missing keys fall back to dataclass defaults.  The file is optional —
+    if absent, defaults apply (corpus_version will be an empty string,
+    which will cause the build/update scripts to raise a clear error).
+
+    Parameters
+    ----------
+    path : str, optional
+        Override the default openiti.yml path (project root / openiti.yml).
+    """
+    config_path = Path(path) if path else _OPENITI_CONFIG_PATH
+    raw: dict = {}
+    if config_path.exists():
+        with config_path.open(encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+
+    wc_raw = raw.get("worldcat", {})
+    return OpenITICorpusConfig(
+        corpus_version = str(raw.get("corpus_version", "")),
+        worldcat       = WorldCatConfig(
+            request_delay = float(wc_raw.get("request_delay", 1.0)),
+            timeout       = int(wc_raw.get("timeout", 12)),
         ),
     )

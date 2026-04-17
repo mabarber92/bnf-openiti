@@ -1,0 +1,31 @@
+# OpenITI corpus configuration
+# -----------------------------------------------------------------------
+# This file is committed to the repo and shared across all users.
+# Most users do not need to edit it.
+#
+# corpus_version
+#   The version string for the current OpenITI corpus snapshot.
+#   This is used to name output files in data/ and recorded in all
+#   pipeline manifests, giving a stable version reference across runs:
+#
+#     data/openiti_parsed_<corpus_version>.json
+#     data/openiti_worldcat_<corpus_version>.json
+#
+#   Update this field when you download a new corpus release, then
+#   run:  python utils/parse_openiti.py update
+#         python utils/enrich_worldcat.py update
+#   and commit the new data/ files.
+
+corpus_version: corpus_2025_1_9
+
+# -----------------------------------------------------------------------
+# WorldCat enrichment settings (Stage 2)
+# -----------------------------------------------------------------------
+
+worldcat:
+  # Minimum seconds between HTTP requests.
+  # WorldCat's ToS requires respectful use — do not set below 1.0.
+  request_delay: 1.0
+
+  # HTTP request timeout in seconds.
+  timeout: 12
