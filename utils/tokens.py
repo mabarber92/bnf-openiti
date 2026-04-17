@@ -179,19 +179,17 @@ def normalise_ayn(text: str) -> str:
 def openiti_slug_tokens(slug: str) -> list[str]:
     """Split an OpenITI slug and apply the C/c → ʿ ʿayn convention.
 
-    In OpenITI URIs, a capital C before a lowercase letter represents ʿayn:
+    In OpenITI URIs, the letter C (upper or lower case) always represents
+    ʿayn — it does not occur for any other phoneme in ALA-LC transliteration
+    of Arabic.  This applies both at the start and in the middle of tokens:
 
         "CamrIbnKulthum"    → ["ʿamr", "ibn", "kulthum"]
         "AbuTalibCabdManaf" → ["abu", "talib", "ʿabd", "manaf"]
+        "ItticazHunafa"     → ["ittiʿaz", "hunafa"]
+        "MacrifaWaAdab"     → ["maʿrifa", "wa", "adab"]
         "NasirDinBaydawi"   → ["nasir", "din", "baydawi"]
 
     Returns lowercase tokens suitable for case-insensitive matching.
     Apply normalise_ayn() to BNF text before comparing against these tokens.
     """
-    result = []
-    for token in split_camel(slug):
-        if len(token) >= 2 and token[0] == "C" and token[1].islower():
-            result.append("\u02BF" + token[1:].lower())
-        else:
-            result.append(token.lower())
-    return result
+    return [token.lower().replace("c", "\u02BF") for token in split_camel(slug)]
