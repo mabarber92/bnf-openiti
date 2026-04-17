@@ -44,7 +44,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from utils.config import load_config, PipelineConfig  # noqa: E402
+from utils.config import load_config, PipelineConfig, FieldBoilerplateConfig  # noqa: E402
 from utils.tokens import (  # noqa: E402
     has_arabic  as _has_arabic,
     has_latin   as _has_latin,
@@ -97,20 +97,26 @@ def _save_manifest(survey_dir: Path, manifest: dict) -> None:
 def _config_snapshot(cfg: PipelineConfig) -> dict:
     """Serialise the full resolved config for audit storage in the manifest."""
     return {
-        "bnf_data_path":              cfg.bnf_data_path,
-        "openiti_data_path":          cfg.openiti_data_path,
-        "pipeline_out_dir":           cfg.pipeline_out_dir,
-        "bnf_survey_dir":             cfg.bnf_survey_dir,
-        "survey_max_n":               cfg.survey.max_n,
-        "survey_keep_abbrev_dots":    cfg.survey.keep_abbrev_dots,
-        "boilerplate_min_doc_freq_pct":    cfg.boilerplate.min_doc_freq_pct,
-        "boilerplate_max_repeats_per_doc": cfg.boilerplate.max_repeats_per_doc,
+        "bnf_data_path":           cfg.bnf_data_path,
+        "openiti_data_path":       cfg.openiti_data_path,
+        "pipeline_out_dir":        cfg.pipeline_out_dir,
+        "bnf_survey_dir":          cfg.bnf_survey_dir,
+        "survey_max_n":            cfg.survey.max_n,
+        "survey_keep_abbrev_dots": cfg.survey.keep_abbrev_dots,
+        "boilerplate_fields": {
+            fname: {
+                "mode":                fcfg.mode,
+                "min_doc_freq_pct":    fcfg.min_doc_freq_pct,
+                "max_repeats_per_doc": fcfg.max_repeats_per_doc,
+            }
+            for fname, fcfg in cfg.boilerplate.fields.items()
+        },
         "parsing_overwrite_existing": cfg.parsing.overwrite_existing,
     }
 
 
 # ---------------------------------------------------------------------------
-# N-gram ranking (full, no truncation — display limits belong in print_summary)
+# N-gram ranking (full, no truncation — display limits belong in print_ngrams)
 # ---------------------------------------------------------------------------
 
 def _rank_ngrams(tf: Counter, df: Counter, n_docs: int) -> dict:
@@ -149,6 +155,7 @@ def _scan(
     glob: str = "**/OAI_*.xml",
     max_n: int = 4,
     keep_abbrev_dots: bool = False,
+    scan_fields: list[str] | None = None,
     sample: int | None = None,
     seed: int = 42,
 ) -> tuple[dict, dict]:
@@ -156,8 +163,15 @@ def _scan(
 
     Runs once per build invocation; both summary.json and ngrams.json
     are derived from this single pass.
+
+    scan_fields
+        DC field names to accumulate n-grams for (e.g. ["description", "format"]).
+        Defaults to ["description"] if not supplied.
     """
     import random as _random
+
+    if scan_fields is None:
+        scan_fields = ["description"]
 
     root = Path(directory)
     paths = sorted(root.glob(glob))
@@ -172,21 +186,29 @@ def _scan(
     n_parsed = n_failed = 0
     parse_errors: list[dict] = []
 
-    # N-gram accumulators
-    desc_tf_lat: list[str] = []
-    desc_tf_ar:  list[str] = []
-    desc_df_lat: dict[int, Counter] = {n: Counter() for n in range(2, max_n + 1)}
-    desc_df_ar:  dict[int, Counter] = {n: Counter() for n in range(2, max_n + 1)}
+    # Per-field n-gram accumulators
+    # field_tf[field][script] = list of tokens (for term-frequency counting)
+    # field_df[field][script][n] = Counter of n-grams (for doc-frequency counting)
+    field_tf: dict[str, dict[str, list[str]]] = {
+        f: {"lat": [], "ar": []} for f in scan_fields
+    }
+    field_df: dict[str, dict[str, dict[int, Counter]]] = {
+        f: {
+            "lat": {n: Counter() for n in range(2, max_n + 1)},
+            "ar":  {n: Counter() for n in range(2, max_n + 1)},
+        }
+        for f in scan_fields
+    }
 
-    # Field-level accumulators
-    field_present: Counter            = Counter()
-    field_counts:  defaultdict        = defaultdict(list)
-    field_arabic:  Counter            = Counter()
-    field_latin:   Counter            = Counter()
-    field_both:    Counter            = Counter()
-    field_empty:   Counter            = Counter()
-    field_attrs:   defaultdict        = defaultdict(Counter)
-    field_samples: defaultdict        = defaultdict(list)
+    # Field-level coverage accumulators
+    field_present: Counter     = Counter()
+    field_counts:  defaultdict = defaultdict(list)
+    field_arabic:  Counter     = Counter()
+    field_latin:   Counter     = Counter()
+    field_both:    Counter     = Counter()
+    field_empty:   Counter     = Counter()
+    field_attrs:   defaultdict = defaultdict(Counter)
+    field_samples: defaultdict = defaultdict(list)
 
     for path in tqdm(paths, desc="Scanning"):
         try:
@@ -204,27 +226,36 @@ def _scan(
 
         n_parsed += 1
 
-        # --- N-gram accumulation ---
-        rec_lat: list[str] = []
-        rec_ar:  list[str] = []
+        # --- Per-field n-gram accumulation ---
+        # Collect tokens per field per script for this record, then update
+        # term-freq lists and doc-freq counters (doc-freq uses a set so each
+        # n-gram is counted once per record regardless of how many elements).
+        rec_tokens: dict[str, dict[str, list[str]]] = {
+            f: {"lat": [], "ar": []} for f in scan_fields
+        }
         for el in dc:
-            if _strip_ns(el.tag) != "description":
+            local = _strip_ns(el.tag)
+            if local not in scan_fields:
                 continue
             text = (el.text or "").strip()
             if not text:
                 continue
             if _has_arabic(text):
-                rec_ar.extend(_tokenize_ar(text))
+                rec_tokens[local]["ar"].extend(_tokenize_ar(text))
             else:
-                rec_lat.extend(_tokenize_lat(text, keep_abbrev_dots=keep_abbrev_dots))
+                rec_tokens[local]["lat"].extend(
+                    _tokenize_lat(text, keep_abbrev_dots=keep_abbrev_dots)
+                )
 
-        desc_tf_lat.extend(rec_lat)
-        desc_tf_ar.extend(rec_ar)
-        for n in range(2, max_n + 1):
-            desc_df_lat[n].update(set(_make_ngrams(rec_lat, n)))
-            desc_df_ar[n].update(set(_make_ngrams(rec_ar, n)))
+        for fname in scan_fields:
+            for script_key, tokens in rec_tokens[fname].items():
+                field_tf[fname][script_key].extend(tokens)
+                for n in range(2, max_n + 1):
+                    field_df[fname][script_key][n].update(
+                        set(_make_ngrams(tokens, n))
+                    )
 
-        # --- Field-level accumulation ---
+        # --- Field-level coverage accumulation ---
         per_record: Counter = Counter()
         record_has_arabic: set[str] = set()
         record_has_latin:  set[str] = set()
@@ -289,8 +320,21 @@ def _scan(
     def _key(n: int) -> str:
         return _NGRAM_NAMES.get(n, f"{n}grams")
 
-    tf_lat = {n: Counter(_make_ngrams(desc_tf_lat, n)) for n in range(2, max_n + 1)}
-    tf_ar  = {n: Counter(_make_ngrams(desc_tf_ar,  n)) for n in range(2, max_n + 1)}
+    # Build ngram_data: "fields" → field_name → script → size_key → rankings
+    ngrams_by_field: dict[str, dict] = {}
+    for fname in scan_fields:
+        tf_lat = {n: Counter(_make_ngrams(field_tf[fname]["lat"], n)) for n in range(2, max_n + 1)}
+        tf_ar  = {n: Counter(_make_ngrams(field_tf[fname]["ar"],  n)) for n in range(2, max_n + 1)}
+        ngrams_by_field[fname] = {
+            "latin": {
+                _key(n): _rank_ngrams(tf_lat[n], field_df[fname]["lat"][n], n_parsed)
+                for n in range(2, max_n + 1)
+            },
+            "arabic": {
+                _key(n): _rank_ngrams(tf_ar[n], field_df[fname]["ar"][n], n_parsed)
+                for n in range(2, max_n + 1)
+            },
+        }
 
     field_stats = {
         "files_found":   n_found,
@@ -300,19 +344,11 @@ def _scan(
         "fields":        fields,
     }
     ngram_data = {
-        "files_parsed":      n_parsed,
-        "max_n":             max_n,
-        "keep_abbrev_dots":  keep_abbrev_dots,
-        "ngrams": {
-            "latin": {
-                _key(n): _rank_ngrams(tf_lat[n], desc_df_lat[n], n_parsed)
-                for n in range(2, max_n + 1)
-            },
-            "arabic": {
-                _key(n): _rank_ngrams(tf_ar[n], desc_df_ar[n], n_parsed)
-                for n in range(2, max_n + 1)
-            },
-        },
+        "files_parsed":     n_parsed,
+        "max_n":            max_n,
+        "keep_abbrev_dots": keep_abbrev_dots,
+        "scan_fields":      scan_fields,
+        "fields":           ngrams_by_field,
     }
     return field_stats, ngram_data
 
@@ -323,16 +359,16 @@ def _scan(
 
 def _suggest_boilerplate(
     ngram_data: dict,
-    min_doc_freq_pct: float,
-    max_repeats_per_doc: float,
+    field_configs: dict[str, FieldBoilerplateConfig],
 ) -> list[dict]:
-    """Return boilerplate candidates sorted by repeats_per_doc ascending.
+    """Return boilerplate candidates sorted by source_field then repeats_per_doc.
 
-    Rows with repeats_per_doc close to 1.0 appear first — they are the most
-    reliable boilerplate.  Rows with higher values (name fragments, rare
-    phrases) appear last, making review top-to-bottom efficient.
+    Applies per-field criteria based on the field's mode:
+    - "full":      doc_freq_pct >= min AND repeats_per_doc <= max
+    - "freq_only": doc_freq_pct >= min only (repeats criterion not applied)
 
-    Each row: {ngram, script, n, doc_freq_pct, repeats_per_doc, keep}
+    Each row: {ngram, source_field, script, n, doc_freq_pct, repeats_per_doc,
+               keep, signal_type}
     """
     n_docs = ngram_data["files_parsed"]
     if n_docs == 0:
@@ -344,33 +380,45 @@ def _suggest_boilerplate(
     }
 
     candidates: list[dict] = []
-    seen: set[str] = set()
+    seen: set[tuple[str, str]] = set()  # (field, ngram) dedup
 
-    for script in ("latin", "arabic"):
-        for size_key, size_data in ngram_data["ngrams"][script].items():
-            n = _NGRAM_SIZES.get(size_key, 0)
-            for row in size_data["by_doc_freq"]:
-                df       = row["doc_freq"]
-                tf       = row["term_freq"]
-                df_pct   = round(100 * df / n_docs, 2)
-                repeats  = round(tf / df, 3) if df > 0 else 0.0
-                ngram    = row["ngram"]
+    for fname, fcfg in field_configs.items():
+        field_ngrams = ngram_data.get("fields", {}).get(fname)
+        if field_ngrams is None:
+            continue
 
-                if ngram in seen:
-                    continue
-                if df_pct >= min_doc_freq_pct and repeats <= max_repeats_per_doc:
-                    seen.add(ngram)
-                    candidates.append({
-                        "ngram":           ngram,
-                        "script":          script,
-                        "n":               n,
-                        "doc_freq_pct":    df_pct,
-                        "repeats_per_doc": repeats,
-                        "keep":            "yes",
-                        "signal_type":     "",
-                    })
+        for script in ("latin", "arabic"):
+            for size_key, size_data in field_ngrams[script].items():
+                n = _NGRAM_SIZES.get(size_key, 0)
+                for row in size_data["by_doc_freq"]:
+                    df     = row["doc_freq"]
+                    tf     = row["term_freq"]
+                    df_pct = round(100 * df / n_docs, 2)
+                    repeats = round(tf / df, 3) if df > 0 else 0.0
+                    ngram  = row["ngram"]
 
-    return sorted(candidates, key=lambda x: x["repeats_per_doc"])
+                    key = (fname, ngram)
+                    if key in seen:
+                        continue
+
+                    passes = df_pct >= fcfg.min_doc_freq_pct
+                    if fcfg.mode == "full":
+                        passes = passes and repeats <= fcfg.max_repeats_per_doc
+
+                    if passes:
+                        seen.add(key)
+                        candidates.append({
+                            "ngram":           ngram,
+                            "source_field":    fname,
+                            "script":          script,
+                            "n":               n,
+                            "doc_freq_pct":    df_pct,
+                            "repeats_per_doc": repeats,
+                            "keep":            "yes",
+                            "signal_type":     "",
+                        })
+
+    return sorted(candidates, key=lambda x: (x["source_field"], x["repeats_per_doc"]))
 
 
 # ---------------------------------------------------------------------------
@@ -378,21 +426,21 @@ def _suggest_boilerplate(
 # ---------------------------------------------------------------------------
 
 def build(
-    data_dir:            str | None = None,
-    survey_dir:          str | None = None,
-    max_n:               int | None = None,
-    keep_abbrev_dots:    bool | None = None,
-    min_doc_freq_pct:    float | None = None,
-    max_repeats_per_doc: float | None = None,
-    sample:              int | None = None,
-    seed:                int = 42,
-    config_path:         str | None = None,
+    data_dir:         str | None = None,
+    survey_dir:       str | None = None,
+    max_n:            int | None = None,
+    keep_abbrev_dots: bool | None = None,
+    sample:           int | None = None,
+    seed:             int = 42,
+    config_path:      str | None = None,
 ) -> Path:
     """Scan XML records; write summary.json, ngrams.json, boilerplate_review.csv.
 
     Returns the survey directory Path.
 
     All parameters fall back to config.yml values if not supplied.
+    Per-field boilerplate thresholds are always read from config — use
+    config.yml to tune them rather than CLI flags.
     """
     cfg = load_config(config_path)
 
@@ -400,8 +448,6 @@ def build(
     out_dir   = Path(survey_dir or cfg.resolved_bnf_survey_dir())
     max_n     = max_n            if max_n is not None            else cfg.survey.max_n
     abbrev    = keep_abbrev_dots if keep_abbrev_dots is not None else cfg.survey.keep_abbrev_dots
-    df_pct    = min_doc_freq_pct    if min_doc_freq_pct is not None    else cfg.boilerplate.min_doc_freq_pct
-    repeats   = max_repeats_per_doc if max_repeats_per_doc is not None else cfg.boilerplate.max_repeats_per_doc
 
     if not data_dir:
         raise ValueError(
@@ -410,11 +456,15 @@ def build(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    scan_fields = list(cfg.boilerplate.fields.keys())
+
     print(f"Scanning: {data_dir}")
+    print(f"  n-gram fields: {', '.join(scan_fields)}")
     field_stats, ngram_data = _scan(
         data_dir,
         max_n=max_n,
         keep_abbrev_dots=abbrev,
+        scan_fields=scan_fields,
         sample=sample,
         seed=seed,
     )
@@ -434,14 +484,14 @@ def build(
     print(f"  ngrams.json         → {ngrams_path}")
 
     # Write boilerplate_review.csv
-    candidates = _suggest_boilerplate(ngram_data, df_pct, repeats)
+    candidates = _suggest_boilerplate(ngram_data, cfg.boilerplate.fields)
     review_path = out_dir / "boilerplate_review.csv"
     with review_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
             fieldnames=[
-                "ngram", "script", "n", "doc_freq_pct", "repeats_per_doc",
-                "keep", "signal_type",
+                "ngram", "source_field", "script", "n",
+                "doc_freq_pct", "repeats_per_doc", "keep", "signal_type",
             ],
         )
         writer.writeheader()
@@ -450,9 +500,20 @@ def build(
     print(f"  Review instructions:")
     print(f"    keep=yes, signal_type=''            → pure boilerplate (discarded)")
     print(f"    keep=yes, signal_type=agent:copyist → signal phrase (routed to relations)")
-    print(f"    keep=no                             → content, left in descriptions")
+    print(f"    keep=no                             → content, left in field text")
     print(f"  Valid signal_type values: agent:copyist, agent:commentator, agent:owner,")
-    print(f"                            relation:commentary, relation:abridgement, relation:continuation")
+    print(f"                            relation:commentary, relation:abridgement,")
+    print(f"                            relation:continuation, date:copy")
+
+    # Record per-field thresholds used in manifest parameters
+    field_params = {
+        fname: {
+            "mode":                fcfg.mode,
+            "min_doc_freq_pct":    fcfg.min_doc_freq_pct,
+            "max_repeats_per_doc": fcfg.max_repeats_per_doc,
+        }
+        for fname, fcfg in cfg.boilerplate.fields.items()
+    }
 
     # Update manifest
     manifest = _load_manifest(out_dir)
@@ -461,9 +522,12 @@ def build(
         "completed":  True,
         "timestamp":  _now(),
         "parameters": {
-            "max_n": max_n, "keep_abbrev_dots": abbrev,
-            "min_doc_freq_pct": df_pct, "max_repeats_per_doc": repeats,
-            "sample": sample, "seed": seed if sample is not None else None,
+            "max_n":          max_n,
+            "keep_abbrev_dots": abbrev,
+            "scan_fields":    scan_fields,
+            "boilerplate_fields": field_params,
+            "sample":         sample,
+            "seed":           seed if sample is not None else None,
         },
         "outputs": ["summary.json", "ngrams.json", "boilerplate_review.csv"],
     }
@@ -481,7 +545,11 @@ def apply_review(
 ) -> Path:
     """Read the reviewed CSV and write boilerplate.json.
 
-    boilerplate.json is a flat list of strings — all n-grams where keep=yes.
+    boilerplate.json contains two sections:
+    - "boilerplate": list of {ngram, field} dicts — phrases stripped from field text
+    - "signals":     list of {ngram, field, signal_type} dicts — phrases routed to
+                     relation/agent detection
+
     Returns the survey directory Path.
     """
     cfg     = load_config(config_path)
@@ -493,7 +561,7 @@ def apply_review(
             f"{review_path} not found. Run `build` first."
         )
 
-    boilerplate: list[str]  = []
+    boilerplate: list[dict] = []
     signals:     list[dict] = []
 
     with review_path.open(encoding="utf-8", newline="") as fh:
@@ -501,11 +569,13 @@ def apply_review(
         for row in reader:
             if row.get("keep", "yes").strip().lower() == "no":
                 continue
+            ngram       = row["ngram"]
+            field       = row.get("source_field", "description").strip() or "description"
             signal_type = row.get("signal_type", "").strip()
             if signal_type:
-                signals.append({"ngram": row["ngram"], "signal_type": signal_type})
+                signals.append({"ngram": ngram, "field": field, "signal_type": signal_type})
             else:
-                boilerplate.append(row["ngram"])
+                boilerplate.append({"ngram": ngram, "field": field})
 
     boilerplate_path = out_dir / "boilerplate.json"
     boilerplate_path.write_text(
@@ -522,11 +592,11 @@ def apply_review(
 
     manifest = _load_manifest(out_dir)
     manifest["stages"]["apply_review"] = {
-        "completed":       True,
-        "timestamp":       _now(),
+        "completed":         True,
+        "timestamp":         _now(),
         "boilerplate_count": len(boilerplate),
         "signal_count":      len(signals),
-        "outputs":         ["boilerplate.json"],
+        "outputs":           ["boilerplate.json"],
     }
     _save_manifest(out_dir, manifest)
 
@@ -580,25 +650,27 @@ def print_summary(results: dict, top_n: int = 20) -> None:
 
 
 def print_ngrams(ngram_data: dict, top_n: int = 20) -> None:
-    """Print top n-grams per ranking per script per size."""
+    """Print top n-grams per ranking per script per size, grouped by field."""
     sep = "-" * 78
     rankings = [
         ("by_doc_freq",  "by doc_freq",  lambda r: f"df={r['doc_freq']:>5}  tf={r['term_freq']:>6}  tfidf={r['tfidf']:>9.3f}"),
         ("by_term_freq", "by term_freq", lambda r: f"tf={r['term_freq']:>6}  df={r['doc_freq']:>5}  tfidf={r['tfidf']:>9.3f}"),
         ("by_tfidf",     "by TF-IDF",   lambda r: f"tfidf={r['tfidf']:>9.3f}  tf={r['term_freq']:>6}  df={r['doc_freq']:>5}"),
     ]
-    print(f"\n  dc:description n-grams (top {top_n} per ranking)")
-    print(sep)
-    for script in ("latin", "arabic"):
-        for size_key, size_data in ngram_data["ngrams"][script].items():
-            print(f"\n  {script.upper()} {size_key}")
-            for rank_key, rank_label, fmt in rankings:
-                entries = size_data[rank_key][:top_n]
-                if not entries:
-                    continue
-                print(f"    --- {rank_label} ---")
-                for row in entries:
-                    print(f"      {row['ngram']:<42}  {fmt(row)}")
+
+    for fname, field_ngrams in ngram_data.get("fields", {}).items():
+        print(f"\n  dc:{fname} n-grams (top {top_n} per ranking)")
+        print(sep)
+        for script in ("latin", "arabic"):
+            for size_key, size_data in field_ngrams[script].items():
+                print(f"\n  {script.upper()} {size_key}")
+                for rank_key, rank_label, fmt in rankings:
+                    entries = size_data[rank_key][:top_n]
+                    if not entries:
+                        continue
+                    print(f"    --- {rank_label} ---")
+                    for row in entries:
+                        print(f"      {row['ngram']:<42}  {fmt(row)}")
     print()
 
 
@@ -624,8 +696,6 @@ def _build_cli(args: argparse.Namespace) -> None:
         survey_dir=args.survey_dir,
         max_n=args.max_n,
         keep_abbrev_dots=args.keep_abbrev_dots if args.keep_abbrev_dots else None,
-        min_doc_freq_pct=args.min_doc_freq_pct,
-        max_repeats_per_doc=args.max_repeats_per_doc,
         sample=args.sample,
         seed=args.seed,
     )
@@ -664,10 +734,6 @@ if __name__ == "__main__":
     p_build.add_argument("--max-n",        type=int,   default=None, help="Largest n-gram size (default from config).")
     p_build.add_argument("--keep-abbrev-dots", action="store_true", default=False,
                          help="Retain trailing dots on abbreviation tokens.")
-    p_build.add_argument("--min-doc-freq-pct",    type=float, default=None,
-                         help="Min doc-freq %% for boilerplate candidates (default from config).")
-    p_build.add_argument("--max-repeats-per-doc", type=float, default=None,
-                         help="Max avg occurrences per record (default from config).")
     p_build.add_argument("--sample",       type=int,   default=None, help="Random sample size.")
     p_build.add_argument("--seed",         type=int,   default=42,   help="Random seed (default 42).")
     p_build.add_argument("--print-summary",  action="store_true", default=False,

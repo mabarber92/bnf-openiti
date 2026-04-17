@@ -44,9 +44,67 @@ class SurveyConfig:
 
 
 @dataclass
+class FieldBoilerplateConfig:
+    """Boilerplate detection settings for a single DC field.
+
+    mode
+        "full"      — apply both doc_freq_pct AND max_repeats_per_doc.
+                      Use for mixed-content fields (dc:description) where
+                      boilerplate and meaningful content coexist; the
+                      repeats criterion separates structural phrases
+                      (appear once per record) from name fragments.
+        "freq_only" — apply only doc_freq_pct.
+                      Use for fields that are predominantly or entirely
+                      boilerplate (dc:format, dc:rights, dc:source) where
+                      the repeats criterion adds no discriminating power.
+    """
+    mode:                str   = "full"
+    min_doc_freq_pct:    float = 5.0
+    max_repeats_per_doc: float = 1.1
+
+
+def _default_boilerplate_fields() -> dict[str, FieldBoilerplateConfig]:
+    return {
+        "description": FieldBoilerplateConfig(
+            mode="full", min_doc_freq_pct=2.0, max_repeats_per_doc=1.1,
+        ),
+        "format": FieldBoilerplateConfig(
+            mode="freq_only", min_doc_freq_pct=10.0,
+        ),
+        "subject": FieldBoilerplateConfig(
+            mode="freq_only", min_doc_freq_pct=15.0,
+        ),
+        "rights": FieldBoilerplateConfig(
+            mode="freq_only", min_doc_freq_pct=50.0,
+        ),
+        "source": FieldBoilerplateConfig(
+            mode="freq_only", min_doc_freq_pct=50.0,
+        ),
+    }
+
+
+@dataclass
 class BoilerplateConfig:
-    min_doc_freq_pct:     float = 5.0
-    max_repeats_per_doc:  float = 1.4
+    """Per-field boilerplate detection configuration.
+
+    Each entry in ``fields`` specifies how to identify boilerplate n-grams
+    for a specific DC field.  Fields not listed are not scanned.
+
+    Example config.yml::
+
+        boilerplate:
+          fields:
+            description:
+              mode: full
+              min_doc_freq_pct: 2.0
+              max_repeats_per_doc: 1.1
+            format:
+              mode: freq_only
+              min_doc_freq_pct: 10.0
+    """
+    fields: dict[str, FieldBoilerplateConfig] = field(
+        default_factory=_default_boilerplate_fields
+    )
 
 
 @dataclass
@@ -122,6 +180,22 @@ class PipelineConfig:
 # Loader
 # ---------------------------------------------------------------------------
 
+def _parse_field_boilerplate(raw_fields: dict) -> dict[str, FieldBoilerplateConfig]:
+    """Parse the boilerplate.fields section of config.yml."""
+    defaults = _default_boilerplate_fields()
+    result: dict[str, FieldBoilerplateConfig] = {}
+    for fname, fraw in raw_fields.items():
+        if not isinstance(fraw, dict):
+            fraw = {}
+        default = defaults.get(fname, FieldBoilerplateConfig())
+        result[fname] = FieldBoilerplateConfig(
+            mode                = str(fraw.get("mode", default.mode)),
+            min_doc_freq_pct    = float(fraw.get("min_doc_freq_pct", default.min_doc_freq_pct)),
+            max_repeats_per_doc = float(fraw.get("max_repeats_per_doc", default.max_repeats_per_doc)),
+        )
+    return result or defaults
+
+
 def load_config(path: str | None = None) -> PipelineConfig:
     """Load config.yml and return a PipelineConfig.
 
@@ -139,13 +213,31 @@ def load_config(path: str | None = None) -> PipelineConfig:
         with config_path.open(encoding="utf-8") as fh:
             raw = yaml.safe_load(fh) or {}
 
-    survey_raw      = raw.get("survey", {})
-    bp_raw          = raw.get("boilerplate", {})
-    parsing_raw     = raw.get("parsing", {})
-    matching_raw    = raw.get("matching", {})
-    clustering_raw  = raw.get("clustering", {})
-    surface_raw     = matching_raw.get("surface_form", {})
-    embedding_raw   = matching_raw.get("embedding", {})
+    survey_raw     = raw.get("survey", {})
+    bp_raw         = raw.get("boilerplate", {})
+    parsing_raw    = raw.get("parsing", {})
+    matching_raw   = raw.get("matching", {})
+    clustering_raw = raw.get("clustering", {})
+    surface_raw    = matching_raw.get("surface_form", {})
+    embedding_raw  = matching_raw.get("embedding", {})
+
+    # Boilerplate: per-field structure supersedes flat legacy keys
+    bp_fields_raw = bp_raw.get("fields", {})
+    if bp_fields_raw:
+        boilerplate_cfg = BoilerplateConfig(
+            fields=_parse_field_boilerplate(bp_fields_raw)
+        )
+    else:
+        # Legacy flat keys — migrate to description-only field config
+        legacy_pct     = float(bp_raw.get("min_doc_freq_pct", 2.0))
+        legacy_repeats = float(bp_raw.get("max_repeats_per_doc", 1.1))
+        defaults = _default_boilerplate_fields()
+        defaults["description"] = FieldBoilerplateConfig(
+            mode="full",
+            min_doc_freq_pct=legacy_pct,
+            max_repeats_per_doc=legacy_repeats,
+        )
+        boilerplate_cfg = BoilerplateConfig(fields=defaults)
 
     return PipelineConfig(
         bnf_data_path     = raw.get("bnf_data_path") or None,
@@ -157,10 +249,7 @@ def load_config(path: str | None = None) -> PipelineConfig:
             max_n            = int(survey_raw.get("max_n", 4)),
             keep_abbrev_dots = bool(survey_raw.get("keep_abbrev_dots", True)),
         ),
-        boilerplate = BoilerplateConfig(
-            min_doc_freq_pct    = float(bp_raw.get("min_doc_freq_pct", 5.0)),
-            max_repeats_per_doc = float(bp_raw.get("max_repeats_per_doc", 1.4)),
-        ),
+        boilerplate = boilerplate_cfg,
         parsing = ParsingConfig(
             overwrite_existing = bool(parsing_raw.get("overwrite_existing", False)),
         ),

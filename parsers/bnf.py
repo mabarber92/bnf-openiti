@@ -137,28 +137,25 @@ TITLE_FROM_DESC_MAX_LEN: int = 100
 MIN_REMAINING_TOKENS: int = 3
 
 # N-grams (any size 2–4) whose presence marks a description string as
-# structural boilerplate.  Populated by calling load_boilerplate_ngrams()
-# or load_boilerplate_file() before bulk parsing; empty by default (all
-# short descriptions promoted, no filtering).
-BOILERPLATE_NGRAMS: frozenset[str] = frozenset()
+# structural boilerplate, keyed by DC field name.  Populated by calling
+# load_boilerplate_ngrams() or load_boilerplate_file() before bulk parsing;
+# empty by default (all short descriptions promoted, no filtering).
+BOILERPLATE_NGRAMS: dict[str, frozenset[str]] = {}
 
 
 def load_boilerplate_ngrams(
     ngrams_path: str,
     min_doc_freq_pct: float = 5.0,
     max_repeats_per_doc: float = 1.4,
-) -> frozenset[str]:
+) -> dict[str, frozenset[str]]:
     """Derive a boilerplate n-gram set from a raw vocabulary file (ngrams.json).
 
-    Applies two criteria in intersection:
+    Applies two criteria in intersection for every field found in the file:
       - doc_freq / files_parsed >= min_doc_freq_pct / 100
-        (n-gram appears in enough records to be structural)
-      - term_freq / doc_freq <= max_repeats_per_doc
-        (n-gram appears roughly once per record — template text, not content)
+      - term_freq / doc_freq   <= max_repeats_per_doc
 
-    True boilerplate (digitisation notices) has doc_freq_pct ~100 % and
-    repeats_per_doc ~1.0.  Name fragments that slip through have higher
-    repeats_per_doc values (same author appears many times per record).
+    Returns a dict keyed by field name (e.g. {"description": frozenset(...),
+    "format": frozenset(...)}).
 
     Parameters
     ----------
@@ -172,7 +169,9 @@ def load_boilerplate_ngrams(
     Typical use before bulk parsing::
 
         import parsers.bnf as bnf
-        bnf.BOILERPLATE_NGRAMS = bnf.load_boilerplate_ngrams("outputs/bnf_survey/ngrams.json")
+        bnf.BOILERPLATE_NGRAMS = bnf.load_boilerplate_ngrams(
+            "outputs/bnf_survey/ngrams.json"
+        )
         metadata = BNFMetadata(directory)
     """
     with open(ngrams_path, encoding="utf-8") as fh:
@@ -180,36 +179,57 @@ def load_boilerplate_ngrams(
 
     n_docs = data.get("files_parsed", 0)
     if n_docs == 0:
-        return frozenset()
+        return {}
 
-    boilerplate: set[str] = set()
-    for script_data in data["ngrams"].values():
-        for size_data in script_data.values():
-            for row in size_data["by_doc_freq"]:
-                df      = row["doc_freq"]
-                tf      = row["term_freq"]
-                df_pct  = 100 * df / n_docs
-                repeats = tf / df if df > 0 else float("inf")
-                if df_pct >= min_doc_freq_pct and repeats <= max_repeats_per_doc:
-                    boilerplate.add(row["ngram"])
+    result: dict[str, frozenset[str]] = {}
 
-    return frozenset(boilerplate)
+    # New per-field format: {"fields": {"description": {"latin": ..., "arabic": ...}, ...}}
+    if "fields" in data:
+        for fname, script_map in data["fields"].items():
+            boilerplate: set[str] = set()
+            for script_data in script_map.values():
+                for size_data in script_data.values():
+                    for row in size_data["by_doc_freq"]:
+                        df      = row["doc_freq"]
+                        tf      = row["term_freq"]
+                        df_pct  = 100 * df / n_docs
+                        repeats = tf / df if df > 0 else float("inf")
+                        if df_pct >= min_doc_freq_pct and repeats <= max_repeats_per_doc:
+                            boilerplate.add(row["ngram"])
+            result[fname] = frozenset(boilerplate)
+    else:
+        # Legacy flat format: {"ngrams": {"latin": ..., "arabic": ...}}
+        boilerplate = set()
+        for script_data in data.get("ngrams", {}).values():
+            for size_data in script_data.values():
+                for row in size_data["by_doc_freq"]:
+                    df      = row["doc_freq"]
+                    tf      = row["term_freq"]
+                    df_pct  = 100 * df / n_docs
+                    repeats = tf / df if df > 0 else float("inf")
+                    if df_pct >= min_doc_freq_pct and repeats <= max_repeats_per_doc:
+                        boilerplate.add(row["ngram"])
+        result["description"] = frozenset(boilerplate)
+
+    return result
 
 
-def load_boilerplate_file(boilerplate_path: str) -> frozenset[str]:
+def load_boilerplate_file(boilerplate_path: str) -> dict[str, frozenset[str]]:
     """Load the curated boilerplate n-gram set from boilerplate.json.
 
     boilerplate.json is produced by ``survey_bnf.py apply-review`` after
     manual review of the CSV.  Format::
 
         {
-            "boilerplate": ["numérisation effectuée", ...],
-            "signals": [{"ngram": "lieu de copie", "signal_type": "agent:copyist"}, ...]
+            "boilerplate": [{"ngram": "numérisation effectuée", "field": "description"}, ...],
+            "signals":     [{"ngram": "lieu de copie", "field": "description",
+                             "signal_type": "agent:copyist"}, ...]
         }
 
-    Returns only the ``boilerplate`` list as a frozenset — phrases to strip
-    entirely from descriptions.  Use load_signal_ngrams() separately to
-    retrieve the signal phrases for relation detection.
+    Returns a dict keyed by field name: {"description": frozenset(...), ...}
+    containing only the ``boilerplate`` entries — phrases to strip entirely
+    from the relevant field text.  Use load_signal_ngrams() separately to
+    retrieve signal phrases for relation detection.
 
     Use this in production runs; use load_boilerplate_ngrams() for threshold
     experimentation against the raw ngrams.json vocabulary.
@@ -224,10 +244,20 @@ def load_boilerplate_file(boilerplate_path: str) -> frozenset[str]:
     """
     with open(boilerplate_path, encoding="utf-8") as fh:
         data = _json.load(fh)
-    # Handle legacy flat-list format
+
+    # Legacy flat-list format
     if isinstance(data, list):
-        return frozenset(data)
-    return frozenset(data.get("boilerplate", []))
+        return {"description": frozenset(data)}
+
+    result: dict[str, set[str]] = {}
+    for entry in data.get("boilerplate", []):
+        if isinstance(entry, str):
+            # Legacy: flat string list inside the dict
+            result.setdefault("description", set()).add(entry)
+        else:
+            fname = entry.get("field", "description")
+            result.setdefault(fname, set()).add(entry["ngram"])
+    return {f: frozenset(s) for f, s in result.items()}
 
 
 def load_signal_ngrams(boilerplate_path: str) -> list[dict]:
@@ -236,15 +266,17 @@ def load_signal_ngrams(boilerplate_path: str) -> list[dict]:
     Signal n-grams are phrases that mark a structural role or textual
     relationship rather than pure boilerplate.  Each entry has the form::
 
-        {"ngram": "lieu de copie", "signal_type": "agent:copyist"}
+        {"ngram": "lieu de copie", "field": "description",
+         "signal_type": "agent:copyist"}
 
     Valid signal_type values:
-        agent:copyist        — phrase marks a copyist name
-        agent:commentator    — phrase marks a commentator name
-        agent:owner          — phrase marks a previous owner name
-        relation:commentary  — phrase marks "this text IS a commentary on X"
-        relation:abridgement — phrase marks abridgement of source work X
+        agent:copyist         — phrase marks a copyist name
+        agent:commentator     — phrase marks a commentator name
+        agent:owner           — phrase marks a previous owner name
+        relation:commentary   — phrase marks "this text IS a commentary on X"
+        relation:abridgement  — phrase marks abridgement of source work X
         relation:continuation — phrase marks continuation of source work X
+        date:copy             — phrase marks a copy date / colophon date
 
     These are used by the parser to populate BNFRecord.detected_relations
     and to annotate matching candidates in matching_data() with their
@@ -429,7 +461,7 @@ class BNFXml:
         self,
         path: str,
         relation_terms: dict[str, str] | None = None,
-        boilerplate_ngrams: frozenset[str] | None = None,
+        boilerplate_ngrams: dict[str, frozenset[str]] | None = None,
     ) -> None:
         self.path                 = Path(path)
         self.relation_terms       = relation_terms or {}
@@ -563,7 +595,7 @@ class BNFXml:
         Strings already in *existing* are deduplicated against title_lat /
         title_ar to avoid redundant matching candidates.
         """
-        boilerplate = self._boilerplate_ngrams
+        boilerplate = self._boilerplate_ngrams.get("description", frozenset())
         seen = set(existing)
         candidates: list[str] = []
 
@@ -710,7 +742,7 @@ class BNFMetadata:
         directory: str,
         glob: str = "**/OAI_*.xml",
         relation_terms: dict[str, str] | None = None,
-        boilerplate_ngrams: frozenset[str] | None = None,
+        boilerplate_ngrams: dict[str, frozenset[str]] | None = None,
     ) -> None:
         self.relation_terms      = relation_terms or {}
         self._boilerplate_ngrams = boilerplate_ngrams

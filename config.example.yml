@@ -38,16 +38,37 @@ survey:
   keep_abbrev_dots: true
 
 # ---------------------------------------------------------------------------
-# Boilerplate detection thresholds
+# Boilerplate detection — per-field configuration
 # (used by `survey build` to generate the review CSV)
 # ---------------------------------------------------------------------------
+#
+# mode: "full"      — apply both doc_freq_pct AND max_repeats_per_doc.
+#                     Use for mixed-content fields (dc:description).
+# mode: "freq_only" — apply only doc_freq_pct.
+#                     Use for predominantly-boilerplate fields.
+#
+# min_doc_freq_pct:    minimum % of records an n-gram must appear in
+# max_repeats_per_doc: max avg occurrences per record (full mode only)
+#                      ~1.0 = structural template; higher = content/names
 
 boilerplate:
-  # Minimum percentage of records an n-gram must appear in to be a candidate
-  min_doc_freq_pct: 5.0
-  # Maximum average occurrences per record (true boilerplate appears ~once;
-  # name fragments appear more often as records contain multiple authors)
-  max_repeats_per_doc: 1.4
+  fields:
+    description:
+      mode: full
+      min_doc_freq_pct: 2.0
+      max_repeats_per_doc: 1.1
+    format:
+      mode: freq_only
+      min_doc_freq_pct: 10.0
+    subject:
+      mode: freq_only
+      min_doc_freq_pct: 15.0
+    rights:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
+    source:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
 
 # ---------------------------------------------------------------------------
 # Parsing

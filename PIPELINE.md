@@ -65,8 +65,38 @@ threshold criteria to generate a list of boilerplate candidates for review.
 |---|---|---|---|
 | `survey.max_n` | `--max-n` | `4` | largest n-gram size (bigrams–quadgrams) |
 | `survey.keep_abbrev_dots` | `--keep-abbrev-dots` | `true` | retain dots on abbreviation tokens (e.g. `cf.`, `ms.`) so abbreviation phrases form distinct n-grams |
-| `boilerplate.min_doc_freq_pct` | `--min-doc-freq-pct` | `2.0` | minimum % of records an n-gram must appear in to be a boilerplate candidate |
-| `boilerplate.max_repeats_per_doc` | `--max-repeats-per-doc` | `1.1` | maximum average occurrences per record — true boilerplate appears exactly once (1.0); name fragments appear more often |
+
+**Per-field boilerplate thresholds (set in `config.yml` only):**
+
+N-gram scanning and boilerplate candidate generation is now per-field.  Each
+field in `boilerplate.fields` is scanned independently and applies its own
+mode and thresholds.
+
+| mode | criteria applied | suitable for |
+|---|---|---|
+| `full` | `doc_freq_pct >= min` AND `repeats_per_doc <= max` | mixed-content fields (`dc:description`) where boilerplate and content coexist |
+| `freq_only` | `doc_freq_pct >= min` only | predominantly-boilerplate fields (`dc:format`, `dc:rights`, `dc:source`) |
+
+```yaml
+boilerplate:
+  fields:
+    description:
+      mode: full
+      min_doc_freq_pct: 2.0
+      max_repeats_per_doc: 1.1
+    format:
+      mode: freq_only
+      min_doc_freq_pct: 10.0
+    subject:
+      mode: freq_only
+      min_doc_freq_pct: 15.0
+    rights:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
+    source:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
+```
 
 **Sampling (experimentation only — do not use for production runs):**
 ```bash
@@ -111,11 +141,12 @@ further down with higher values.
 | column | description |
 |---|---|
 | `ngram` | the phrase |
+| `source_field` | DC field the phrase was found in (`description`, `format`, `subject`, etc.) |
 | `script` | `latin` or `arabic` |
 | `n` | n-gram size (2=bigram, 3=trigram, 4=quadgram) |
 | `doc_freq_pct` | % of records containing this phrase |
 | `repeats_per_doc` | average occurrences per record — ~1.0 = structural template |
-| `keep` | `yes` = filter this phrase; `no` = leave in descriptions as content |
+| `keep` | `yes` = filter this phrase; `no` = leave in field text as content |
 | `signal_type` | if non-empty, phrase is a structural signal rather than pure noise (see below) |
 
 **`keep` column:**
@@ -137,6 +168,7 @@ discarded:
 | `relation:commentary` | phrase marks that *this text* is a commentary on another work |
 | `relation:abridgement` | phrase marks abridgement of a source work |
 | `relation:continuation` | phrase marks continuation of a source work |
+| `date:copy` | phrase marks a colophon copy date (e.g. "copié en", "katabahu fī") |
 
 > **Note on ambiguity:** `relation:commentary` means the manuscript *is* a
 > commentary — what follows is the referenced *work*.  `agent:commentator`
@@ -159,10 +191,16 @@ with two sections:
 
 ```json
 {
-  "boilerplate": ["numérisation effectuée", "effectuée partir", ...],
+  "boilerplate": [
+    {"ngram": "numérisation effectuée", "field": "description"},
+    {"ngram": "effectuée partir",       "field": "description"},
+    {"ngram": "naskhi maghribi",        "field": "format"},
+    ...
+  ],
   "signals": [
-    {"ngram": "lieu de copie",  "signal_type": "agent:copyist"},
-    {"ngram": "sharḥ ʿalā",    "signal_type": "relation:commentary"}
+    {"ngram": "lieu de copie", "field": "description", "signal_type": "agent:copyist"},
+    {"ngram": "sharḥ ʿalā",   "field": "description", "signal_type": "relation:commentary"},
+    {"ngram": "copié en",     "field": "description", "signal_type": "date:copy"}
   ]
 }
 ```
