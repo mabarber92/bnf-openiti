@@ -10,8 +10,10 @@
 # Absolute path to your local BNF OAI-PMH XML directory
 bnf_data_path:
 
-# Absolute path to your local OpenITI data directory
-openiti_data_path:
+# Note: the OpenITI corpus path is NOT set here.
+# Pass --dir to parse_openiti.py / enrich_worldcat.py when running the
+# one-off OpenITI preparation stages (Stages 1–2).  Normal pipeline runs
+# load the pre-built data/openiti_*.json files directly.
 
 # ---------------------------------------------------------------------------
 # Pipeline outputs
@@ -63,6 +65,9 @@ survey:
 
 boilerplate:
   fields:
+    # Delete any field you do not want scanned.
+    # Add any DC field that exists in your collection.
+
     # dc:description — mixed content; boilerplate and real text coexist.
     # Lower threshold to surface rarer structural phrases.
     description:
@@ -81,32 +86,30 @@ boilerplate:
       mode: freq_only
       min_doc_freq_pct: 15.0
 
-    # --- Optional fields — uncomment to scan ---
-
     # dc:contributor — role labels ("Ancien possesseur") on contributor names.
-    # contributor:
-    #   mode: freq_only
-    #   min_doc_freq_pct: 10.0
+    contributor:
+      mode: freq_only
+      min_doc_freq_pct: 10.0
 
     # dc:format — physical description templates (script style, material, size).
-    # format:
-    #   mode: freq_only
-    #   min_doc_freq_pct: 10.0
+    format:
+      mode: freq_only
+      min_doc_freq_pct: 10.0
 
     # dc:rights — digitisation/copyright notices (near-universal boilerplate).
-    # rights:
-    #   mode: freq_only
-    #   min_doc_freq_pct: 50.0
+    rights:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
 
     # dc:source — shelfmark prefix ("Bibliothèque nationale de France. …").
-    # source:
-    #   mode: freq_only
-    #   min_doc_freq_pct: 50.0
+    source:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
 
     # dc:type — record type labels ("Manuscrit", "Texte imprimé", …).
-    # type:
-    #   mode: freq_only
-    #   min_doc_freq_pct: 50.0
+    type:
+      mode: freq_only
+      min_doc_freq_pct: 50.0
 
 # ---------------------------------------------------------------------------
 # Parsing

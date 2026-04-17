@@ -18,14 +18,3 @@
 
 corpus_version: corpus_2025_1_9
 
-# -----------------------------------------------------------------------
-# WorldCat enrichment settings (Stage 2)
-# -----------------------------------------------------------------------
-
-worldcat:
-  # Minimum seconds between HTTP requests.
-  # WorldCat's ToS requires respectful use — do not set below 1.0.
-  request_delay: 1.0
-
-  # HTTP request timeout in seconds.
-  timeout: 12

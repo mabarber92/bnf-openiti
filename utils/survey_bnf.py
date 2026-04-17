@@ -98,7 +98,6 @@ def _config_snapshot(cfg: PipelineConfig) -> dict:
     """Serialise the full resolved config for audit storage in the manifest."""
     return {
         "bnf_data_path":           cfg.bnf_data_path,
-        "openiti_data_path":       cfg.openiti_data_path,
         "pipeline_out_dir":        cfg.pipeline_out_dir,
         "bnf_survey_dir":          cfg.bnf_survey_dir,
         "survey_max_n":            cfg.survey.max_n,

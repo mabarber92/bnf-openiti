@@ -131,29 +131,19 @@ class ClusteringConfig:
 
 
 @dataclass
-class WorldCatConfig:
-    """HTTP settings for the WorldCat enrichment stage."""
-    request_delay: float = 1.0   # seconds between requests (minimum 1.0)
-    timeout:       int   = 12    # HTTP timeout in seconds
-
-
-@dataclass
 class OpenITICorpusConfig:
     """OpenITI corpus configuration.
 
     Read from openiti.yml (committed to the repo).  Controls the corpus
-    version identifier used to name data/ output files and recorded in
-    pipeline manifests, plus HTTP settings for the WorldCat enrichment stage.
+    version identifier used to name data/ output files.
 
     corpus_version
         The version string for the current OpenITI corpus snapshot
-        (e.g. "corpus_2025_1_9").  This names the output files:
-          data/openiti_parsed_<corpus_version>.json
-          data/openiti_worldcat_<corpus_version>.json
+        (e.g. "corpus_2025_1_9").  This names the output file:
+          data/openiti_<corpus_version>.json
         Update this field when downloading a new corpus release.
     """
-    corpus_version: str          = ""
-    worldcat:       WorldCatConfig = field(default_factory=WorldCatConfig)
+    corpus_version: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -169,8 +159,10 @@ class PipelineConfig:
     bnf_data_path and openiti_data_path.
     """
     # Data sources
+    # openiti_data_path is NOT here — the parsed OpenITI data lives in data/
+    # and is loaded directly.  Pass --dir to parse_openiti.py / enrich_worldcat.py
+    # when running the one-off preparation stages.
     bnf_data_path:      Optional[str] = None
-    openiti_data_path:  Optional[str] = None
 
     # Output root — all pipeline artifacts live under here (gitignored)
     pipeline_out_dir:   str           = "outputs"
@@ -262,7 +254,6 @@ def load_config(path: str | None = None) -> PipelineConfig:
 
     return PipelineConfig(
         bnf_data_path     = raw.get("bnf_data_path") or None,
-        openiti_data_path = raw.get("openiti_data_path") or None,
         pipeline_out_dir  = raw.get("pipeline_out_dir", "outputs"),
         bnf_survey_dir    = raw.get("bnf_survey_dir") or None,
 
@@ -315,11 +306,6 @@ def load_openiti_config(path: str | None = None) -> OpenITICorpusConfig:
         with config_path.open(encoding="utf-8") as fh:
             raw = yaml.safe_load(fh) or {}
 
-    wc_raw = raw.get("worldcat", {})
     return OpenITICorpusConfig(
         corpus_version = str(raw.get("corpus_version", "")),
-        worldcat       = WorldCatConfig(
-            request_delay = float(wc_raw.get("request_delay", 1.0)),
-            timeout       = int(wc_raw.get("timeout", 12)),
-        ),
     )

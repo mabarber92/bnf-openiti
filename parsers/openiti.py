@@ -150,7 +150,8 @@ def _decompose_uri(uri: str) -> tuple[Optional[int], Optional[str], Optional[str
 class OpenITIAuthorData:
     uri: str
     death_year_ah:  Optional[int] = None
-    # Arabic name components — all may be absent
+    name_slug:      Optional[str] = None  # CamelCase slug from URI (e.g. "NasirDinBaydawi")
+    # Arabic name components from YML — all may be absent
     name_shuhra_ar: Optional[str] = None  # "known as" name — most useful for matching
     name_ism_ar:    Optional[str] = None  # personal name
     name_kunya_ar:  Optional[str] = None  # teknonym (Abū...)
@@ -158,6 +159,14 @@ class OpenITIAuthorData:
     name_nasab_ar:  Optional[str] = None  # patronymic chain (b. X b. Y...)
     name_nisba_ar:  Optional[str] = None  # relational adjective (al-Baṣrī etc.)
     wikidata_id:    Optional[str] = None
+    # Wikidata enrichment — populated by enrich_wikidata.py; absent until that stage runs
+    wd_label_ar:    Optional[str]  = None
+    wd_label_en:    Optional[str]  = None
+    wd_aliases_ar:  list[str]      = field(default_factory=list)
+    wd_aliases_en:  list[str]      = field(default_factory=list)
+    wd_death_year:  Optional[int]  = None
+    wd_fetched_at:  Optional[str]  = None
+    wd_error:       Optional[str]  = None
 
 
 @dataclass
@@ -179,7 +188,7 @@ class OpenITIBookData:
 class OpenITIVersionData:
     uri:      str
     book_uri: str              # parent book URI (all but last dot-component)
-    links:    list[str] = field(default_factory=list)  # WorldCat, edition URLs
+    links:    list[str] = field(default_factory=list)  # edition/catalogue URLs
 
 
 # ---------------------------------------------------------------------------
@@ -272,7 +281,7 @@ class OpenITIAuthorYml(OpenITIYml):
         if not self.uri:
             raise ValueError(f"No URI found in {self.path}")
 
-        death_year_ah, _, _ = _decompose_uri(self.uri)
+        death_year_ah, name_slug, _ = _decompose_uri(self.uri)
 
         extid_raw     = self._get("EXTID") or ""
         wikidata_match = _WIKIDATA_RE.search(extid_raw)
@@ -280,6 +289,7 @@ class OpenITIAuthorYml(OpenITIYml):
         return OpenITIAuthorData(
             uri           = self.uri,
             death_year_ah = death_year_ah,
+            name_slug     = name_slug,
             name_shuhra_ar = self._get("SHUHRA"),
             name_ism_ar    = self._get("ISM"),
             name_kunya_ar  = self._get("KUNYA"),

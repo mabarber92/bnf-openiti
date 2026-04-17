@@ -20,9 +20,8 @@ The pipeline is split into two tracks:
 1. Copy `config.example.yml` → `config.yml` and fill in your local paths:
 
 ```yaml
-bnf_data_path:     /path/to/BNF_data      # OAI-PMH XML files
-openiti_data_path: /path/to/OpenITI_data
-pipeline_out_dir:  outputs                 # relative or absolute
+bnf_data_path:    /path/to/BNF_data   # OAI-PMH XML files
+pipeline_out_dir: outputs              # relative or absolute
 ```
 
 2. Install dependencies:
@@ -40,9 +39,9 @@ pip install -r requirements.txt
 ```
 ── OpenITI preparation (one-off per corpus version; outputs committed to repo) ──
 
-Stage 1  parse OpenITI    →  data/openiti_parsed_<version>.json    [not yet implemented]
+Stage 1  parse OpenITI    →  data/openiti_<version>.json   (structural parse)
          ↓
-Stage 2  enrich WorldCat  →  data/openiti_worldcat_<version>.json  [optional]
+Stage 2  enrich Wikidata  →  data/openiti_<version>.json   (wd_* fields added in-place)
 
 ── Manuscript library preparation (per collection) ──────────────────────────────
 
@@ -67,109 +66,103 @@ Stage 7  cluster/resolve  →  outputs/resolutions.json               [not yet i
 
 ## Stage 1 — Parse OpenITI
 
-**Not yet implemented** — will produce `data/openiti_parsed_<corpus_version>.json`
-and be committed to the repo.
-
----
-
-## Stage 2 — WorldCat enrichment (optional)
-
-> **Most users:** check `data/` for an existing
-> `openiti_worldcat_<corpus_version>.json`.  If it is present, skip to
-> **Update** below.  The file is committed to the repo so you should not
-> need to run `build` unless you are working with a new corpus version.
-
-**Why it exists:**  
-Only ~13 % of OpenITI book YMLs have a `TITLEA` field.  The remaining
-87 % carry only a CamelCase URI slug (e.g. `DalalatHairin`).  WorldCat
-provides Arabic-script titles and ALA-LC transliterations for ~18 % of
-books, improving Arabic-script matching coverage for that subset.
-
----
+> **Most users:** check `data/` for an existing `openiti_<corpus_version>.json`.
+> If present, both stages are already done — skip to Stage 3.
+> The file is committed to the repo; you only need to run Stages 1–2 for a
+> new corpus version.
 
 ### Build (first-time / new corpus version)
 
 ```bash
-python utils/enrich_worldcat.py build
-python utils/enrich_worldcat.py build --delay 2.0   # more conservative
+python utils/parse_openiti.py build --dir /path/to/corpus_2025_1_9
 ```
 
-Fetches WorldCat data for all ~1,300 books with OCLC links in the current
-corpus.  At 1 req/s this takes ~25 minutes.  Safe to interrupt — re-running
-resumes from where it stopped.  Commit the output to `data/` once complete.
+Walks the corpus directory recursively, parses every `.yml` file, and writes
+`data/openiti_<version>.json`.  Typical corpus (~10,000 books) completes in
+under a minute.  **Run Stage 2 immediately after** — do not commit the file
+until both stages are complete.
 
----
-
-### Update (after a corpus version bump or new YML links)
+### Update (after a corpus version bump)
 
 ```bash
-python utils/enrich_worldcat.py update
+python utils/parse_openiti.py update --dir /path/to/corpus_2025_1_9
 ```
 
-Loads the existing enrichment file and fetches **only**:
-- Books not yet in the file (new OCLC links added in a corpus update)
-- Books whose OCLC ID in the YML has changed since last fetch
+Re-parses the full corpus and overwrites the output file.  Remember to also
+bump `corpus_version` in `openiti.yml` before running, then run Stage 2.
 
-The stored `oclc_id` per record is the canonical change key — if it
-matches the current YML link, no fetch is made even if the previous fetch
-errored.  To retry errors for a specific book, remove that URI from the
-JSON and re-run `update`.
+**Output file:** `data/openiti_<corpus_version>.json`  
+Shared with Stage 2 — Stage 1 writes the structural skeleton; Stage 2 adds
+`wd_*` fields to author records in-place.  Commit the file after both stages.
 
 ---
 
-**Rate limiting:**  
-Default: 1 req/s.  Do not set `--delay` below 1.0.  The User-Agent
-header identifies this as a research tool.
+## Stage 2 — Wikidata enrichment (optional)
 
-**Output:**
+> **Most users:** check `data/` for an existing
+> `openiti_wikidata_<corpus_version>.json`.  If present, skip to Stage 3.
+> The file is committed to the repo — you only need to run this if you are
+> working with a new corpus version.
 
-| file | contents |
-|---|---|
-| `data/openiti_worldcat_<corpus_version>.json` | WorldCat title/author data keyed by book URI; committed to repo |
+**Why it exists:**  
+~48 % of OpenITI authors carry a verified Wikidata QID in their YML `EXTID`
+field.  Wikidata provides Arabic-script name labels and English
+transliteration aliases beyond what the YML contains, improving author-name
+matching coverage for that subset.  The Wikidata SPARQL endpoint is fully
+open and explicitly supports programmatic access.
 
-**Output format:**
+### Build (first-time / new corpus version)
 
-```json
-{
-  "_meta": {
-    "schema_version": 1,
-    "corpus_version": "corpus_2025_1_9",
-    "generated_at": "...",
-    "total_records": 1283,
-    "total_fetched": 1278,
-    "total_failed": 5
-  },
-  "records": {
-    "0110HasanBasri.FadailMakka": {
-      "oclc_id":          "8850761",
-      "title_ar":         "فضائل مكة والسكن فيها",
-      "title_lat":        null,
-      "author_names_ar":  ["الحسن البصري", "حسن البصري"],
-      "author_names_lat": ["Ḥasan al-Baṣrī"],
-      "language":         "ara",
-      "fetched_at":       "..."
-    },
-    "0601MusaIbnMaymun.DalalatHairin": {
-      "oclc_id":    "...",
-      "error":      "HTTP 404: Not Found",
-      "fetched_at": "..."
-    }
-  }
-}
+```bash
+python utils/enrich_wikidata.py build
 ```
 
-Records with an `"error"` key are retained so `update` skips them unless
-the OCLC ID changes.
+Reads `data/openiti_<corpus_version>.json` (created by Stage 1), batches
+~1,700 author QIDs into 5 SPARQL queries, and writes `wd_*` fields directly
+into each author record.  Typically completes in under two minutes.  Safe to
+resume — already-enriched authors are skipped.
+
+### Update (after a corpus version bump)
+
+```bash
+python utils/enrich_wikidata.py update
+```
+
+Re-fetches only authors whose QID has changed since the last enrichment.
+
+**Output:** updates `data/openiti_<corpus_version>.json` in-place.
+
+**Author record after Stage 2:**
+
+```json
+"0110HasanBasri": {
+  "uri": "0110HasanBasri",
+  "death_year_ah": 110,
+  "name_slug": "HasanBasri",
+  "name_shuhra_ar": "al-Ḥasan al-Baṣrī",
+  "name_ism_ar": "al-Ḥasan",
+  "name_kunya_ar": "Abū Saʿīd",
+  "name_nasab_ar": "b. Yasār",
+  "name_nisba_ar": "al-Baṣrī",
+  "wikidata_id": "Q293500",
+  "wd_label_ar":   "الحسن البصري",
+  "wd_label_en":   "Hasan al-Basri",
+  "wd_aliases_ar": ["حسن البصري", "الحسن البصرى"],
+  "wd_aliases_en": ["Hasan of Basra", "al-Ḥasan al-Baṣrī"],
+  "wd_death_year": 728,
+  "wd_fetched_at": "..."
+}
+```
 
 **Loading in downstream stages:**
 
 ```python
-from utils.enrich_worldcat import load_worldcat_enrichment
+from utils.parse_openiti import load_openiti_corpus
 
-wc = load_worldcat_enrichment("data/openiti_worldcat_corpus_2025_1_9.json")
-rec = wc.get("0110HasanBasri.FadailMakka")
-if rec and not rec.get("error"):
-    arabic_title = rec["title_ar"]   # "فضائل مكة والسكن فيها"
+books, authors = load_openiti_corpus("data/openiti_corpus_2025_1_9.json")
+author = authors.get("0110HasanBasri")
+print(author.wd_label_ar)    # "الحسن البصري"
+print(author.wd_aliases_en)  # ["Hasan of Basra", ...]
 ```
 
 ---
@@ -413,7 +406,7 @@ before overwriting.
    (e.g. `outputs/new_collection_survey/`) so artifacts are not overwritten.
 3. Run Stage 3 (survey build) → review → Stage 4 (apply-review) → Stage 5 (parse).
 4. The `boilerplate.json` produced is independent of any other collection.
-5. Stages 1–2 (OpenITI parse and WorldCat enrichment) do **not** need to be
+5. Stages 1–2 (OpenITI parse and Wikidata enrichment) do **not** need to be
    repeated — the committed `data/` files are reused directly.
 
 ---
@@ -428,11 +421,11 @@ before overwriting.
 | `utils/config.py` | yes | typed config loader; all defaults defined here |
 | `utils/tokens.py` | yes | shared tokenisation (Latin + Arabic) |
 | `utils/survey_bnf.py` | yes | BNF survey pipeline: `build` and `apply-review` subcommands |
-| `utils/enrich_worldcat.py` | yes | WorldCat enrichment: `build` and `update` subcommands |
+| `utils/parse_openiti.py` | yes | OpenITI parse script: `build` and `update` subcommands |
+| `utils/enrich_wikidata.py` | yes | Wikidata enrichment: `build` and `update` subcommands |
 | `parsers/bnf.py` | yes | BNF XML parser: `BNFXml`, `BNFMetadata`, `BNFRecord` |
 | `parsers/openiti.py` | yes | OpenITI YML parser: `OpenITIMetaYmls`, `OpenITIBookData`, etc. |
-| `data/openiti_worldcat_<version>.json` | yes | WorldCat enrichment; committed, version-stamped |
-| `data/openiti_parsed_<version>.json` | yes (planned) | Parsed OpenITI corpus; committed, version-stamped |
+| `data/openiti_<version>.json` | yes | Parsed corpus + Wikidata enrichment; single source of truth; committed |
 | `outputs/bnf_survey/summary.json` | no | field coverage report |
 | `outputs/bnf_survey/ngrams.json` | no | full n-gram vocabulary (~250 MB for 7,825 records) |
 | `outputs/bnf_survey/boilerplate_review.csv` | no | manual review artifact |
