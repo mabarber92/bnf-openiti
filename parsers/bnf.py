@@ -115,6 +115,11 @@ NS = {
 # Creator name cleaning
 # Role suffixes and parenthetical dates are stripped to leave the name only.
 # ---------------------------------------------------------------------------
+# 654/7825 BNF XML files claim UTF-8 but store Š (0x8A) and š (0x9A) as CP1252
+# single bytes.  Python's XML parser yields these as U+008A / U+009A (C1
+# control characters).  Remap them to the correct Unicode codepoints.
+_C1_FIX = str.maketrans({"\x8a": "\u0160", "\x9a": "\u0161"})  # Š / š
+
 _ROLE_RE = re.compile(
     r"\.\s*("
     r"Auteur du texte|Copiste|Ancien possesseur|Traducteur"
@@ -460,7 +465,7 @@ class BNFXml:
     def __init__(
         self,
         path: str,
-        relation_terms: dict[str, str] | None = None,
+        relation_terms: dict[str, tuple[str, str | None]] | None = None,
         boilerplate_ngrams: dict[str, frozenset[str]] | None = None,
     ) -> None:
         self.path                 = Path(path)
@@ -484,7 +489,7 @@ class BNFXml:
 
         def texts(field_name: str) -> list[str]:
             return [
-                (el.text or "").strip()
+                (el.text or "").strip().translate(_C1_FIX)
                 for el in elements.get(field_name, [])
                 if (el.text or "").strip()
             ]
@@ -644,10 +649,11 @@ class BNFXml:
     def _detect_relations(
         self, fields: dict[str, list[str]]
     ) -> list[DetectedRelation]:
-        """Search all text fields for configured relation patterns.
+        """Search text fields for configured relation patterns.
 
-        Returns one DetectedRelation per match. The same term can match
-        multiple times across different fields or elements.
+        relation_terms maps pattern → (signal_type, field_constraint).
+        When field_constraint is set, the pattern is only searched in that
+        field.  None means search all fields.
         """
         if not self.relation_terms:
             return []
@@ -655,7 +661,12 @@ class BNFXml:
         results: list[DetectedRelation] = []
         for field_name, values in fields.items():
             full_text = " ".join(values)
-            for pattern, relation_type in self.relation_terms.items():
+            for pattern, (relation_type, field_constraint) in self.relation_terms.items():
+                # Only restrict when the signal came from a searchable field
+                # (title/description). Signals sourced from creator/subject etc.
+                # can validly appear in any text field, so don't filter them.
+                if field_constraint in ("title", "description") and field_constraint != field_name:
+                    continue
                 for m in re.finditer(re.escape(pattern), full_text, re.IGNORECASE):
                     start = max(0, m.start() - 40)
                     end   = min(len(full_text), m.end() + 80)

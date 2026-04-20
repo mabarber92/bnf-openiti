@@ -113,9 +113,12 @@ def _load_boilerplate(boilerplate_path: Path) -> tuple[dict, list[dict]]:
     return bp_ngrams, signals
 
 
-def _signals_to_relation_terms(signals: list[dict]) -> dict[str, str]:
-    """Convert signal entries to the {pattern: signal_type} dict BNFXml expects."""
-    return {entry["ngram"]: entry["signal_type"] for entry in signals}
+def _signals_to_relation_terms(signals: list[dict]) -> dict[str, tuple[str, str | None]]:
+    """Convert signal entries to the {pattern: (signal_type, field_constraint)} dict BNFXml expects."""
+    return {
+        entry["ngram"]: (entry["signal_type"], entry.get("field"))
+        for entry in signals
+    }
 
 
 def _write_output(
@@ -309,8 +312,8 @@ def sample(n: int = 50, seed: int | None = None) -> None:
     print(f"With desc candidates: {stats['with_desc_cands']} / {total}")
     print(f"With relations:       {stats['with_relations']} / {total}")
 
-    # Print a few example matching_data() outputs
-    print("\n--- Example records ---")
+    # Print full record details for example records
+    print("\n--- Example records (full detail) ---")
     shown = 0
     for path in chosen:
         if shown >= 5:
@@ -325,14 +328,30 @@ def sample(n: int = 50, seed: int | None = None) -> None:
             md = r.matching_data()
             if not (md["lat"] or md["ar"]):
                 continue
-            print(f"\n{r.bnf_id}  signal_count={r.signal_count}  "
-                  f"composite={r.is_composite}")
-            print(f"  lat: {md['lat'][:4]}")
-            print(f"  ar:  {md['ar'][:3]}")
+            print(f"\n{'='*60}")
+            print(f"ID:          {r.bnf_id}")
+            print(f"signal_count={r.signal_count}  composite={r.is_composite}")
+            print(f"title_lat:   {r.title_lat!r}")
+            print(f"title_ar:    {r.title_ar!r}")
+            print(f"creator_lat: {r.creator_lat!r}")
+            print(f"creator_ar:  {r.creator_ar!r}")
+            print(f"subject:     {r.subject}")
+            print(f"copy_date:   {r.copy_date_raw!r}  from={r.date_from}  to={r.date_to}")
+            if r.description_candidates:
+                print(f"desc_cands ({len(r.description_candidates)}):")
+                for cand in r.description_candidates:
+                    print(f"  {cand!r}")
             if r.detected_relations:
-                for rel in r.detected_relations[:2]:
-                    print(f"  relation: {rel.signal_type if hasattr(rel, 'signal_type') else rel.relation_type}"
-                          f" via '{rel.matched_term}'")
+                print(f"relations ({len(r.detected_relations)}):")
+                for rel in r.detected_relations:
+                    st = rel.relation_type
+                    print(f"  [{st}] term={rel.matched_term!r}  context={rel.context!r}")
+            print(f"matching lat ({len(md['lat'])}):")
+            for item in md["lat"]:
+                print(f"  {item!r}")
+            print(f"matching ar  ({len(md['ar'])}):")
+            for item in md["ar"]:
+                print(f"  {item!r}")
             shown += 1
         except Exception:
             pass
