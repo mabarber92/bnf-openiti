@@ -90,6 +90,8 @@ from pathlib import Path
 from typing import Optional
 from xml.etree import ElementTree as ET
 
+from tqdm import tqdm
+
 logger = logging.getLogger(__name__)
 
 # Ensure project root is on sys.path when parsers/ is used outside the package.
@@ -914,7 +916,8 @@ class BNFMetadata:
         self._load(directory, glob)
 
     def _load(self, directory: str, glob: str) -> None:
-        for path in sorted(Path(directory).glob(glob)):
+        paths = sorted(Path(directory).glob(glob))
+        for path in tqdm(paths, desc="Parsing BNF XML files", unit="file"):
             try:
                 xml = BNFXml(
                     str(path),
