@@ -179,8 +179,8 @@ def _book_merge(
         death_year_ah=tsv_book.death_year_ah or (yml_book.death_year_ah if yml_book else None),
         author_slug=tsv_book.author_slug,
         title_slug=tsv_book.title_slug,
-        title_a=tsv_book.title_a or (yml_book.title_a if yml_book else None),
-        title_b=tsv_book.title_b or (yml_book.title_b if yml_book else None),
+        title_lat=tsv_book.title_lat or (yml_book.title_lat if yml_book else None),
+        title_ara=tsv_book.title_ara or (yml_book.title_ara if yml_book else None),
         # For IDs, try YML if TSV doesn't have them
         wikidata_id=tsv_book.wikidata_id or (yml_book.wikidata_id if yml_book else None),
         viaf_id=tsv_book.viaf_id or (yml_book.viaf_id if yml_book else None),
@@ -393,7 +393,7 @@ def load_openiti_corpus(
         )
         book = books.get("0685NasirDinBaydawi.AnwarTanzil")
         if book:
-            print(book.title_a, book.death_year_ah)
+            print(book.title_lat, book.death_year_ah)
     """
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     books   = {uri: _book_from_dict(d)   for uri, d in data.get("books",   {}).items()}

@@ -177,8 +177,8 @@ class OpenITIBookData:
     death_year_ah:  Optional[int] = None  # parsed from URI prefix
     author_slug:    Optional[str] = None  # e.g. "NasirDinBaydawi"
     title_slug:     Optional[str] = None  # e.g. "AnwarTanzil"
-    title_a:        Optional[str] = None  # TITLEA (transliterated)
-    title_b:        Optional[str] = None  # TITLEB
+    title_lat:      Optional[str] = None  # Latin/transliterated title
+    title_ara:      Optional[str] = None  # Arabic title
     wikidata_id:    Optional[str] = None
     viaf_id:        Optional[str] = None
     # Populated after loading by OpenITIMetaYmls._attach_version_links()
@@ -326,8 +326,8 @@ class OpenITIBookYml(OpenITIYml):
             death_year_ah = death_year_ah,
             author_slug   = author_slug,
             title_slug    = title_slug,
-            title_a       = self._get("TITLEA"),
-            title_b       = self._get("TITLEB"),
+            title_lat     = self._get("TITLEA"),
+            title_ara     = self._get("TITLEB"),
             wikidata_id   = wikidata_match.group(1) if wikidata_match else None,
             viaf_id       = viaf_match.group(1) if viaf_match else None,
         )
@@ -499,8 +499,8 @@ class OpenITITSV:
                 death_year_ah=death_year_ah,
                 author_slug=author_slug,
                 title_slug=title_slug,
-                title_a=book_fields["title_lat"],
-                title_b=book_fields["title_ar"],
+                title_lat=book_fields["title_lat"],
+                title_ara=book_fields["title_ar"],
             )
 
         # Build author records from aggregated data
