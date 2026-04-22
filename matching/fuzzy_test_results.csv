@@ -1,0 +1,14 @@
+test_case,category,query,target,expected_match,score_ratio,score_partial,score_token_sort,score_token_set,match_0.7,match_0.75,match_0.8,match_0.85,match_0.9,correct_0.7,correct_0.75,correct_0.8,correct_0.85,correct_0.9
+OAI_11000434 → 0685NasirDinBaydawi.AnwarTanzil (Latin title),known_correspondence_lat,ʿABD ALLĀH IBN ʿUMAR AL-BAYḌĀWĪ. Anwār al-tanzīl wa-asrār al-taʾwīl (Coran I-XVIII).,Anwar Tanzil,True,19,58,24,26,True,True,True,True,True,True,True,True,True,True
+OAI_10030933 → 0660IbnCadim.BughyatTalab (Latin title),known_correspondence_lat,"Al-dourr al-mountakhab fi taʾrikh Halab, supplément, contenant les biographies des hommes célèbres d'Alep, depuis 658 de l'hégire, par Ala al-Din Aboul-Hasan Ali ibn Mohammad al-Djibrini ibn Khatib al-Nasiriyya, au Boughiat al-talab fi taʾrikh Halab, par Kamal al-Din Aboul-Qāsim Omar ibn Ahmad ibn al-ʿAdim.",Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,True,12,63,12,15,True,True,True,True,True,True,True,True,True,True
+OAI_10884186 → 0732AbuFida.MukhtasarFiAkhbar (Latin title),known_correspondence_lat,Maǧmūʿ min al-tawārīẖ al-qadīma al-islāmiyya.,al-Muḫtaṣar fī aḫbār al-bašar,True,38,45,44,38,True,True,True,True,True,True,True,True,True,True
+OAI_11001068 → 0697IbnWasil.MufarrijKurub (Latin title),known_correspondence_lat,Muḥammad ibn Sālim Ğamāl al-Dīn Ibn Wāṣil al-Ḥamawī. Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb.,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,True,54,81,55,86,True,True,True,True,True,True,True,True,True,True
+Diacritic: ā vs a,diacritic_macron,Kitab al-Tabari,Kitab al-Ṭabarī,True,87,87,87,87,True,True,True,True,True,True,True,True,True,True
+Diacritic: ṣ vs s,diacritic_underscore,Sacd al-Suud,Ṣaʿd al-Suʿud,True,80,83,56,56,True,True,True,True,True,True,True,True,True,True
+Word order: preserved,word_order_same,Anwar al-Tanzil wa-Asrar al-Tawil,Anwar al-Tanzil wa-Asrar al-Tawil,True,100,100,100,100,True,True,True,True,True,True,True,True,True,True
+Word order: reversed subtitle,word_order_different,Anwar al-Tanzil wa-Asrar al-Tawil,Asrar al-Tawil wa-Anwar al-Tanzil,False,79,79,100,100,True,True,True,True,True,False,False,False,False,False
+Hyphenation: wa- vs wa ,hyphenation,Kitab wa Risala,Kitab wa-Risala,True,93,93,100,100,True,True,True,True,True,True,True,True,True,True
+Hyphenation: al- vs al ,hyphenation_article,al Fihrist,al-Fihrist,True,90,90,100,100,True,True,True,True,True,True,True,True,True,True
+Case: capitalization,case_variation,AL-TABARI,al-Tabari,True,22,22,100,100,True,True,True,True,True,True,True,True,True,True
+Ayn variant: C vs ʿ,ayn_variant,Cabd al-Rahman,ʿAbd al-Rahman,False,86,86,64,93,True,True,True,True,True,False,False,False,False,False
+Substring match,substring,Fihrist,al-Fihrist al-Nadim,True,54,100,54,100,True,True,True,True,True,True,True,True,True,True
