@@ -51,6 +51,8 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from tqdm import tqdm
+
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -151,13 +153,13 @@ def _merge_tsv_yml(
     merged.versions = tsv_corpus.versions.copy()
 
     # Merge books: TSV primary, YML supplementary
-    for book_uri, tsv_book in tsv_corpus.books.items():
+    for book_uri, tsv_book in tqdm(tsv_corpus.books.items(), desc="Merging books", unit="book", leave=False):
         yml_book = yml_corpus.books.get(book_uri)
         merged_book = _book_merge(tsv_book, yml_book)
         merged.books[book_uri] = merged_book
 
     # Merge authors: TSV primary, YML supplementary (especially wikidata_id)
-    for author_uri, tsv_author in tsv_corpus.authors.items():
+    for author_uri, tsv_author in tqdm(tsv_corpus.authors.items(), desc="Merging authors", unit="author", leave=False):
         yml_author = yml_corpus.authors.get(author_uri)
         merged_author = _author_merge(tsv_author, yml_author)
         merged.authors[author_uri] = merged_author
@@ -262,7 +264,7 @@ def _write_output(
 
     # Build author output with preserved wikidata fields
     authors_output = {}
-    for uri, author in corpus.authors.items():
+    for uri, author in tqdm(corpus.authors.items(), desc="Serializing authors", unit="author", leave=False):
         author_dict = _author_to_dict(author)
         # Preserve wikidata enrichment if it exists
         if uri in existing_authors:

@@ -34,6 +34,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from tqdm import tqdm
+
 logger = logging.getLogger(__name__)
 
 
@@ -463,7 +465,7 @@ class OpenITITSV:
         books_data: dict[str, dict[str, str]] = {}  # book_uri → aggregated fields
         authors_data: dict[str, dict[str, str]] = {}  # author_uri → aggregated fields
 
-        for row in rows:
+        for row in tqdm(rows, desc="Aggregating TSV data", unit="version", leave=False):
             if not row.version_uri:
                 continue
 
@@ -551,7 +553,8 @@ class OpenITIMetaYmls:
         self._attach_version_links()
 
     def _load(self, directory: str) -> None:
-        for path in sorted(Path(directory).rglob("*.yml")):
+        yml_files = sorted(Path(directory).rglob("*.yml"))
+        for path in tqdm(yml_files, desc="Loading OpenITI YML files", unit="file", leave=False):
             try:
                 yml = parse_openiti_yml(str(path))
                 if not yml.uri:

@@ -52,6 +52,8 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from tqdm import tqdm
+
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -188,7 +190,7 @@ def build(output_path: str | None = None) -> Path:
     metadata = BNFMetadata(str(data_path), **_bnfxml_kwargs(cfg, relation_terms, bp_ngrams))
     print(metadata)
 
-    records = {r.bnf_id: _record_to_dict(r) for r in metadata}
+    records = {r.bnf_id: _record_to_dict(r) for r in tqdm(metadata, desc="Parsing BNF records", unit="record")}
     _write_output(
         out_path,
         records,
@@ -242,7 +244,7 @@ def update(output_path: str | None = None) -> Path:
     failed: list[dict] = []
 
     kwargs = _bnfxml_kwargs(cfg, relation_terms, bp_ngrams)
-    for path in pending:
+    for path in tqdm(pending, desc="Parsing new BNF records", unit="record"):
         try:
             xml = _bnf.BNFXml(str(path), **kwargs)
             new_records[xml.record.bnf_id] = _record_to_dict(xml.record)
@@ -296,7 +298,7 @@ def sample(n: int = 50, seed: int | None = None, output_path: str | None = None)
              "with_title": 0, "with_desc_cands": 0, "with_relations": 0}
 
     kwargs = _bnfxml_kwargs(cfg, relation_terms, bp_ngrams)
-    for path in chosen:
+    for path in tqdm(chosen, desc="Sampling BNF records", unit="record", file=sys.stderr):
         try:
             xml = _bnf.BNFXml(str(path), **kwargs)
             r   = xml.record
