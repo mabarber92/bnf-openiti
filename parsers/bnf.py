@@ -355,6 +355,10 @@ class BNFRecord:
     description_candidates_lat: list[str] = field(default_factory=list)
     description_candidates_ar:  list[str] = field(default_factory=list)
 
+    # Labels for each description candidate, keyed by relation type or None if unlabeled
+    description_candidate_labels_lat: list[Optional[str]] = field(default_factory=list)
+    description_candidate_labels_ar:  list[Optional[str]] = field(default_factory=list)
+
     # Contributor (previous owners, copyists, etc.), dates and role suffixes stripped
     contributor_lat:    list[str] = field(default_factory=list)
     contributor_ar:     list[str] = field(default_factory=list)
@@ -534,8 +538,8 @@ class BNFXml:
         # Extract non-boilerplate segments from description strings as matching
         # candidates (potential titles / author names buried in dc:description).
         existing = set(title_lat + title_ar)
-        desc_cands_flat = self._extract_desc_segments(desc_lat + desc_ar, existing)
-        desc_cands_lat, desc_cands_ar = self._split_by_script(desc_cands_flat)
+        desc_cands_flat, desc_cands_labels = self._extract_desc_segments(desc_lat + desc_ar, existing)
+        desc_cands_lat, desc_cands_labels_lat, desc_cands_ar, desc_cands_labels_ar = self._split_by_script_labeled(desc_cands_flat, desc_cands_labels)
 
         # --- Other fields ---
         format_raw = texts("format")
@@ -572,6 +576,8 @@ class BNFXml:
             description_ar               = desc_ar,
             description_candidates_lat   = desc_cands_lat,
             description_candidates_ar    = desc_cands_ar,
+            description_candidate_labels_lat = desc_cands_labels_lat,
+            description_candidate_labels_ar  = desc_cands_labels_ar,
             contributor_lat         = contributor_lat,
             contributor_ar     = contributor_ar,
             format_raw         = format_raw,
@@ -592,46 +598,37 @@ class BNFXml:
         self,
         desc_texts: list[str],
         existing: set[str],
-    ) -> list[str]:
+    ) -> tuple[list[str], list[Optional[str]]]:
         """Extract non-boilerplate segments from description strings.
 
-        Two categories of phrase act as span masks:
+        Uses a two-pass algorithm:
+          1. Greedy longest-match-first signal matching (sizes 4→2)
+          2. Greedy longest-match-first boilerplate matching on remaining uncovered tokens
 
-        * Boilerplate n-grams (from boilerplate.json) — structural filler that
-          carries no matching signal.
-        * Signal phrases (from relation_terms) — phrases like "daté de" or
-          "lieu de copie" that mark structural metadata rather than titles or
-          names; they split the description without being useful candidates
-          themselves.
+        Between-phrase boundary extraction: each uncovered run uses the character
+        positions of adjacent covered phrases to determine its bounds, capturing
+        inter-token content (digits, punctuation) between marked phrases.
 
-        Covered tokens are removed and contiguous uncovered runs are extracted
-        as character-level substrings.  Matching uses a greedy longest-match-
-        first scan so that a short phrase that overlaps a longer one does not
-        create a spurious split inside the longer match.
-
-        A segment is kept when:
-          1. At least min_desc_tokens uncovered tokens form the run.
-          2. The extracted character span is within max_desc_len chars.
-
-        Segments already in *existing* (title_lat / title_ar) are skipped.
-
-        When neither boilerplate nor signals are loaded, falls back to
-        whole-string filtering (include strings ≤ max_desc_len as-is).
+        Returns (candidates, labels) — parallel lists where labels[i] is the
+        relation type for candidates[i], or None if unlabeled.
         """
         boilerplate = self._boilerplate_ngrams.get("description", frozenset())
-        # Signal phrases split descriptions just like boilerplate — they mark
-        # structural metadata (dates, locations, role labels) not matching data.
-        signal_phrases = frozenset(pat.lower() for pat in self.relation_terms)
-        splitters = boilerplate | signal_phrases
+        # Build signal phrase mapping: phrase (lowercased) → signal_type
+        signal_map: dict[str, str] = {}
+        for pattern, (signal_type, _) in self.relation_terms.items():
+            signal_map[pattern.lower()] = signal_type
+        signal_phrases = frozenset(signal_map.keys())
 
         seen = set(existing)
         candidates: list[str] = []
+        labels: list[Optional[str]] = []
 
         for text in desc_texts:
-            if not splitters:
+            if not (boilerplate or signal_phrases):
                 # No splitters available: include whole string up to max_desc_len
                 if len(text) <= self._max_desc_len and text not in seen:
                     candidates.append(text)
+                    labels.append(None)
                     seen.add(text)
                 continue
 
@@ -643,10 +640,9 @@ class BNFXml:
             tokens  = [t for t, _s, _e in tok_pos]
             n_tok   = len(tokens)
             covered = [False] * n_tok
+            signal_at: dict[int, str] = {}  # token_position → signal_type
 
-            # Greedy longest-match-first: at each position try sizes 4→2 and
-            # advance past the matched phrase so overlapping shorter phrases
-            # inside a longer match don't create additional split points.
+            # Pass 1: Greedy signal matching (priority, sizes 4→2)
             i = 0
             while i < n_tok:
                 matched = False
@@ -654,7 +650,35 @@ class BNFXml:
                     end = i + size
                     if end > n_tok:
                         continue
-                    if " ".join(tokens[i:end]) in splitters:
+                    phrase = " ".join(tokens[i:end])
+                    phrase_lower = phrase.lower()
+                    if phrase_lower in signal_phrases:
+                        for j in range(i, end):
+                            covered[j] = True
+                        # Track the signal type at the start of this covered span
+                        signal_type = signal_map[phrase_lower]
+                        signal_at[i] = signal_type
+                        i = end
+                        matched = True
+                        break
+                if not matched:
+                    i += 1
+
+            # Pass 2: Greedy boilerplate matching on remaining uncovered tokens
+            i = 0
+            while i < n_tok:
+                if covered[i]:
+                    i += 1
+                    continue
+                matched = False
+                for size in range(4, 1, -1):
+                    end = i + size
+                    if end > n_tok:
+                        continue
+                    # Skip if any token in range is already covered
+                    if any(covered[j] for j in range(i, end)):
+                        continue
+                    if " ".join(tokens[i:end]) in boilerplate:
                         for j in range(i, end):
                             covered[j] = True
                         i = end
@@ -663,42 +687,90 @@ class BNFXml:
                 if not matched:
                     i += 1
 
-            # Extract contiguous runs of uncovered tokens as character segments
+            # Extract contiguous runs of uncovered tokens using between-phrase boundaries
             run_start: int | None = None
             for i, c in enumerate(covered):
                 if not c and run_start is None:
                     run_start = i
                 elif c and run_start is not None:
-                    self._add_segment(text, tok_pos, run_start, i, seen, candidates)
+                    self._add_run(text, tok_pos, run_start, i, signal_at, seen, candidates, labels)
                     run_start = None
             if run_start is not None:
-                self._add_segment(text, tok_pos, run_start, n_tok, seen, candidates)
+                self._add_run(text, tok_pos, run_start, n_tok, signal_at, seen, candidates, labels)
 
-        return candidates
+        return candidates, labels
 
-    def _add_segment(
+    def _add_run(
         self,
         text: str,
         tok_pos: list[tuple[str, int, int]],
         run_start: int,
         run_end: int,
+        signal_at: dict[int, str],
         seen: set[str],
         candidates: list[str],
+        labels: list[Optional[str]],
     ) -> None:
-        """Extract one uncovered-token run as a segment and add to candidates."""
+        """Extract one uncovered-token run using between-phrase boundaries.
+
+        Between-phrase boundary extraction:
+          - char_start: end of preceding covered token (or 0 if no predecessor)
+          - char_end: start of next covered token (or len(text) if no successor)
+
+        Label assignment: find the nearest signal before and after the run.
+        A run is labeled with a signal if it directly follows or precedes it
+        (separated only by other covered tokens). When signals exist on both
+        sides, both labels should be captured.
+        """
         if run_end - run_start < self._min_desc_tokens:
             return
-        char_start = tok_pos[run_start][1]
-        char_end   = tok_pos[run_end - 1][2]
-        # Include trailing punctuation (closing parens, periods) up to next whitespace
-        while char_end < len(text) and not text[char_end].isspace():
-            char_end += 1
-        segment    = text[char_start:char_end].strip()
+
+        # Find character boundaries from adjacent covered tokens
+        if run_start > 0:
+            char_start = tok_pos[run_start - 1][2]  # end of preceding covered token
+        else:
+            char_start = 0
+
+        if run_end < len(tok_pos):
+            char_end = tok_pos[run_end][1]  # start of next covered token
+        else:
+            char_end = len(text)
+
+        # Strip leading/trailing whitespace
+        while char_start < char_end and text[char_start].isspace():
+            char_start += 1
+        while char_end > char_start and text[char_end - 1].isspace():
+            char_end -= 1
+
+        segment = text[char_start:char_end]
         if not segment or len(segment) > self._max_desc_len:
             return
-        if segment not in seen:
-            seen.add(segment)
-            candidates.append(segment)
+        if segment in seen:
+            return
+
+        # Label assignment: find the nearest signal before and after the run
+        label_before = None
+        label_after = None
+
+        # Look backward for the nearest signal (search from run_start-1 downward)
+        for i in range(run_start - 1, -1, -1):
+            if i in signal_at:
+                label_before = signal_at[i]
+                break
+
+        # Look forward for the nearest signal (search from run_end upward)
+        for i in range(run_end, len(tok_pos)):
+            if i in signal_at:
+                label_after = signal_at[i]
+                break
+
+        # Assign label: prefer single label, but if both exist, prioritize
+        # based on proximity (could be extended to store both in future)
+        label = label_before or label_after
+
+        seen.add(segment)
+        candidates.append(segment)
+        labels.append(label)
 
     @staticmethod
     def _parse_date_range(date_str: str) -> tuple[Optional[int], Optional[int]]:
@@ -758,6 +830,29 @@ class BNFXml:
         for v in values:
             (ar if _has_arabic(v) else lat).append(v)
         return lat, ar
+
+    @staticmethod
+    def _split_by_script_labeled(
+        values: list[str], labels: list[Optional[str]]
+    ) -> tuple[list[str], list[Optional[str]], list[str], list[Optional[str]]]:
+        """Partition candidates and labels into Latin and Arabic sublists.
+
+        Returns (lat_candidates, lat_labels, ar_candidates, ar_labels).
+        Mixed-script candidates go to the Arabic list (priority for harder-to-surface signal).
+        """
+        lat_cands: list[str] = []
+        lat_labs:  list[Optional[str]] = []
+        ar_cands:  list[str] = []
+        ar_labs:   list[Optional[str]] = []
+
+        for cand, label in zip(values, labels):
+            if _has_arabic(cand):
+                ar_cands.append(cand)
+                ar_labs.append(label)
+            else:
+                lat_cands.append(cand)
+                lat_labs.append(label)
+        return lat_cands, lat_labs, ar_cands, ar_labs
 
     @staticmethod
     def _extract_shelfmark(source: Optional[str]) -> Optional[str]:

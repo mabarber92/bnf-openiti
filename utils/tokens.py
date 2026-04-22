@@ -60,6 +60,12 @@ _ABBREV_RE = re.compile(
 # Plain letter-run: one or more consecutive Latin-range letters
 _WORD_RE = re.compile(rf"{_LAT_LETTERS}+")
 
+# Digit sequences (numerals)
+_NUM_RE = re.compile(r"\d+")
+
+# Combined token pattern: either letters or digits (for efficient findall/finditer)
+_TOKEN_RE = re.compile(rf"(?:{_LAT_LETTERS}+|\d+)")
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -76,16 +82,17 @@ def has_latin(text: str) -> bool:
 
 
 def tokenize_lat(text: str, keep_abbrev_dots: bool = False) -> list[str]:
-    """Tokenise Latin-script text into lowercase word tokens.
+    """Tokenise Latin-script text into lowercase word tokens and digit sequences.
 
     Covers ASCII Latin, extended Latin (accented characters), and the
     precomposed Latin Extended Additional block used in ALA-LC transliteration
-    (ā, ī, ū, ḍ, ṣ, ḥ, etc.).  Tokens shorter than 2 characters are dropped.
+    (ā, ī, ū, ḍ, ṣ, ḥ, etc.). Includes numeric sequences (e.g., years, folio
+    numbers). Tokens shorter than 2 characters are dropped.
 
     Parameters
     ----------
     text : str
-        Raw input string (any mixture of scripts; only Latin tokens extracted).
+        Raw input string (any mixture of scripts; only Latin and numeric tokens extracted).
     keep_abbrev_dots : bool
         When True, tokens of 1–4 letters immediately followed by a period
         (abbreviation pattern, e.g. "Cf.", "ms.", "no.") are emitted with the
@@ -99,7 +106,7 @@ def tokenize_lat(text: str, keep_abbrev_dots: bool = False) -> list[str]:
         while pos < len(text_lower):
             abbrev = _ABBREV_RE.match(text_lower, pos)
             if abbrev:
-                tokens.append(abbrev.group(0))   # e.g. "cf."
+                tokens.append(abbrev.group(0))
                 pos = abbrev.end()
                 continue
             word = _WORD_RE.match(text_lower, pos)
@@ -109,26 +116,39 @@ def tokenize_lat(text: str, keep_abbrev_dots: bool = False) -> list[str]:
                     tokens.append(t)
                 pos = word.end()
                 continue
+            num = _NUM_RE.match(text_lower, pos)
+            if num:
+                n = num.group(0)
+                if len(n) >= 2:
+                    tokens.append(n)
+                pos = num.end()
+                continue
             pos += 1
     else:
-        tokens = [t for t in _WORD_RE.findall(text_lower) if len(t) >= 2]
+        tokens = [t for t in _TOKEN_RE.findall(text_lower) if len(t) >= 2]
     return tokens
 
 
 def tokenize_ar(text: str) -> list[str]:
-    """Tokenise Arabic-script text into word tokens.
+    """Tokenise Arabic-script text into word tokens and digit sequences.
 
     Arabic particles (و، في، من …) are kept — they form meaningful n-gram
-    components for BNF description phrases.
+    components for BNF description phrases. Numeric sequences (years, folio
+    numbers) are also included.
     """
-    return re.findall(
-        r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+",
-        text,
-    )
+    tokens = []
+    for m in _AR_RE.finditer(text):
+        t = m.group(0)
+        if t[0].isdigit():
+            if len(t) >= 2:
+                tokens.append(t)
+        else:
+            tokens.append(t)
+    return tokens
 
 
 _AR_RE = re.compile(
-    r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+"
+    r"(?:[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+|\d+)"
 )
 
 
@@ -157,9 +177,16 @@ def tokenize_lat_pos(
                     result.append((t, pos, word.end()))
                 pos = word.end()
                 continue
+            num = _NUM_RE.match(text_lower, pos)
+            if num:
+                n = num.group(0)
+                if len(n) >= 2:
+                    result.append((n, pos, num.end()))
+                pos = num.end()
+                continue
             pos += 1
     else:
-        for m in _WORD_RE.finditer(text_lower):
+        for m in _TOKEN_RE.finditer(text_lower):
             t = m.group(0)
             if len(t) >= 2:
                 result.append((t, m.start(), m.end()))
@@ -168,7 +195,15 @@ def tokenize_lat_pos(
 
 def tokenize_ar_pos(text: str) -> list[tuple[str, int, int]]:
     """Like tokenize_ar but returns (token, start, end) character-offset tuples."""
-    return [(m.group(0), m.start(), m.end()) for m in _AR_RE.finditer(text)]
+    result = []
+    for m in _AR_RE.finditer(text):
+        t = m.group(0)
+        if t[0].isdigit():
+            if len(t) >= 2:
+                result.append((t, m.start(), m.end()))
+        else:
+            result.append((t, m.start(), m.end()))
+    return result
 
 
 def make_ngrams(tokens: list[str], n: int) -> list[str]:
