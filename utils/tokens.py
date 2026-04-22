@@ -14,7 +14,9 @@ Exports
     has_arabic          — True if text contains any Arabic-script character
     has_latin           — True if text contains any basic Latin letter
     tokenize_lat        — Latin-script word tokeniser (with optional abbrev-dot mode)
+    tokenize_lat_pos    — Like tokenize_lat but returns (token, start, end) tuples
     tokenize_ar         — Arabic-script word tokeniser
+    tokenize_ar_pos     — Like tokenize_ar but returns (token, start, end) tuples
     make_ngrams         — Produce a list of n-gram strings from a token list
     split_camel         — Split a CamelCase OpenITI URI slug into word tokens
     normalise_ayn       — Normalise Unicode ʿayn variants to canonical ʿ (U+02BF)
@@ -41,18 +43,18 @@ _LATIN_RE = re.compile(r"[A-Za-z]")
 # Latin tokenisation patterns
 # ---------------------------------------------------------------------------
 
-# Character class covering ASCII + extended Latin (accented) + Latin Extended
-# Additional (ALA-LC transliteration: ā, ī, ū, ḍ, ṣ, ḥ, …) +
-# Spacing Modifier Letters block (superscript letters used in some transliterations)
-_LAT_LETTERS = r"[a-zA-ZÀ-ÖØ-öø-ÿ\u02b0-\u02ff\u1e00-\u1eff]"
+# Character class covering ASCII + extended Latin (accented) +
+# Latin Extended-A/B (U+0100–U+024F: macron letters ā Ā ī Ī ū Ū, etc.) +
+# Latin Extended Additional (U+1E00–U+1EFF: ALA-LC dotted letters ḥ ṭ ṣ …) +
+# Spacing Modifier Letters (U+02B0–U+02FF: superscript letters in some romanisations)
+_LAT_LETTERS = r"[a-zA-ZÀ-ÖØ-öø-ÿ\u0100-\u024f\u02b0-\u02ff\u1e00-\u1eff]"
 
 # Matches an abbreviation: 1–4 letter-chars immediately followed by a period
 # that is NOT itself followed by another letter.  This lets "cf." and "ms."
 # be captured with their dot while sentence-ending periods are ignored.
 # "e.g." produces "e." and "g." separately — acceptable for this corpus.
 _ABBREV_RE = re.compile(
-    rf"({_LAT_LETTERS}{{1,4}})\."
-    r"(?![a-zA-ZÀ-ÖØ-öø-ÿ\u02b0-\u02ff\u1e00-\u1eff])",
+    rf"({_LAT_LETTERS}{{1,4}})\.(?!{_LAT_LETTERS})"
 )
 
 # Plain letter-run: one or more consecutive Latin-range letters
@@ -123,6 +125,50 @@ def tokenize_ar(text: str) -> list[str]:
         r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+",
         text,
     )
+
+
+_AR_RE = re.compile(
+    r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+"
+)
+
+
+def tokenize_lat_pos(
+    text: str, keep_abbrev_dots: bool = False
+) -> list[tuple[str, int, int]]:
+    """Like tokenize_lat but returns (token, start, end) character-offset tuples.
+
+    Positions are offsets into the original *text* string (lowercasing is 1:1
+    so positions in text.lower() are identical to those in text).
+    """
+    text_lower = text.lower()
+    result: list[tuple[str, int, int]] = []
+    if keep_abbrev_dots:
+        pos = 0
+        while pos < len(text_lower):
+            abbrev = _ABBREV_RE.match(text_lower, pos)
+            if abbrev:
+                result.append((abbrev.group(0), pos, abbrev.end()))
+                pos = abbrev.end()
+                continue
+            word = _WORD_RE.match(text_lower, pos)
+            if word:
+                t = word.group(0)
+                if len(t) >= 2:
+                    result.append((t, pos, word.end()))
+                pos = word.end()
+                continue
+            pos += 1
+    else:
+        for m in _WORD_RE.finditer(text_lower):
+            t = m.group(0)
+            if len(t) >= 2:
+                result.append((t, m.start(), m.end()))
+    return result
+
+
+def tokenize_ar_pos(text: str) -> list[tuple[str, int, int]]:
+    """Like tokenize_ar but returns (token, start, end) character-offset tuples."""
+    return [(m.group(0), m.start(), m.end()) for m in _AR_RE.finditer(text)]
 
 
 def make_ngrams(tokens: list[str], n: int) -> list[str]:

@@ -120,6 +120,20 @@ parsing:
   # Set to true to force overwrite.
   overwrite_existing: false
 
+  # Composite manuscript heuristic: flag as composite when Latin creator
+  # count reaches this threshold.  Lower for collections with many
+  # single-author composite manuscripts.
+  composite_min_creators: 2
+
+  # Description → candidate promotion: maximum string length (chars) for a
+  # description string to be considered a title/author candidate.
+  max_desc_len: 250
+
+  # Minimum uncovered tokens remaining after boilerplate marking (any script).
+  # 1 retains all strings with at least one non-boilerplate token — single-word
+  # titles are valid in both Arabic (القرآن) and Latin (Coran, Muqaddima).
+  min_desc_tokens: 1
+
 # ---------------------------------------------------------------------------
 # Matching
 # ---------------------------------------------------------------------------

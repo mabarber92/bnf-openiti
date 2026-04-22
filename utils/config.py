@@ -104,7 +104,12 @@ class BoilerplateConfig:
 
 @dataclass
 class ParsingConfig:
-    overwrite_existing: bool = False
+    overwrite_existing:    bool = False
+    # Composite: manuscript is flagged composite when creator count >= this
+    composite_min_creators: int = 2
+    # Description → candidate promotion thresholds
+    max_desc_len:          int = 250  # max chars for a description string to be a candidate
+    min_desc_tokens:       int = 1    # min uncovered tokens after boilerplate marking (any script)
 
 
 @dataclass
@@ -263,7 +268,10 @@ def load_config(path: str | None = None) -> PipelineConfig:
         ),
         boilerplate = boilerplate_cfg,
         parsing = ParsingConfig(
-            overwrite_existing = bool(parsing_raw.get("overwrite_existing", False)),
+            overwrite_existing     = bool(parsing_raw.get("overwrite_existing", False)),
+            composite_min_creators = int(parsing_raw.get("composite_min_creators", 2)),
+            max_desc_len           = int(parsing_raw.get("max_desc_len", 250)),
+            min_desc_tokens        = int(parsing_raw.get("min_desc_tokens", 1)),
         ),
         matching = MatchingConfig(
             surface_form = SurfaceMatchConfig(

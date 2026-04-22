@@ -113,6 +113,18 @@ def _load_boilerplate(boilerplate_path: Path) -> tuple[dict, list[dict]]:
     return bp_ngrams, signals
 
 
+def _bnfxml_kwargs(cfg, relation_terms, bp_ngrams) -> dict:
+    """Build keyword args for BNFXml from config + boilerplate data."""
+    p = cfg.parsing
+    return dict(
+        relation_terms         = relation_terms,
+        boilerplate_ngrams     = bp_ngrams or None,
+        composite_min_creators = p.composite_min_creators,
+        max_desc_len           = p.max_desc_len,
+        min_desc_tokens        = p.min_desc_tokens,
+    )
+
+
 def _signals_to_relation_terms(signals: list[dict]) -> dict[str, tuple[str, str | None]]:
     """Convert signal entries to the {pattern: (signal_type, field_constraint)} dict BNFXml expects."""
     return {
@@ -173,11 +185,7 @@ def build(output_path: str | None = None) -> Path:
     print(f"Boilerplate ngrams: {sum(len(v) for v in bp_ngrams.values())}  "
           f"Signals: {len(signals)}")
 
-    metadata = BNFMetadata(
-        str(data_path),
-        relation_terms     = relation_terms,
-        boilerplate_ngrams = bp_ngrams or None,
-    )
+    metadata = BNFMetadata(str(data_path), **_bnfxml_kwargs(cfg, relation_terms, bp_ngrams))
     print(metadata)
 
     records = {r.bnf_id: _record_to_dict(r) for r in metadata}
@@ -233,13 +241,10 @@ def update(output_path: str | None = None) -> Path:
     new_records: dict[str, dict] = {}
     failed: list[dict] = []
 
+    kwargs = _bnfxml_kwargs(cfg, relation_terms, bp_ngrams)
     for path in pending:
         try:
-            xml = _bnf.BNFXml(
-                str(path),
-                relation_terms     = relation_terms,
-                boilerplate_ngrams = bp_ngrams or None,
-            )
+            xml = _bnf.BNFXml(str(path), **kwargs)
             new_records[xml.record.bnf_id] = _record_to_dict(xml.record)
         except Exception as exc:
             failed.append({"path": str(path), "error": str(exc)})
@@ -261,13 +266,21 @@ def update(output_path: str | None = None) -> Path:
     return out_path
 
 
-def sample(n: int = 50, seed: int | None = None) -> None:
-    """Parse a random sample of N records and print matching_data() summaries.
+def sample(n: int = 50, seed: int | None = None, output_path: str | None = None) -> None:
+    """Parse a random sample of N records and write a JSON store.
 
-    Writes no output files — for inspection and debugging only.
+    The output matches the format produced by build() — same _meta and
+    records structure — so the file can be loaded with load_bnf_records().
+    Also adds a matching_data key per record for easy inspection.
+
+    Stats are printed to stderr.  If output_path is None the JSON is written
+    to <pipeline_out_dir>/bnf_sample.json.
     """
     cfg = load_config()
-    data_path, boilerplate_path, _ = _resolve_paths(cfg, None)
+    data_path, boilerplate_path, default_out = _resolve_paths(cfg, output_path)
+    out_path = Path(output_path) if output_path else (
+        Path(cfg.pipeline_out_dir) / "bnf_sample.json"
+    )
     bp_ngrams, signals = _load_boilerplate(boilerplate_path)
     relation_terms     = _signals_to_relation_terms(signals)
 
@@ -275,86 +288,67 @@ def sample(n: int = 50, seed: int | None = None) -> None:
     rng = random.Random(seed)
     chosen = rng.sample(xml_files, min(n, len(xml_files)))
 
-    print(f"Sampling {len(chosen)} records (seed={seed}) …\n")
+    print(f"Sampling {len(chosen)} records (seed={seed}) …", file=sys.stderr)
 
+    records: dict[str, dict] = {}
+    failed:  list[dict]      = []
     stats = {"with_lat": 0, "with_ar": 0, "with_creator": 0,
-             "with_title": 0, "with_desc_cands": 0, "with_relations": 0,
-             "failed": 0}
+             "with_title": 0, "with_desc_cands": 0, "with_relations": 0}
 
+    kwargs = _bnfxml_kwargs(cfg, relation_terms, bp_ngrams)
     for path in chosen:
         try:
-            xml = _bnf.BNFXml(
-                str(path),
-                relation_terms     = relation_terms,
-                boilerplate_ngrams = bp_ngrams or None,
-            )
-            r  = xml.record
-            md = r.matching_data()
+            xml = _bnf.BNFXml(str(path), **kwargs)
+            r   = xml.record
+            md  = r.matching_data()
+            rec = _record_to_dict(r)
+            rec["_matching_data"] = md        # inspection convenience key
+            records[r.bnf_id] = rec
 
             stats["with_lat"]        += bool(md["lat"])
             stats["with_ar"]         += bool(md["ar"])
             stats["with_creator"]    += bool(r.creator_lat or r.creator_ar)
             stats["with_title"]      += bool(r.title_lat or r.title_ar)
-            stats["with_desc_cands"] += bool(r.description_candidates)
+            stats["with_desc_cands"] += bool(r.description_candidates_lat or r.description_candidates_ar)
             stats["with_relations"]  += bool(r.detected_relations)
 
         except Exception as exc:
-            stats["failed"] += 1
-            print(f"  FAILED {path.name}: {exc}")
+            failed.append({"path": str(path), "error": str(exc)})
+            print(f"  FAILED {path.name}: {exc}", file=sys.stderr)
 
-    total = len(chosen) - stats["failed"]
-    print(f"Sample size:          {len(chosen)}")
-    print(f"Parse failures:       {stats['failed']}")
-    print(f"With Latin matches:   {stats['with_lat']} / {total}")
-    print(f"With Arabic matches:  {stats['with_ar']} / {total}")
-    print(f"With creator:         {stats['with_creator']} / {total}")
-    print(f"With title:           {stats['with_title']} / {total}")
-    print(f"With desc candidates: {stats['with_desc_cands']} / {total}")
-    print(f"With relations:       {stats['with_relations']} / {total}")
+    total = len(chosen) - len(failed)
+    print(f"Sample size:          {len(chosen)}",          file=sys.stderr)
+    print(f"Parse failures:       {len(failed)}",          file=sys.stderr)
+    print(f"With Latin matches:   {stats['with_lat']} / {total}", file=sys.stderr)
+    print(f"With Arabic matches:  {stats['with_ar']} / {total}",  file=sys.stderr)
+    print(f"With creator:         {stats['with_creator']} / {total}", file=sys.stderr)
+    print(f"With title:           {stats['with_title']} / {total}",   file=sys.stderr)
+    print(f"With desc candidates: {stats['with_desc_cands']} / {total}", file=sys.stderr)
+    print(f"With relations:       {stats['with_relations']} / {total}",  file=sys.stderr)
 
-    # Print full record details for example records
-    print("\n--- Example records (full detail) ---")
-    shown = 0
-    for path in chosen:
-        if shown >= 5:
-            break
-        try:
-            xml = _bnf.BNFXml(
-                str(path),
-                relation_terms     = relation_terms,
-                boilerplate_ngrams = bp_ngrams or None,
-            )
-            r  = xml.record
-            md = r.matching_data()
-            if not (md["lat"] or md["ar"]):
-                continue
-            print(f"\n{'='*60}")
-            print(f"ID:          {r.bnf_id}")
-            print(f"signal_count={r.signal_count}  composite={r.is_composite}")
-            print(f"title_lat:   {r.title_lat!r}")
-            print(f"title_ar:    {r.title_ar!r}")
-            print(f"creator_lat: {r.creator_lat!r}")
-            print(f"creator_ar:  {r.creator_ar!r}")
-            print(f"subject:     {r.subject}")
-            print(f"copy_date:   {r.copy_date_raw!r}  from={r.date_from}  to={r.date_to}")
-            if r.description_candidates:
-                print(f"desc_cands ({len(r.description_candidates)}):")
-                for cand in r.description_candidates:
-                    print(f"  {cand!r}")
-            if r.detected_relations:
-                print(f"relations ({len(r.detected_relations)}):")
-                for rel in r.detected_relations:
-                    st = rel.relation_type
-                    print(f"  [{st}] term={rel.matched_term!r}  context={rel.context!r}")
-            print(f"matching lat ({len(md['lat'])}):")
-            for item in md["lat"]:
-                print(f"  {item!r}")
-            print(f"matching ar  ({len(md['ar'])}):")
-            for item in md["ar"]:
-                print(f"  {item!r}")
-            shown += 1
-        except Exception:
-            pass
+    n_bp = sum(len(v) for v in bp_ngrams.values())
+    output = {
+        "_meta": {
+            "schema_version":   _SCHEMA_VERSION,
+            "sample":           True,
+            "sample_n":         len(chosen),
+            "sample_seed":      seed,
+            "bnf_data_path":    str(data_path),
+            "generated_at":     __import__("datetime").datetime.now(
+                                    __import__("datetime").timezone.utc
+                                ).isoformat(timespec="seconds"),
+            "total_records":    len(records),
+            "total_failed":     len(failed),
+            "boilerplate_path": str(boilerplate_path),
+            "boilerplate_count": n_bp,
+            "signal_count":     len(signals),
+            "parse_errors":     failed,
+        },
+        "records": records,
+    }
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nOutput: {out_path}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -393,7 +387,7 @@ def _update_cli(args: argparse.Namespace) -> None:
 def _sample_cli(args: argparse.Namespace) -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    sample(n=args.n, seed=args.seed)
+    sample(n=args.n, seed=args.seed, output_path=args.output)
 
 
 if __name__ == "__main__":
@@ -430,10 +424,14 @@ if __name__ == "__main__":
 
     p_sample = sub.add_parser(
         "sample",
-        help="Parse a random sample and print matching_data() summaries (no file output).",
+        help="Parse a random sample and write a JSON store for inspection.",
     )
     p_sample.add_argument("--n",    type=int, default=50,   help="Sample size (default 50).")
     p_sample.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility.")
+    p_sample.add_argument(
+        "--output", default=None,
+        help="Override output path (default: <pipeline_out_dir>/bnf_sample.json).",
+    )
     p_sample.set_defaults(func=_sample_cli)
 
     args = parser.parse_args()

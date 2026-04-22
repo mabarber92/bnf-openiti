@@ -28,11 +28,12 @@ dc:creator
 dc:description
     - Always present (100%), avg 6 per record, max 146.
     - 34.9% of records have mixed-script descriptions.
-    - Short strings (≤ TITLE_FROM_DESC_MAX_LEN chars) where fewer than
-      MIN_REMAINING_TOKENS tokens survive after marking boilerplate n-gram
-      coverage are excluded.  Use load_boilerplate_file() (production) or
-      load_boilerplate_ngrams() (experimentation) to populate BOILERPLATE_NGRAMS
-      before bulk parsing.
+    - Boilerplate n-grams act as span masks: covered tokens are removed and
+      contiguous uncovered runs are extracted as character-level segments
+      (description_candidates).  Long descriptions that are partly boilerplate
+      yield useful sub-strings rather than being discarded wholesale.
+      Use load_boilerplate_file() (production) or load_boilerplate_ngrams()
+      (experimentation) to populate BOILERPLATE_NGRAMS before bulk parsing.
 
 matching_data()
     - BNFRecord.matching_data() returns {"lat": [...], "ar": [...]} —
@@ -97,9 +98,9 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from utils.tokens import (  # noqa: E402
-    has_arabic   as _has_arabic,
-    tokenize_lat as _tokenize_lat,
-    tokenize_ar  as _tokenize_ar,
+    has_arabic       as _has_arabic,
+    tokenize_lat_pos as _tokenize_lat_pos,
+    tokenize_ar_pos  as _tokenize_ar_pos,
 )
 
 # ---------------------------------------------------------------------------
@@ -135,7 +136,7 @@ _DATES_RE = re.compile(r"\s*\(\d{3,4}\??(?:\s*[-\u2013]\s*\d{3,4}\??)?\)\s*")
 
 # Maximum length (chars) for a description string to be considered a title
 # candidate.
-TITLE_FROM_DESC_MAX_LEN: int = 100
+TITLE_FROM_DESC_MAX_LEN: int = 250
 
 # Minimum uncovered tokens required for a description string to be included
 # as a matching candidate after boilerplate n-grams are marked out.
@@ -350,8 +351,9 @@ class BNFRecord:
     description_ar:     list[str] = field(default_factory=list)
 
     # Short non-boilerplate description strings promoted as matching candidates
-    # (potential titles or author names embedded in dc:description)
-    description_candidates: list[str] = field(default_factory=list)
+    # (potential titles or author names embedded in dc:description), split by script
+    description_candidates_lat: list[str] = field(default_factory=list)
+    description_candidates_ar:  list[str] = field(default_factory=list)
 
     # Contributor (previous owners, copyists, etc.), dates and role suffixes stripped
     contributor_lat:    list[str] = field(default_factory=list)
@@ -414,11 +416,11 @@ class BNFRecord:
         for name in self.creator_ar:
             add(name, ar, seen_ar)
 
-        for cand in self.description_candidates:
-            if _has_arabic(cand):
-                add(cand, ar, seen_ar)
-            else:
-                add(cand, lat, seen_lat)
+        for cand in self.description_candidates_lat:
+            add(cand, lat, seen_lat)
+
+        for cand in self.description_candidates_ar:
+            add(cand, ar, seen_ar)
 
         return {"lat": lat, "ar": ar}
 
@@ -467,13 +469,19 @@ class BNFXml:
         path: str,
         relation_terms: dict[str, tuple[str, str | None]] | None = None,
         boilerplate_ngrams: dict[str, frozenset[str]] | None = None,
+        composite_min_creators: int = 2,
+        max_desc_len:           int = TITLE_FROM_DESC_MAX_LEN,
+        min_desc_tokens:        int = 1,
     ) -> None:
-        self.path                 = Path(path)
-        self.relation_terms       = relation_terms or {}
-        self._boilerplate_ngrams  = (
+        self.path                    = Path(path)
+        self.relation_terms          = relation_terms or {}
+        self._boilerplate_ngrams     = (
             boilerplate_ngrams if boilerplate_ngrams is not None
             else BOILERPLATE_NGRAMS
         )
+        self._composite_min_creators = composite_min_creators
+        self._max_desc_len           = max_desc_len
+        self._min_desc_tokens        = min_desc_tokens
         self.record: BNFRecord = self._parse()
 
     def _parse(self) -> BNFRecord:
@@ -523,12 +531,11 @@ class BNFXml:
         # --- Descriptions ---
         desc_lat, desc_ar = self._split_by_script(texts("description"))
 
-        # Promote short, non-boilerplate description strings as matching
+        # Extract non-boilerplate segments from description strings as matching
         # candidates (potential titles / author names buried in dc:description).
         existing = set(title_lat + title_ar)
-        description_candidates = self._desc_candidates(
-            desc_lat + desc_ar, existing
-        )
+        desc_cands_flat = self._extract_desc_segments(desc_lat + desc_ar, existing)
+        desc_cands_lat, desc_cands_ar = self._split_by_script(desc_cands_flat)
 
         # --- Other fields ---
         format_raw = texts("format")
@@ -543,7 +550,7 @@ class BNFXml:
         # More than one distinct Latin-script creator entry indicates multiple
         # authors. Pattern-based detection is deferred until survey data
         # confirms what composite descriptions actually look like.
-        is_composite = len(creator_lat) > 1
+        is_composite = len(creator_lat) >= self._composite_min_creators
 
         # --- Relation detection ---
         # Run over all text fields that may contain relation language.
@@ -561,9 +568,10 @@ class BNFXml:
             title_ar           = title_ar,
             creator_lat        = creator_lat,
             creator_ar         = creator_ar,
-            description_lat         = desc_lat,
-            description_ar          = desc_ar,
-            description_candidates  = description_candidates,
+            description_lat              = desc_lat,
+            description_ar               = desc_ar,
+            description_candidates_lat   = desc_cands_lat,
+            description_candidates_ar    = desc_cands_ar,
             contributor_lat         = contributor_lat,
             contributor_ar     = contributor_ar,
             format_raw         = format_raw,
@@ -580,57 +588,94 @@ class BNFXml:
         record.signal_count = self._count_signals(record)
         return record
 
-    def _desc_candidates(
+    def _extract_desc_segments(
         self,
         desc_texts: list[str],
         existing: set[str],
     ) -> list[str]:
-        """Promote short description strings as matching candidates.
+        """Extract non-boilerplate segments from description strings.
 
-        A string is included when:
-          1. Its length is within TITLE_FROM_DESC_MAX_LEN chars.
-          2. After marking every token position covered by any boilerplate
-             n-gram (sizes 2–4), at least MIN_REMAINING_TOKENS uncovered
-             tokens remain.
+        Uses boilerplate n-grams as character-span masks: tokens covered by
+        any boilerplate n-gram (bigrams–quadgrams) are masked out, and
+        contiguous runs of uncovered tokens are extracted as character-level
+        substrings of the original string.
 
-        Token coverage uses the same normalisation as the survey (tokenize_lat
-        with keep_abbrev_dots=True, or tokenize_ar for Arabic text) so that
-        boilerplate n-grams match reliably on both sides of the comparison.
+        This is preferable to whole-string filtering because a long description
+        like "Auteur du texte. Traité de logique. Reliure orientale." yields
+        "Traité de logique" as a candidate rather than being discarded entirely.
 
-        Strings already in *existing* are deduplicated against title_lat /
-        title_ar to avoid redundant matching candidates.
+        A segment is kept when:
+          1. At least min_desc_tokens uncovered tokens form the run.
+          2. The extracted character span is within max_desc_len chars.
+
+        Segments already in *existing* (title_lat / title_ar) are skipped.
+
+        When no boilerplate is loaded, falls back to whole-string filtering
+        (same behaviour as the old _desc_candidates).
         """
         boilerplate = self._boilerplate_ngrams.get("description", frozenset())
         seen = set(existing)
         candidates: list[str] = []
 
         for text in desc_texts:
-            if len(text) > TITLE_FROM_DESC_MAX_LEN:
+            if not boilerplate:
+                # No boilerplate available: include whole string up to max_desc_len
+                if len(text) <= self._max_desc_len and text not in seen:
+                    candidates.append(text)
+                    seen.add(text)
                 continue
 
-            if boilerplate:
-                is_ar  = _has_arabic(text)
-                tokens = _tokenize_ar(text) if is_ar else _tokenize_lat(text, keep_abbrev_dots=True)
-                n_tok  = len(tokens)
-                covered = [False] * n_tok
+            is_ar   = _has_arabic(text)
+            tok_pos = _tokenize_ar_pos(text) if is_ar else _tokenize_lat_pos(text, keep_abbrev_dots=True)
+            if not tok_pos:
+                continue
 
-                for i in range(n_tok):
-                    for size in range(2, 5):   # check bigrams, trigrams, quadgrams
-                        end = i + size
-                        if end > n_tok:
-                            break
-                        if " ".join(tokens[i:end]) in boilerplate:
-                            for j in range(i, end):
-                                covered[j] = True
+            tokens  = [t for t, _s, _e in tok_pos]
+            n_tok   = len(tokens)
+            covered = [False] * n_tok
 
-                if sum(1 for c in covered if not c) < MIN_REMAINING_TOKENS:
-                    continue
+            for i in range(n_tok):
+                for size in range(2, 5):
+                    end = i + size
+                    if end > n_tok:
+                        break
+                    if " ".join(tokens[i:end]) in boilerplate:
+                        for j in range(i, end):
+                            covered[j] = True
 
-            if text not in seen:
-                candidates.append(text)
-                seen.add(text)
+            # Extract contiguous runs of uncovered tokens as character segments
+            run_start: int | None = None
+            for i, c in enumerate(covered):
+                if not c and run_start is None:
+                    run_start = i
+                elif c and run_start is not None:
+                    self._add_segment(text, tok_pos, run_start, i, seen, candidates)
+                    run_start = None
+            if run_start is not None:
+                self._add_segment(text, tok_pos, run_start, n_tok, seen, candidates)
 
         return candidates
+
+    def _add_segment(
+        self,
+        text: str,
+        tok_pos: list[tuple[str, int, int]],
+        run_start: int,
+        run_end: int,
+        seen: set[str],
+        candidates: list[str],
+    ) -> None:
+        """Extract one uncovered-token run as a segment and add to candidates."""
+        if run_end - run_start < self._min_desc_tokens:
+            return
+        char_start = tok_pos[run_start][1]
+        char_end   = tok_pos[run_end - 1][2]
+        segment    = text[char_start:char_end].strip()
+        if not segment or len(segment) > self._max_desc_len:
+            return
+        if segment not in seen:
+            seen.add(segment)
+            candidates.append(segment)
 
     @staticmethod
     def _parse_date_range(date_str: str) -> tuple[Optional[int], Optional[int]]:
@@ -752,11 +797,17 @@ class BNFMetadata:
         self,
         directory: str,
         glob: str = "**/OAI_*.xml",
-        relation_terms: dict[str, str] | None = None,
+        relation_terms: dict[str, tuple[str, str | None]] | None = None,
         boilerplate_ngrams: dict[str, frozenset[str]] | None = None,
+        composite_min_creators: int = 2,
+        max_desc_len:           int = TITLE_FROM_DESC_MAX_LEN,
+        min_desc_tokens:        int = 1,
     ) -> None:
-        self.relation_terms      = relation_terms or {}
-        self._boilerplate_ngrams = boilerplate_ngrams
+        self.relation_terms          = relation_terms or {}
+        self._boilerplate_ngrams     = boilerplate_ngrams
+        self._composite_min_creators = composite_min_creators
+        self._max_desc_len           = max_desc_len
+        self._min_desc_tokens        = min_desc_tokens
         self.records: dict[str, BNFRecord] = {}
         self.failed:  list[dict]           = []
         self._load(directory, glob)
@@ -766,8 +817,11 @@ class BNFMetadata:
             try:
                 xml = BNFXml(
                     str(path),
-                    relation_terms=self.relation_terms,
-                    boilerplate_ngrams=self._boilerplate_ngrams,
+                    relation_terms         = self.relation_terms,
+                    boilerplate_ngrams     = self._boilerplate_ngrams,
+                    composite_min_creators = self._composite_min_creators,
+                    max_desc_len           = self._max_desc_len,
+                    min_desc_tokens        = self._min_desc_tokens,
                 )
                 self.records[xml.record.bnf_id] = xml.record
             except Exception as exc:
