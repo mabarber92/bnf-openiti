@@ -12,7 +12,7 @@ Design notes (informed by surveying the full 7,825-record dataset):
 
 dc:title
     - Not always single: max 4 per record, avg 1.16.
-    - Raw strings are stored as-is in title_lat / title_ar — no structural
+    - Raw strings are stored as-is in title_lat / title_ara — no structural
       transformation is applied at parse time. Many values follow the pattern
       "AUTHOR_NAME. Title text"; BNFRecord.matching_data() splits these on
       '. ' to surface all parts as separate matching candidates.
@@ -343,28 +343,28 @@ class BNFRecord:
 
     # Title — raw dc:title strings, split by script
     title_lat:          list[str] = field(default_factory=list)
-    title_ar:           list[str] = field(default_factory=list)
+    title_ara:          list[str] = field(default_factory=list)
 
     # Creator (authors of the text), dates and role suffixes stripped
     creator_lat:        list[str] = field(default_factory=list)
-    creator_ar:         list[str] = field(default_factory=list)
+    creator_ara:        list[str] = field(default_factory=list)
 
     # Description, split by script (full text, some boilerplate)
     description_lat:    list[str] = field(default_factory=list)
-    description_ar:     list[str] = field(default_factory=list)
+    description_ara:    list[str] = field(default_factory=list)
 
     # Short non-boilerplate description strings promoted as matching candidates
     # (potential titles or author names embedded in dc:description), split by script
     description_candidates_lat: list[str] = field(default_factory=list)
-    description_candidates_ar:  list[str] = field(default_factory=list)
+    description_candidates_ara: list[str] = field(default_factory=list)
 
     # Labels for each description candidate, keyed by relation type or None if unlabeled
     description_candidate_labels_lat: list[Optional[str]] = field(default_factory=list)
-    description_candidate_labels_ar:  list[Optional[str]] = field(default_factory=list)
+    description_candidate_labels_ara: list[Optional[str]] = field(default_factory=list)
 
     # Contributor (previous owners, copyists, etc.), dates and role suffixes stripped
     contributor_lat:    list[str] = field(default_factory=list)
-    contributor_ar:     list[str] = field(default_factory=list)
+    contributor_ara:    list[str] = field(default_factory=list)
 
     # Physical description (script style, material, dimensions, leaf count)
     format_raw:         list[str] = field(default_factory=list)
@@ -413,14 +413,14 @@ class BNFRecord:
             for part in title.split(". "):
                 add(part, lat, seen_lat)
 
-        for title in self.title_ar:
+        for title in self.title_ara:
             for part in title.split(". "):
                 add(part, ar, seen_ar)
 
         for name in self.creator_lat:
             add(name, lat, seen_lat)
 
-        for name in self.creator_ar:
+        for name in self.creator_ara:
             add(name, ar, seen_ar)
 
         for cand in self.description_candidates_lat:
@@ -572,17 +572,17 @@ class BNFXml:
             gallica_url        = gallica_url,
             catalogue_url      = catalogue_url,
             title_lat          = title_lat,
-            title_ar           = title_ar,
+            title_ara          = title_ar,
             creator_lat        = creator_lat,
-            creator_ar         = creator_ar,
+            creator_ara        = creator_ar,
             description_lat              = desc_lat,
-            description_ar               = desc_ar,
+            description_ara              = desc_ar,
             description_candidates_lat   = desc_cands_lat,
-            description_candidates_ar    = desc_cands_ar,
+            description_candidates_ara   = desc_cands_ar,
             description_candidate_labels_lat = desc_cands_labels_lat,
-            description_candidate_labels_ar  = desc_cands_labels_ar,
+            description_candidate_labels_ara = desc_cands_labels_ar,
             contributor_lat         = contributor_lat,
-            contributor_ar     = contributor_ar,
+            contributor_ara    = contributor_ar,
             format_raw         = format_raw,
             subject            = subject,
             coverage           = coverage,
