@@ -1,0 +1,25 @@
+{
+  "record_id": "OAI_11000949",
+  "title_lat": [],
+  "title_ar_present": true,
+  "title_ar_count": 1,
+  "title_ar_first": "كتاب حسن المحاضرة فى اخبار مصر و القاهرة « Causeries agréables au sujet de l'Égypte et du Caire ».",
+  "creator_lat": [
+    "ʿABD AL-RAḤMĀN ibn abī Bakr al-Soyūṭī (Ğalāl al-Dīn)"
+  ],
+  "creator_ar_present": false,
+  "creator_ar_first": null,
+  "desc_cand_lat_count": 3,
+  "desc_cand_ar_count": 1,
+  "matching_data": {
+    "lat": [
+      "ʿABD AL-RAḤMĀN ibn abī Bakr al-Soyūṭī (Ğalāl al-Dīn)",
+      "Numérisation effectuée à partir d'un document de substitution",
+      "Exemplaire de la première édition"
+    ],
+    "ar": [
+      "كتاب حسن المحاضرة فى اخبار مصر و القاهرة « Causeries agréables au sujet de l'Égypte et du Caire »",
+      "كتاب حسن المحاضرة فى اخبار مصر و القاهرة"
+    ]
+  }
+}
