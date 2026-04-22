@@ -71,6 +71,16 @@ def _pct(n: int, total: int) -> float:
     return round(100 * n / total, 1) if total else 0.0
 
 
+def _filter_numeric_tokens(tokens: list[str]) -> list[str]:
+    """Filter out digit-only tokens.
+
+    Numerals are critical signals for the parser (years, folio numbers),
+    but create noise in the boilerplate review CSV when used for n-gram
+    analysis. This function removes digit-only tokens for survey purposes.
+    """
+    return [t for t in tokens if not t.isdigit()]
+
+
 # ---------------------------------------------------------------------------
 # Manifest helpers
 # ---------------------------------------------------------------------------
@@ -240,11 +250,15 @@ def _scan(
             if not text:
                 continue
             if _has_arabic(text):
-                rec_tokens[local]["ar"].extend(_tokenize_ar(text))
+                tokens = _tokenize_ar(text)
+                # Filter numeric tokens for survey (they're noise in boilerplate review)
+                tokens = _filter_numeric_tokens(tokens)
+                rec_tokens[local]["ar"].extend(tokens)
             else:
-                rec_tokens[local]["lat"].extend(
-                    _tokenize_lat(text, keep_abbrev_dots=keep_abbrev_dots)
-                )
+                tokens = _tokenize_lat(text, keep_abbrev_dots=keep_abbrev_dots)
+                # Filter numeric tokens for survey (they're noise in boilerplate review)
+                tokens = _filter_numeric_tokens(tokens)
+                rec_tokens[local]["lat"].extend(tokens)
 
         for fname in scan_fields:
             for script_key, tokens in rec_tokens[fname].items():
