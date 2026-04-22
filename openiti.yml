@@ -17,4 +17,5 @@
 #   and commit the new data/ files.
 
 corpus_version: corpus_2025_1_9
+corpus_tsv: data/OpenITI_metadata_2025-1-9.tsv
 

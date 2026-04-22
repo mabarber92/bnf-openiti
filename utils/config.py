@@ -147,8 +147,15 @@ class OpenITICorpusConfig:
         (e.g. "corpus_2025_1_9").  This names the output file:
           data/openiti_<corpus_version>.json
         Update this field when downloading a new corpus release.
+
+    corpus_tsv
+        Path to the compiled OpenITI metadata TSV (optional).
+        If provided, parse_openiti.py will use it as the primary data
+        source and use YML files as a fallback for missing fields
+        (especially wikidata_id).  If not provided, falls back to YML-only.
     """
     corpus_version: str = ""
+    corpus_tsv: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -316,4 +323,5 @@ def load_openiti_config(path: str | None = None) -> OpenITICorpusConfig:
 
     return OpenITICorpusConfig(
         corpus_version = str(raw.get("corpus_version", "")),
+        corpus_tsv = str(raw.get("corpus_tsv", "")),
     )

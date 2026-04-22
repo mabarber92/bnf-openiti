@@ -26,6 +26,7 @@ Use OpenITIMetaYmls(directory) to load an entire corpus at once.
 
 from __future__ import annotations
 
+import csv
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -375,6 +376,134 @@ def parse_openiti_yml(path: str) -> OpenITIYml:
     if n_dots == 1:
         return OpenITIBookYml(path)
     return OpenITIVersionYml(path)
+
+
+# ---------------------------------------------------------------------------
+# TSV parsing
+# ---------------------------------------------------------------------------
+
+class OpenITITSVRow:
+    """A single row from the OpenITI compiled metadata TSV.
+
+    The TSV is version-level (one row per text version), with denormalized
+    author and book data in each row.
+    """
+    def __init__(self, row: dict[str, str]) -> None:
+        self.version_uri = row.get("version_uri", "").strip()
+        self.language = row.get("language", "").strip()
+        self.author_ar = row.get("author_ar", "").strip()
+        self.author_lat = row.get("author_lat", "").strip()
+        self.author_lat_shuhra = row.get("author_lat_shuhra", "").strip()
+        self.book = row.get("book", "").strip()
+        self.title_ar = row.get("title_ar", "").strip()
+        self.title_lat = row.get("title_lat", "").strip()
+        self.tags = row.get("tags", "").strip()
+
+    @property
+    def author_uri(self) -> str:
+        """Extract author URI from version_uri (first dot-separated component)."""
+        if self.version_uri:
+            return self.version_uri.split(".")[0]
+        return ""
+
+    @property
+    def book_uri(self) -> str:
+        """Extract book URI from version_uri (first two dot-separated components)."""
+        if self.version_uri:
+            parts = self.version_uri.split(".")
+            if len(parts) >= 2:
+                return ".".join(parts[0:2])
+        return ""
+
+
+class OpenITITSV:
+    """Load and parse the OpenITI compiled metadata TSV.
+
+    The TSV is at version granularity; this class aggregates to book and author
+    level, producing dicts compatible with OpenITIMetaYmls output.
+
+    Returns:
+        authors: dict[str, OpenITIAuthorData]
+        books: dict[str, OpenITIBookData]
+        versions: dict[str, OpenITIVersionData]
+    """
+
+    def __init__(self, tsv_path: str) -> None:
+        self.authors:  dict[str, OpenITIAuthorData]  = {}
+        self.books:    dict[str, OpenITIBookData]    = {}
+        self.versions: dict[str, OpenITIVersionData] = {}
+        self._load(tsv_path)
+
+    def _load(self, tsv_path: str) -> None:
+        """Load and parse the TSV file."""
+        with open(tsv_path, encoding="utf-8") as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            rows = [OpenITITSVRow(row) for row in reader]
+
+        # Index rows by book_uri and author_uri for aggregation
+        books_data: dict[str, dict[str, str]] = {}  # book_uri → aggregated fields
+        authors_data: dict[str, dict[str, str]] = {}  # author_uri → aggregated fields
+
+        for row in rows:
+            if not row.version_uri:
+                continue
+
+            # Create version record
+            self.versions[row.version_uri] = OpenITIVersionData(
+                uri=row.version_uri,
+                book_uri=row.book_uri,
+            )
+
+            # Aggregate book data (use first occurrence for each field)
+            if row.book_uri not in books_data:
+                books_data[row.book_uri] = {
+                    "title_lat": row.title_lat,
+                    "title_ar": row.title_ar,
+                    "author_uri": row.author_uri,
+                }
+
+            # Aggregate author data (use first occurrence for each field)
+            if row.author_uri not in authors_data:
+                authors_data[row.author_uri] = {
+                    "author_ar": row.author_ar,
+                    "author_lat": row.author_lat,
+                    "author_lat_shuhra": row.author_lat_shuhra,
+                }
+
+        # Build book records from aggregated data
+        for book_uri, book_fields in books_data.items():
+            # Extract author and title slugs from URI
+            uri_parts = book_uri.split(".")
+            author_slug = uri_parts[0] if uri_parts else ""
+            title_slug = uri_parts[1] if len(uri_parts) > 1 else ""
+
+            self.books[book_uri] = OpenITIBookData(
+                uri=book_uri,
+                author_uri=book_fields["author_uri"],
+                author_slug=author_slug,
+                title_slug=title_slug,
+                title_a=book_fields["title_lat"],
+                title_b=book_fields["title_ar"],
+            )
+
+        # Build author records from aggregated data
+        for author_uri, author_fields in authors_data.items():
+            # Extract author slug from URI
+            author_slug = author_uri.split(".")[0] if author_uri else ""
+
+            self.authors[author_uri] = OpenITIAuthorData(
+                uri=author_uri,
+                name_slug=author_slug,
+                name_shuhra_ar=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra
+            )
+
+    def __repr__(self) -> str:
+        return (
+            f"OpenITITSV("
+            f"authors={len(self.authors)}, "
+            f"books={len(self.books)}, "
+            f"versions={len(self.versions)})"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -55,7 +55,12 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from parsers.openiti import OpenITIAuthorData, OpenITIBookData, OpenITIMetaYmls
+from parsers.openiti import (
+    OpenITIAuthorData,
+    OpenITIBookData,
+    OpenITIMetaYmls,
+    OpenITITSV,
+)
 from utils.config import load_openiti_config
 
 # ---------------------------------------------------------------------------
@@ -89,13 +94,136 @@ def _author_from_dict(d: dict) -> OpenITIAuthorData:
 # Core parse + write
 # ---------------------------------------------------------------------------
 
-def _load_corpus(directory: str) -> OpenITIMetaYmls:
-    print(f"Loading OpenITI corpus from {directory} …")
-    corpus = OpenITIMetaYmls(directory)
-    print(corpus)
-    if corpus.failed:
-        print(f"  ({len(corpus.failed)} files failed to parse — see parse_errors in output)")
-    return corpus
+def _load_corpus(directory: str, yml_only: bool = False) -> OpenITIMetaYmls:
+    """Load corpus from YMLs, optionally merged with TSV data.
+
+    yml_only: If True, load only from YML files (legacy mode).
+              If False, merge TSV data (if available) with YML data.
+    """
+    openiti_cfg = load_openiti_config()
+
+    if yml_only:
+        print(f"Loading OpenITI corpus from YML files in {directory} …")
+        corpus = OpenITIMetaYmls(directory)
+        print(corpus)
+        if corpus.failed:
+            print(f"  ({len(corpus.failed)} files failed to parse — see parse_errors in output)")
+        return corpus
+
+    # Try TSV-first approach with YML fallback
+    tsv_path = openiti_cfg.corpus_tsv
+    if not Path(tsv_path).exists():
+        print(f"Warning: corpus_tsv not found at {tsv_path}")
+        print("Falling back to YML-only parsing")
+        return _load_corpus(directory, yml_only=True)
+
+    print(f"Loading OpenITI from TSV: {tsv_path} …")
+    tsv_corpus = OpenITITSV(tsv_path)
+    print(tsv_corpus)
+
+    print(f"Loading OpenITI from YML files in {directory} (for wikidata_id and missing fields) …")
+    yml_corpus = OpenITIMetaYmls(directory)
+    if yml_corpus.failed:
+        print(f"  ({len(yml_corpus.failed)} files failed to parse — see parse_errors in output)")
+
+    # Merge: TSV primary, YML supplementary
+    return _merge_tsv_yml(tsv_corpus, yml_corpus)
+
+
+def _merge_tsv_yml(
+    tsv_corpus: OpenITITSV,
+    yml_corpus: OpenITIMetaYmls,
+) -> OpenITIMetaYmls:
+    """Merge TSV-parsed corpus with YML-parsed corpus.
+
+    TSV is primary (overwrites all fields); YML fills missing fields,
+    especially wikidata_id which is extracted from EXTID field.
+    """
+    # Create a new corpus object to hold merged data
+    class MergedCorpus:
+        def __init__(self):
+            self.authors = {}
+            self.books = {}
+            self.versions = {}
+            self.failed = []
+
+    merged = MergedCorpus()
+    merged.versions = tsv_corpus.versions.copy()
+
+    # Merge books: TSV primary, YML supplementary
+    for book_uri, tsv_book in tsv_corpus.books.items():
+        yml_book = yml_corpus.books.get(book_uri)
+        merged_book = _book_merge(tsv_book, yml_book)
+        merged.books[book_uri] = merged_book
+
+    # Merge authors: TSV primary, YML supplementary (especially wikidata_id)
+    for author_uri, tsv_author in tsv_corpus.authors.items():
+        yml_author = yml_corpus.authors.get(author_uri)
+        merged_author = _author_merge(tsv_author, yml_author)
+        merged.authors[author_uri] = merged_author
+
+    return merged
+
+
+def _book_merge(
+    tsv_book: OpenITIBookData,
+    yml_book: OpenITIBookData | None,
+) -> OpenITIBookData:
+    """Merge a TSV book with YML data (if present).
+
+    TSV overwrites all fields; YML fills missing fields.
+    """
+    merged = OpenITIBookData(
+        uri=tsv_book.uri,
+        author_uri=tsv_book.author_uri,
+        death_year_ah=tsv_book.death_year_ah or (yml_book.death_year_ah if yml_book else None),
+        author_slug=tsv_book.author_slug,
+        title_slug=tsv_book.title_slug,
+        title_a=tsv_book.title_a or (yml_book.title_a if yml_book else None),
+        title_b=tsv_book.title_b or (yml_book.title_b if yml_book else None),
+        # For IDs, try YML if TSV doesn't have them
+        wikidata_id=tsv_book.wikidata_id or (yml_book.wikidata_id if yml_book else None),
+        viaf_id=tsv_book.viaf_id or (yml_book.viaf_id if yml_book else None),
+    )
+    return merged
+
+
+def _author_merge(
+    tsv_author: OpenITIAuthorData,
+    yml_author: OpenITIAuthorData | None,
+) -> OpenITIAuthorData:
+    """Merge a TSV author with YML data (if present).
+
+    TSV overwrites name fields; YML is primary for wikidata_id and other metadata.
+    """
+    if yml_author is None:
+        # No YML data, return TSV author as-is
+        return tsv_author
+
+    # Start with YML author (has wikidata_id and wd_* fields)
+    merged = OpenITIAuthorData(
+        uri=yml_author.uri,
+        death_year_ah=yml_author.death_year_ah,
+        name_slug=yml_author.name_slug or tsv_author.name_slug,
+        # Use TSV name fields (more complete)
+        name_shuhra_ar=tsv_author.name_shuhra_ar or yml_author.name_shuhra_ar,
+        name_ism_ar=yml_author.name_ism_ar,
+        name_kunya_ar=yml_author.name_kunya_ar,
+        name_laqab_ar=yml_author.name_laqab_ar,
+        name_nasab_ar=yml_author.name_nasab_ar,
+        name_nisba_ar=yml_author.name_nisba_ar,
+        # Wikidata ID from YML (source of truth)
+        wikidata_id=yml_author.wikidata_id,
+        # Preserve wikidata enrichment fields from YML
+        wd_label_ar=yml_author.wd_label_ar,
+        wd_label_en=yml_author.wd_label_en,
+        wd_aliases_ar=yml_author.wd_aliases_ar,
+        wd_aliases_en=yml_author.wd_aliases_en,
+        wd_death_year=yml_author.wd_death_year,
+        wd_fetched_at=yml_author.wd_fetched_at,
+        wd_error=yml_author.wd_error,
+    )
+    return merged
 
 
 def _resolve_output_path(output_path: str | None, corpus_version: str) -> Path:
@@ -112,11 +240,38 @@ def _resolve_output_path(output_path: str | None, corpus_version: str) -> Path:
 
 def _write_output(
     path: Path,
-    corpus: OpenITIMetaYmls,
+    corpus,
     corpus_path: str,
     corpus_version: str,
+    preserve_existing: Path | None = None,
 ) -> None:
-    """Serialise the parsed corpus to JSON."""
+    """Serialise the parsed corpus to JSON.
+
+    If preserve_existing is provided, load that file and preserve wikidata
+    enrichment (wd_* fields) from existing author records.
+    """
+    # Load existing enrichment if requested
+    existing_authors = {}
+    if preserve_existing and preserve_existing.exists():
+        try:
+            print(f"Preserving wikidata enrichment from {preserve_existing} …")
+            existing_data = json.loads(preserve_existing.read_text(encoding="utf-8"))
+            existing_authors = existing_data.get("authors", {})
+        except Exception as e:
+            print(f"Warning: failed to load existing enrichment: {e}")
+
+    # Build author output with preserved wikidata fields
+    authors_output = {}
+    for uri, author in corpus.authors.items():
+        author_dict = _author_to_dict(author)
+        # Preserve wikidata enrichment if it exists
+        if uri in existing_authors:
+            existing = existing_authors[uri]
+            for wd_field in ["wd_label_ar", "wd_label_en", "wd_aliases_ar", "wd_aliases_en", "wd_death_year", "wd_fetched_at", "wd_error"]:
+                if wd_field in existing and existing[wd_field] is not None:
+                    author_dict[wd_field] = existing[wd_field]
+        authors_output[uri] = author_dict
+
     output = {
         "_meta": {
             "schema_version": _SCHEMA_VERSION,
@@ -130,7 +285,7 @@ def _write_output(
             "parse_errors":   corpus.failed,
         },
         "books":   {uri: _book_to_dict(b)   for uri, b in corpus.books.items()},
-        "authors": {uri: _author_to_dict(a) for uri, a in corpus.authors.items()},
+        "authors": authors_output,
     }
     path.write_text(
         json.dumps(output, ensure_ascii=False, indent=2),
@@ -145,6 +300,7 @@ def _write_output(
 def build(
     data_dir:    str,
     output_path: str | None = None,
+    yml_only:    bool = False,
 ) -> Path:
     """Parse the full corpus and write the versioned JSON store.
 
@@ -155,18 +311,24 @@ def build(
         Override the default output path.  Defaults to
         data/openiti_<corpus_version>.json.
 
+    yml_only
+        If True, parse only YML files (legacy mode).
+        If False (default), use TSV as primary source with YML fallback.
+
     Returns the output Path.
     """
     openiti_cfg = load_openiti_config()
     out_path    = _resolve_output_path(output_path, openiti_cfg.corpus_version)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
+    preserve_wikidata = False
     if out_path.exists():
         print(f"Output already exists: {out_path}")
         print("Overwriting.  Run `update` in future to make intent explicit.")
+        preserve_wikidata = True
 
-    corpus = _load_corpus(data_dir)
-    _write_output(out_path, corpus, data_dir, openiti_cfg.corpus_version)
+    corpus = _load_corpus(data_dir, yml_only=yml_only)
+    _write_output(out_path, corpus, data_dir, openiti_cfg.corpus_version, preserve_existing=out_path if preserve_wikidata else None)
 
     print(
         f"\nDone.  Books: {len(corpus.books)}  "
@@ -180,11 +342,17 @@ def build(
 def update(
     data_dir:    str,
     output_path: str | None = None,
+    yml_only:    bool = False,
 ) -> Path:
     """Re-parse after a corpus version bump or YML additions.
 
     Identical to build — re-parses the full corpus and overwrites the
     output file.  There is no HTTP cost, so a full re-parse is always safe.
+    Preserves existing Wikidata enrichment (wd_* fields).
+
+    yml_only
+        If True, parse only YML files (legacy mode).
+        If False (default), use TSV as primary source with YML fallback.
 
     Returns the output Path.
     """
@@ -192,8 +360,9 @@ def update(
     out_path    = _resolve_output_path(output_path, openiti_cfg.corpus_version)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    corpus = _load_corpus(data_dir)
-    _write_output(out_path, corpus, data_dir, openiti_cfg.corpus_version)
+    corpus = _load_corpus(data_dir, yml_only=yml_only)
+    # Always try to preserve wikidata enrichment on update
+    _write_output(out_path, corpus, data_dir, openiti_cfg.corpus_version, preserve_existing=out_path if out_path.exists() else None)
 
     print(
         f"\nDone.  Books: {len(corpus.books)}  "
@@ -237,11 +406,11 @@ def load_openiti_corpus(
 # ---------------------------------------------------------------------------
 
 def _build_cli(args: argparse.Namespace) -> None:
-    build(data_dir=args.dir, output_path=args.output)
+    build(data_dir=args.dir, output_path=args.output, yml_only=args.yml_only)
 
 
 def _update_cli(args: argparse.Namespace) -> None:
-    update(data_dir=args.dir, output_path=args.output)
+    update(data_dir=args.dir, output_path=args.output, yml_only=args.yml_only)
 
 
 if __name__ == "__main__":
@@ -266,6 +435,10 @@ if __name__ == "__main__":
     _shared.add_argument(
         "--output", default=None,
         help="Override output path (default: data/openiti_parsed_<version>.json).",
+    )
+    _shared.add_argument(
+        "--yml-only", action="store_true",
+        help="Parse only YML files (legacy mode). By default, uses TSV as primary source.",
     )
 
     p_build = sub.add_parser(
