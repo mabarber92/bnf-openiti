@@ -595,14 +595,19 @@ class BNFXml:
     ) -> list[str]:
         """Extract non-boilerplate segments from description strings.
 
-        Uses boilerplate n-grams as character-span masks: tokens covered by
-        any boilerplate n-gram (bigrams–quadgrams) are masked out, and
-        contiguous runs of uncovered tokens are extracted as character-level
-        substrings of the original string.
+        Two categories of phrase act as span masks:
 
-        This is preferable to whole-string filtering because a long description
-        like "Auteur du texte. Traité de logique. Reliure orientale." yields
-        "Traité de logique" as a candidate rather than being discarded entirely.
+        * Boilerplate n-grams (from boilerplate.json) — structural filler that
+          carries no matching signal.
+        * Signal phrases (from relation_terms) — phrases like "daté de" or
+          "lieu de copie" that mark structural metadata rather than titles or
+          names; they split the description without being useful candidates
+          themselves.
+
+        Covered tokens are removed and contiguous uncovered runs are extracted
+        as character-level substrings.  Matching uses a greedy longest-match-
+        first scan so that a short phrase that overlaps a longer one does not
+        create a spurious split inside the longer match.
 
         A segment is kept when:
           1. At least min_desc_tokens uncovered tokens form the run.
@@ -610,16 +615,21 @@ class BNFXml:
 
         Segments already in *existing* (title_lat / title_ar) are skipped.
 
-        When no boilerplate is loaded, falls back to whole-string filtering
-        (same behaviour as the old _desc_candidates).
+        When neither boilerplate nor signals are loaded, falls back to
+        whole-string filtering (include strings ≤ max_desc_len as-is).
         """
         boilerplate = self._boilerplate_ngrams.get("description", frozenset())
+        # Signal phrases split descriptions just like boilerplate — they mark
+        # structural metadata (dates, locations, role labels) not matching data.
+        signal_phrases = frozenset(pat.lower() for pat in self.relation_terms)
+        splitters = boilerplate | signal_phrases
+
         seen = set(existing)
         candidates: list[str] = []
 
         for text in desc_texts:
-            if not boilerplate:
-                # No boilerplate available: include whole string up to max_desc_len
+            if not splitters:
+                # No splitters available: include whole string up to max_desc_len
                 if len(text) <= self._max_desc_len and text not in seen:
                     candidates.append(text)
                     seen.add(text)
@@ -634,14 +644,24 @@ class BNFXml:
             n_tok   = len(tokens)
             covered = [False] * n_tok
 
-            for i in range(n_tok):
-                for size in range(2, 5):
+            # Greedy longest-match-first: at each position try sizes 4→2 and
+            # advance past the matched phrase so overlapping shorter phrases
+            # inside a longer match don't create additional split points.
+            i = 0
+            while i < n_tok:
+                matched = False
+                for size in range(4, 1, -1):
                     end = i + size
                     if end > n_tok:
-                        break
-                    if " ".join(tokens[i:end]) in boilerplate:
+                        continue
+                    if " ".join(tokens[i:end]) in splitters:
                         for j in range(i, end):
                             covered[j] = True
+                        i = end
+                        matched = True
+                        break
+                if not matched:
+                    i += 1
 
             # Extract contiguous runs of uncovered tokens as character segments
             run_start: int | None = None
@@ -670,6 +690,9 @@ class BNFXml:
             return
         char_start = tok_pos[run_start][1]
         char_end   = tok_pos[run_end - 1][2]
+        # Include trailing punctuation (closing parens, periods) up to next whitespace
+        while char_end < len(text) and not text[char_end].isspace():
+            char_end += 1
         segment    = text[char_start:char_end].strip()
         if not segment or len(segment) > self._max_desc_len:
             return
