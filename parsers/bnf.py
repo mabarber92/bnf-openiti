@@ -98,9 +98,10 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from utils.tokens import (  # noqa: E402
-    has_arabic       as _has_arabic,
-    tokenize_lat_pos as _tokenize_lat_pos,
-    tokenize_ar_pos  as _tokenize_ar_pos,
+    has_arabic                 as _has_arabic,
+    tokenize_lat_pos           as _tokenize_lat_pos,
+    tokenize_ar_pos            as _tokenize_ar_pos,
+    greedy_longest_match_scan  as _greedy_match,
 )
 
 # ---------------------------------------------------------------------------
@@ -642,7 +643,7 @@ class BNFXml:
             covered = [False] * n_tok
             signal_at: dict[int, str] = {}  # token_position → signal_type
 
-            # Pass 1: Greedy signal matching (priority, sizes 4→2)
+            # Pass 1: Greedy signal matching (priority) — track signal types
             i = 0
             while i < n_tok:
                 matched = False
@@ -655,7 +656,6 @@ class BNFXml:
                     if phrase_lower in signal_phrases:
                         for j in range(i, end):
                             covered[j] = True
-                        # Track the signal type at the start of this covered span
                         signal_type = signal_map[phrase_lower]
                         signal_at[i] = signal_type
                         i = end
@@ -665,27 +665,8 @@ class BNFXml:
                     i += 1
 
             # Pass 2: Greedy boilerplate matching on remaining uncovered tokens
-            i = 0
-            while i < n_tok:
-                if covered[i]:
-                    i += 1
-                    continue
-                matched = False
-                for size in range(4, 1, -1):
-                    end = i + size
-                    if end > n_tok:
-                        continue
-                    # Skip if any token in range is already covered
-                    if any(covered[j] for j in range(i, end)):
-                        continue
-                    if " ".join(tokens[i:end]) in boilerplate:
-                        for j in range(i, end):
-                            covered[j] = True
-                        i = end
-                        matched = True
-                        break
-                if not matched:
-                    i += 1
+            # (use utility with skip_covered=True to avoid re-matching already-covered positions)
+            _greedy_match(tokens, boilerplate, covered, skip_covered=True, case_sensitive=True)
 
             # Extract contiguous runs of uncovered tokens using between-phrase boundaries
             run_start: int | None = None
@@ -748,7 +729,9 @@ class BNFXml:
         if segment in seen:
             return
 
-        # Label assignment: find the nearest signal before and after the run
+        # Label assignment: check for relation markers on either side of the run.
+        # For linguistic agnosticism, scan both directions to capture relation data
+        # regardless of word order or which side marks the relation structurally.
         label_before = None
         label_after = None
 
@@ -764,8 +747,8 @@ class BNFXml:
                 label_after = signal_at[i]
                 break
 
-        # Assign label: prefer single label, but if both exist, prioritize
-        # based on proximity (could be extended to store both in future)
+        # Prefer preceding signal (typically marks context); fall back to following signal.
+        # Both directions are always checked to ensure no relations are missed.
         label = label_before or label_after
 
         seen.add(segment)

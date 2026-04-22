@@ -211,6 +211,73 @@ def make_ngrams(tokens: list[str], n: int) -> list[str]:
     return [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
 
 
+def greedy_longest_match_scan(
+    tokens: list[str],
+    phrases: frozenset[str],
+    covered: list[bool],
+    skip_covered: bool = False,
+    case_sensitive: bool = False,
+    max_phrase_size: int = 4,
+) -> None:
+    """Greedy longest-match-first token scanning (in-place marking).
+
+    Scans tokens left-to-right, greedily matching the longest phrase at each
+    position, then advancing past it. This prevents overlapping shorter phrases
+    inside a longer match from creating spurious split points.
+
+    Marks matched tokens in the `covered` list in-place.
+
+    Parameters
+    ----------
+    tokens : list[str]
+        Sequence of tokens to scan.
+    phrases : frozenset[str]
+        Set of phrases to match (space-separated tokens, e.g. "daté de").
+    covered : list[bool]
+        In-place marking list; covered[i] = True if token i matches.
+    skip_covered : bool
+        If True, skip positions already marked as covered (for multi-pass).
+    case_sensitive : bool
+        If False (default), phrases are matched case-insensitively.
+    max_phrase_size : int
+        Maximum phrase size in tokens to attempt (default 4).
+    """
+    n_tok = len(tokens)
+    i = 0
+
+    while i < n_tok:
+        if skip_covered and covered[i]:
+            i += 1
+            continue
+
+        matched = False
+        for size in range(max_phrase_size, 1, -1):
+            end = i + size
+            if end > n_tok:
+                continue
+            phrase = " ".join(tokens[i:end])
+            if not case_sensitive:
+                phrase = phrase.lower()
+
+            # Check if phrase matches (normalize phrases list once if not case-sensitive)
+            phrase_match = False
+            for p in phrases:
+                p_check = p if case_sensitive else p.lower()
+                if phrase == p_check:
+                    phrase_match = True
+                    break
+
+            if phrase_match:
+                for j in range(i, end):
+                    covered[j] = True
+                i = end
+                matched = True
+                break
+
+        if not matched:
+            i += 1
+
+
 # ---------------------------------------------------------------------------
 # OpenITI slug normalisation
 # ---------------------------------------------------------------------------

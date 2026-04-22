@@ -419,8 +419,15 @@ class OpenITITSVRow:
 class OpenITITSV:
     """Load and parse the OpenITI compiled metadata TSV.
 
-    The TSV is at version granularity; this class aggregates to book and author
-    level, producing dicts compatible with OpenITIMetaYmls output.
+    The TSV is at version granularity (one row per text version); this class
+    aggregates versions to book and author level, producing dicts compatible
+    with OpenITIMetaYmls output.
+
+    Key assumption: OpenITI URI structure guarantees all versions of the same
+    book share identical book_uri and author_uri (derived from the URI itself,
+    not from varying metadata). Thus, aggregating versions by taking the first
+    occurrence of each metadata field (title, names) is safe—all versions of
+    the same book have the same canonical data.
 
     Returns:
         authors: dict[str, OpenITIAuthorData]
@@ -435,10 +442,22 @@ class OpenITITSV:
         self._load(tsv_path)
 
     def _load(self, tsv_path: str) -> None:
-        """Load and parse the TSV file."""
-        with open(tsv_path, encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            rows = [OpenITITSVRow(row) for row in reader]
+        """Load and parse the TSV file.
+
+        Raises FileNotFoundError if the TSV path does not exist.
+        Logs warnings for malformed rows (missing required fields).
+        """
+        try:
+            with open(tsv_path, encoding="utf-8") as f:
+                reader = csv.DictReader(f, delimiter="\t")
+                rows = []
+                for row_num, row in enumerate(reader, start=2):  # start=2 (after header)
+                    try:
+                        rows.append(OpenITITSVRow(row))
+                    except Exception as e:
+                        logger.warning(f"Skipping malformed TSV row {row_num}: {e}")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"TSV file not found: {tsv_path}")
 
         # Index rows by book_uri and author_uri for aggregation
         books_data: dict[str, dict[str, str]] = {}  # book_uri → aggregated fields
@@ -472,14 +491,12 @@ class OpenITITSV:
 
         # Build book records from aggregated data
         for book_uri, book_fields in books_data.items():
-            # Extract author and title slugs from URI
-            uri_parts = book_uri.split(".")
-            author_slug = uri_parts[0] if uri_parts else ""
-            title_slug = uri_parts[1] if len(uri_parts) > 1 else ""
+            death_year_ah, author_slug, title_slug = _decompose_uri(book_uri)
 
             self.books[book_uri] = OpenITIBookData(
                 uri=book_uri,
                 author_uri=book_fields["author_uri"],
+                death_year_ah=death_year_ah,
                 author_slug=author_slug,
                 title_slug=title_slug,
                 title_a=book_fields["title_lat"],
@@ -488,11 +505,11 @@ class OpenITITSV:
 
         # Build author records from aggregated data
         for author_uri, author_fields in authors_data.items():
-            # Extract author slug from URI
-            author_slug = author_uri.split(".")[0] if author_uri else ""
+            death_year_ah, author_slug, _ = _decompose_uri(author_uri)
 
             self.authors[author_uri] = OpenITIAuthorData(
                 uri=author_uri,
+                death_year_ah=death_year_ah,
                 name_slug=author_slug,
                 name_shuhra_ar=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra
             )
