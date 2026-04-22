@@ -53,7 +53,7 @@ Stage 3  survey build     →  outputs/bnf_survey/summary.json
          ↓
 Stage 4  apply-review     →  outputs/bnf_survey/boilerplate.json
          ↓
-Stage 5  parse BNF        →  outputs/bnf_parsed.json               [not yet implemented]
+Stage 5  parse BNF        →  outputs/bnf_parsed.json
 
 ── Matching and resolution ───────────────────────────────────────────────────────
 
@@ -334,7 +334,82 @@ manifest in place.
 
 ## Stage 5 — Parse BNF records
 
-**Not yet a CLI stage** — called programmatically.
+Parse OAI-PMH XML files into structured JSON records using the curated
+boilerplate (from Stage 4).
+
+**Prerequisite:**  
+Stage 4 must be completed first — `outputs/bnf_survey/boilerplate.json` is required.
+
+### Build (full collection)
+
+```bash
+python utils/parse_bnf.py build
+```
+
+Parses all `OAI_*.xml` files in `bnf_data_path`, extracts:
+- Titles (Latin and Arabic, split on '. ')
+- Creators (dates and role suffixes cleaned)
+- Description candidates (boilerplate-filtered; now labeled with relation types)
+- Subject, contributor, format, coverage
+- Detected relations (e.g. commentary, date:copy)
+
+For each `dc:description` string:
+1. **Signal matching** (Pass 1): Finds relation markers ("daté de", "lieu de copie") and marks them as covered spans, tracking the signal type
+2. **Boilerplate matching** (Pass 2): Finds remaining boilerplate n-grams (from curated list) and marks them covered
+3. **Between-phrase extraction**: Extracts uncovered token runs using character boundaries of adjacent covered phrases, capturing inter-token content (digits, punctuation)
+4. **Label assignment**: Each candidate inherits the nearest signal's relation type
+
+**Outputs:**
+
+| file | contents |
+|---|---|
+| `outputs/bnf_parsed.json` | all parsed BNF records as JSON (no `_matching_data`); reused across matching runs to avoid re-parsing |
+
+Typical collection (7,825 records) parses in under 30 seconds.
+
+### Update (incremental)
+
+```bash
+python utils/parse_bnf.py update
+```
+
+Re-parses only XML files not yet present in the existing `bnf_parsed.json`.
+Safe to run when new records are added to the collection.
+
+### Sample (exploration and validation)
+
+```bash
+python utils/parse_bnf.py sample --n 50 --seed 42
+```
+
+**Purpose:** Validate parser output during development; inspect description
+candidates and relation detection; run regression checks.
+
+**Key difference:** The sample output includes `_matching_data` (matching
+candidates for each record), while the final `bnf_parsed.json` does **not**.
+
+```json
+{
+  "OAI_11002945": {
+    "bnf_id": "OAI_11002945",
+    "title_lat": [...],
+    "description_candidates_lat": ["Fabricius...", "1666"],
+    "description_candidate_labels_lat": ["date:copy", "date:copy"],
+    "_matching_data": {"lat": [...], "ar": [...]}     // ← sample only; not in bnf_parsed.json
+  }
+}
+```
+
+**Options:**
+- `--n` — sample size (default 50)
+- `--seed` — random seed for reproducibility
+- `--output` — override output path
+
+---
+
+### Programmatic access
+
+For threshold experimentation or embedding-based downstream stages:
 
 ```python
 import parsers.bnf as bnf
@@ -353,6 +428,8 @@ metadata = bnf.BNFMetadata(cfg.bnf_data_path)
 # Access a record
 record = metadata.get("OAI_11000434")
 print(record.matching_data())   # {"lat": [...], "ar": [...]}
+print(record.description_candidates_lat)
+print(record.description_candidate_labels_lat)
 ```
 
 **Threshold experimentation (bypass manual review):**
@@ -364,12 +441,6 @@ bnf.BOILERPLATE_NGRAMS = bnf.load_boilerplate_ngrams(
     max_repeats_per_doc=1.1,
 )
 ```
-
-**Outputs** (planned, not yet implemented):
-
-| file | contents |
-|---|---|
-| `outputs/bnf_parsed.json` | all parsed BNF records as JSON; reused across matching runs to avoid re-parsing |
 
 ---
 
@@ -421,6 +492,7 @@ before overwriting.
 | `utils/config.py` | yes | typed config loader; all defaults defined here |
 | `utils/tokens.py` | yes | shared tokenisation (Latin + Arabic) |
 | `utils/survey_bnf.py` | yes | BNF survey pipeline: `build` and `apply-review` subcommands |
+| `utils/parse_bnf.py` | yes | BNF parsing CLI: `build`, `update`, and `sample` subcommands |
 | `utils/parse_openiti.py` | yes | OpenITI parse script: `build` and `update` subcommands |
 | `utils/enrich_wikidata.py` | yes | Wikidata enrichment: `build` and `update` subcommands |
 | `parsers/bnf.py` | yes | BNF XML parser: `BNFXml`, `BNFMetadata`, `BNFRecord` |
