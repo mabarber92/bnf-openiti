@@ -1,0 +1,26 @@
+COMPREHENSIVE FUZZY MATCHING TEST REPORT
+======================================================================
+
+Test pairs: 11
+Match attempts: 345
+Unique BNF-OpenITI comparisons: 11
+
+SUCCESS RATE BY THRESHOLD (token_set_ratio)
+----------------------------------------------------------------------
+  0.7: 69/69 (100.0%)
+  0.75: 69/69 (100.0%)
+  0.8: 69/69 (100.0%)
+  0.85: 69/69 (100.0%)
+  0.9: 69/69 (100.0%)
+
+FIELDS TESTED
+----------------------------------------------------------------------
+  all_ara → all_ara: 165 attempts
+  all_lat → all_lat: 180 attempts
+
+RECOMMENDATION
+----------------------------------------------------------------------
+Overall success rate at 0.80 threshold: 100.0%
+
+✓ Fuzzy matching is performing well.
+Proceed with surface matching using threshold 0.80–0.85.

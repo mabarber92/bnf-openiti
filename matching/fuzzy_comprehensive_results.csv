@@ -1,0 +1,346 @@
+openiti_uri,bnf_id,bnf_field,openiti_field,query,target,score_simple,score_token_set,match_0.7,match_0.75,match_0.8,match_0.85,match_0.9,is_expected
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_lat,all_lat,Anwār al-tanzīl wa-asrār al-taʾwīl,Anwar Tanzil,39.00,51.00,True,,,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_lat,all_lat,Anwār al-tanzīl wa-asrār al-taʾwīl,Anwar Tanzil,39.00,51.00,,True,,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_lat,all_lat,Anwār al-tanzīl wa-asrār al-taʾwīl,Anwar Tanzil,39.00,51.00,,,True,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_lat,all_lat,Anwār al-tanzīl wa-asrār al-taʾwīl,Anwar Tanzil,39.00,51.00,,,,True,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_lat,all_lat,Anwār al-tanzīl wa-asrār al-taʾwīl,Anwar Tanzil,39.00,51.00,,,,,True,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_ara,all_ara,عبد الله بن عمر البيضاوي,تفسير البيضاوي,53.00,73.00,True,,,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_ara,all_ara,عبد الله بن عمر البيضاوي,تفسير البيضاوي,53.00,73.00,,True,,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_ara,all_ara,عبد الله بن عمر البيضاوي,تفسير البيضاوي,53.00,73.00,,,True,,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_ara,all_ara,عبد الله بن عمر البيضاوي,تفسير البيضاوي,53.00,73.00,,,,True,,True
+0685NasirDinBaydawi.AnwarTanzil,OAI_11000434,all_ara,all_ara,عبد الله بن عمر البيضاوي,تفسير البيضاوي,53.00,73.00,,,,,True,True
+0660IbnCadim.BughyatTalab,OAI_10030933,all_lat,all_lat,Boughiat al-talab fi taʾrikh Halab,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,66.00,56.00,True,,,,,True
+0660IbnCadim.BughyatTalab,OAI_10030933,all_lat,all_lat,Boughiat al-talab fi taʾrikh Halab,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,66.00,56.00,,True,,,,True
+0660IbnCadim.BughyatTalab,OAI_10030933,all_lat,all_lat,Boughiat al-talab fi taʾrikh Halab,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,66.00,56.00,,,True,,,True
+0660IbnCadim.BughyatTalab,OAI_10030933,all_lat,all_lat,Boughiat al-talab fi taʾrikh Halab,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,66.00,56.00,,,,True,,True
+0660IbnCadim.BughyatTalab,OAI_10030933,all_lat,all_lat,Boughiat al-talab fi taʾrikh Halab,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,66.00,56.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_10882524,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,,True,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),al-Muḫtaṣar fī aḫbār al-bašar,75.00,88.00,True,,,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),al-Muḫtaṣar fī aḫbār al-bašar,75.00,88.00,,True,,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),al-Muḫtaṣar fī aḫbār al-bašar,75.00,88.00,,,True,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),al-Muḫtaṣar fī aḫbār al-bašar,75.00,88.00,,,,True,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),al-Muḫtaṣar fī aḫbār al-bašar,75.00,88.00,,,,,True,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,المختصر في أخبار البشر,93.00,95.00,True,,,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,المختصر في أخبار البشر,93.00,95.00,,True,,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,المختصر في أخبار البشر,93.00,95.00,,,True,,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,المختصر في أخبار البشر,93.00,95.00,,,,True,,True
+0732AbuFida.MukhtasarFiAkhbar,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,المختصر في أخبار البشر,93.00,95.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Awzan Wa Akyal,35.00,41.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Awzan Wa Akyal,35.00,41.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Awzan Wa Akyal,35.00,41.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Awzan Wa Akyal,35.00,41.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Awzan Wa Akyal,35.00,41.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Kitāb al-Awzān wa-l-Akyāl al-Sharʿīya,10.00,22.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Kitāb al-Awzān wa-l-Akyāl al-Sharʿīya,10.00,22.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Kitāb al-Awzān wa-l-Akyāl al-Sharʿīya,10.00,22.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Kitāb al-Awzān wa-l-Akyāl al-Sharʿīya,10.00,22.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Kitāb al-Awzān wa-l-Akyāl al-Sharʿīya,10.00,22.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"GALLAND, Antoine.",Bayan,9.00,30.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"GALLAND, Antoine.",Bayan,9.00,30.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"GALLAND, Antoine.",Bayan,9.00,30.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"GALLAND, Antoine.",Bayan,9.00,30.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"GALLAND, Antoine.",Bayan,9.00,30.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,البيان والإعراب عما بأرض مصر من الأعراب,50.00,50.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,البيان والإعراب عما بأرض مصر من الأعراب,50.00,50.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,البيان والإعراب عما بأرض مصر من الأعراب,50.00,50.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,البيان والإعراب عما بأرض مصر من الأعراب,50.00,50.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,البيان والإعراب عما بأرض مصر من الأعراب,50.00,50.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Daw Sari,9.00,48.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Daw Sari,9.00,48.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Daw Sari,9.00,48.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Daw Sari,9.00,48.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Daw Sari,9.00,48.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,الضوء الساري في معرفة خبر تميم الداري - مخطوط,56.00,55.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,الضوء الساري في معرفة خبر تميم الداري - مخطوط,56.00,55.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,الضوء الساري في معرفة خبر تميم الداري - مخطوط,56.00,55.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,الضوء الساري في معرفة خبر تميم الداري - مخطوط,56.00,55.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,الضوء الساري في معرفة خبر تميم الداري - مخطوط,56.00,55.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Dhahab Masbuk,23.00,35.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Dhahab Masbuk,23.00,35.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Dhahab Masbuk,23.00,35.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Dhahab Masbuk,23.00,35.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Dhahab Masbuk,23.00,35.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Dhahab al-Masbūk fī dhikr man ḥajja min al-khulafāʾ wa-l-mulūk,16.00,22.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Dhahab al-Masbūk fī dhikr man ḥajja min al-khulafāʾ wa-l-mulūk,16.00,22.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Dhahab al-Masbūk fī dhikr man ḥajja min al-khulafāʾ wa-l-mulūk,16.00,22.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Dhahab al-Masbūk fī dhikr man ḥajja min al-khulafāʾ wa-l-mulūk,16.00,22.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Dhahab al-Masbūk fī dhikr man ḥajja min al-khulafāʾ wa-l-mulūk,16.00,22.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Durar al-ʿuqūd al-farīdaŧ fī tarāǧim al-aʿyān al-mufīdaŧ,41.00,47.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Durar al-ʿuqūd al-farīdaŧ fī tarāǧim al-aʿyān al-mufīdaŧ,41.00,47.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Durar al-ʿuqūd al-farīdaŧ fī tarāǧim al-aʿyān al-mufīdaŧ,41.00,47.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Durar al-ʿuqūd al-farīdaŧ fī tarāǧim al-aʿyān al-mufīdaŧ,41.00,47.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Durar al-ʿuqūd al-farīdaŧ fī tarāǧim al-aʿyān al-mufīdaŧ,41.00,47.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,درر العقود الفريدة في تراجم الأعيان المفيدة,47.00,55.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,درر العقود الفريدة في تراجم الأعيان المفيدة,47.00,55.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,درر العقود الفريدة في تراجم الأعيان المفيدة,47.00,55.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,درر العقود الفريدة في تراجم الأعيان المفيدة,47.00,55.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,درر العقود الفريدة في تراجم الأعيان المفيدة,47.00,55.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Fadl Al Bayt,37.00,43.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Fadl Al Bayt,37.00,43.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Fadl Al Bayt,37.00,43.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Fadl Al Bayt,37.00,43.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Fadl Al Bayt,37.00,43.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,فضل آل البيت,36.00,38.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,فضل آل البيت,36.00,38.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,فضل آل البيت,36.00,38.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,فضل آل البيت,36.00,38.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,فضل آل البيت,36.00,38.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ighatha Umma,29.00,42.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ighatha Umma,29.00,42.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ighatha Umma,29.00,42.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ighatha Umma,29.00,42.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ighatha Umma,29.00,42.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ilmam,22.00,31.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ilmam,22.00,31.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ilmam,22.00,31.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ilmam,22.00,31.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Ilmam,22.00,31.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Ilmām bi-Akhbār man bi-Arḍ al-Ḥabasha min Mulūk al-Islām,17.00,22.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Ilmām bi-Akhbār man bi-Arḍ al-Ḥabasha min Mulūk al-Islām,17.00,22.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Ilmām bi-Akhbār man bi-Arḍ al-Ḥabasha min Mulūk al-Islām,17.00,22.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Ilmām bi-Akhbār man bi-Arḍ al-Ḥabasha min Mulūk al-Islām,17.00,22.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",al-Ilmām bi-Akhbār man bi-Arḍ al-Ḥabasha min Mulūk al-Islām,17.00,22.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Imtac Asmac,30.00,44.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Imtac Asmac,30.00,44.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Imtac Asmac,30.00,44.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Imtac Asmac,30.00,44.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Imtac Asmac,30.00,44.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إمتاع الأسماع بما للنبي من الأحوال و الأموال و الحفدة و المتاع‏ - الجزء1,49.00,53.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إمتاع الأسماع بما للنبي من الأحوال و الأموال و الحفدة و المتاع‏ - الجزء1,49.00,53.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إمتاع الأسماع بما للنبي من الأحوال و الأموال و الحفدة و المتاع‏ - الجزء1,49.00,53.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إمتاع الأسماع بما للنبي من الأحوال و الأموال و الحفدة و المتاع‏ - الجزء1,49.00,53.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إمتاع الأسماع بما للنبي من الأحوال و الأموال و الحفدة و المتاع‏ - الجزء1,49.00,53.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),ʾIttiʿāẓ al-ḥunafā bi-aḫbār al-ʾaʾimmaŧ al-Fāṭimiyyīn al-ḫulafā,42.00,46.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),ʾIttiʿāẓ al-ḥunafā bi-aḫbār al-ʾaʾimmaŧ al-Fāṭimiyyīn al-ḫulafā,42.00,46.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),ʾIttiʿāẓ al-ḥunafā bi-aḫbār al-ʾaʾimmaŧ al-Fāṭimiyyīn al-ḫulafā,42.00,46.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),ʾIttiʿāẓ al-ḥunafā bi-aḫbār al-ʾaʾimmaŧ al-Fāṭimiyyīn al-ḫulafā,42.00,46.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),ʾIttiʿāẓ al-ḥunafā bi-aḫbār al-ʾaʾimmaŧ al-Fāṭimiyyīn al-ḫulafā,42.00,46.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إتعاظ الحنفا بأخبار الأإمة الفاطميين الخلفا,45.00,45.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إتعاظ الحنفا بأخبار الأإمة الفاطميين الخلفا,45.00,45.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إتعاظ الحنفا بأخبار الأإمة الفاطميين الخلفا,45.00,45.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إتعاظ الحنفا بأخبار الأإمة الفاطميين الخلفا,45.00,45.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,إسماعيل بن علي أبو الفداء الحموي الملك المؤيد.,إتعاظ الحنفا بأخبار الأإمة الفاطميين الخلفا,45.00,45.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Khabar Can Bashar,37.00,42.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Khabar Can Bashar,37.00,42.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Khabar Can Bashar,37.00,42.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Khabar Can Bashar,37.00,42.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muẖtaṣar fi aẖbār al-bašar (al-),Khabar Can Bashar,37.00,42.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",kitāb al-Khabar ʿan al-Bashar Fī ’ansāb al-‘Arab wa Nasab Sayyed al-Bashar,18.00,21.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",kitāb al-Khabar ʿan al-Bashar Fī ’ansāb al-‘Arab wa Nasab Sayyed al-Bashar,18.00,21.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",kitāb al-Khabar ʿan al-Bashar Fī ’ansāb al-‘Arab wa Nasab Sayyed al-Bashar,18.00,21.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",kitāb al-Khabar ʿan al-Bashar Fī ’ansāb al-‘Arab wa Nasab Sayyed al-Bashar,18.00,21.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",kitāb al-Khabar ʿan al-Bashar Fī ’ansāb al-‘Arab wa Nasab Sayyed al-Bashar,18.00,21.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,45.00,51.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,45.00,51.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,45.00,51.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,45.00,51.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,45.00,51.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,46.00,52.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,46.00,52.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,46.00,52.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,46.00,52.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,46.00,52.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),Muḫtaṣar al-Kāmil fī al-ḍuʿafāʾ wa ʿilal al-ḥadīṯ,44.00,55.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),Muḫtaṣar al-Kāmil fī al-ḍuʿafāʾ wa ʿilal al-ḥadīṯ,44.00,55.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),Muḫtaṣar al-Kāmil fī al-ḍuʿafāʾ wa ʿilal al-ḥadīṯ,44.00,55.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),Muḫtaṣar al-Kāmil fī al-ḍuʿafāʾ wa ʿilal al-ḥadīṯ,44.00,55.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Kawākib al-sāʾira fī aẖbār Miṣr wa-al-Qāhira (al-),Muḫtaṣar al-Kāmil fī al-ḍuʿafāʾ wa ʿilal al-ḥadīṯ,44.00,55.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر الكامل في الضعفاء و علل الحديث,46.00,57.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر الكامل في الضعفاء و علل الحديث,46.00,57.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر الكامل في الضعفاء و علل الحديث,46.00,57.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر الكامل في الضعفاء و علل الحديث,46.00,57.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر الكامل في الضعفاء و علل الحديث,46.00,57.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Kitab Witr,38.00,44.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Kitab Witr,38.00,44.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Kitab Witr,38.00,44.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Kitab Witr,38.00,44.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Kitab Witr,38.00,44.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر كتاب الوتر,59.00,61.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر كتاب الوتر,59.00,61.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر كتاب الوتر,59.00,61.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر كتاب الوتر,59.00,61.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر كتاب الوتر,59.00,61.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Layl,43.00,49.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Layl,43.00,49.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Layl,43.00,49.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Layl,43.00,49.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Layl,43.00,49.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر قيام الليل,59.00,56.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر قيام الليل,59.00,56.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر قيام الليل,59.00,56.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر قيام الليل,59.00,56.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,مختصر قيام الليل,59.00,56.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Ramadan,40.00,41.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Ramadan,40.00,41.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Ramadan,40.00,41.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Ramadan,40.00,41.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Mukhtasar Qiyam Ramadan,40.00,41.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى.",قيام رمضان لمحمد بن نصر,44.00,54.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى.",قيام رمضان لمحمد بن نصر,44.00,54.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى.",قيام رمضان لمحمد بن نصر,44.00,54.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى.",قيام رمضان لمحمد بن نصر,44.00,54.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى.",قيام رمضان لمحمد بن نصر,44.00,54.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Muqaffa,28.00,29.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Muqaffa,28.00,29.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Muqaffa,28.00,29.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Muqaffa,28.00,29.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Muqaffa,28.00,29.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,المقفى الكبير,28.00,40.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,المقفى الكبير,28.00,40.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,المقفى الكبير,28.00,40.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,المقفى الكبير,28.00,40.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,الكواكب السائرة في أخبار مصر والقاهرة,المقفى الكبير,28.00,40.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Musawwadat Mawaciz,45.00,51.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Musawwadat Mawaciz,45.00,51.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Musawwadat Mawaciz,45.00,51.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Musawwadat Mawaciz,45.00,51.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Musawwadat Mawaciz,45.00,51.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Nizac Wa Takhasum,31.00,37.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Nizac Wa Takhasum,31.00,37.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Nizac Wa Takhasum,31.00,37.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Nizac Wa Takhasum,31.00,37.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Muḥammad Niʿmat Allah.,Nizac Wa Takhasum,31.00,37.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,النزاع والتخاصم,32.00,40.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,النزاع والتخاصم,32.00,40.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,النزاع والتخاصم,32.00,40.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,النزاع والتخاصم,32.00,40.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,مجموع من التواريخ القديمة الإسلامية,النزاع والتخاصم,32.00,40.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Rasāʾil al-Maqrīzī,64.00,71.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Rasāʾil al-Maqrīzī,64.00,71.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Rasāʾil al-Maqrīzī,64.00,71.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Rasāʾil al-Maqrīzī,64.00,71.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,Rasāʾil al-Maqrīzī,64.00,71.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,أحمد بن علي المقريزي.,رسائل المقريزي,57.00,73.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,أحمد بن علي المقريزي.,رسائل المقريزي,57.00,73.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,أحمد بن علي المقريزي.,رسائل المقريزي,57.00,73.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,أحمد بن علي المقريزي.,رسائل المقريزي,57.00,73.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,أحمد بن علي المقريزي.,رسائل المقريزي,57.00,73.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Shudhur Cuqud,14.00,31.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Shudhur Cuqud,14.00,31.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Shudhur Cuqud,14.00,31.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Shudhur Cuqud,14.00,31.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Shudhur Cuqud,14.00,31.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Shudhūr al-ʿUqūd fī Dhikr al-Nuqūd,15.00,20.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Shudhūr al-ʿUqūd fī Dhikr al-Nuqūd,15.00,20.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Shudhūr al-ʿUqūd fī Dhikr al-Nuqūd,15.00,20.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Shudhūr al-ʿUqūd fī Dhikr al-Nuqūd,15.00,20.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,"محمد بن محمد بن شاهنشاه , منسوب إلى. Auteur prétendu du texte",Shudhūr al-ʿUqūd fī Dhikr al-Nuqūd,15.00,20.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,al-Sulūk li-maʿrifaŧ duwal al-mulūk,30.00,42.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,al-Sulūk li-maʿrifaŧ duwal al-mulūk,30.00,42.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,al-Sulūk li-maʿrifaŧ duwal al-mulūk,30.00,42.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,al-Sulūk li-maʿrifaŧ duwal al-mulūk,30.00,42.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,Aḥmad ibn ʿAlī al-Maqrīzī.,al-Sulūk li-maʿrifaŧ duwal al-mulūk,30.00,42.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,محمد نعمة الله.,السلوك لمعرفة دول الملوك,36.00,47.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,محمد نعمة الله.,السلوك لمعرفة دول الملوك,36.00,47.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,محمد نعمة الله.,السلوك لمعرفة دول الملوك,36.00,47.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,محمد نعمة الله.,السلوك لمعرفة دول الملوك,36.00,47.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,محمد نعمة الله.,السلوك لمعرفة دول الملوك,36.00,47.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Tajrid Tawhid,14.00,38.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Tajrid Tawhid,14.00,38.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Tajrid Tawhid,14.00,38.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Tajrid Tawhid,14.00,38.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_lat,all_lat,"ASCARI, Joseph.",Tajrid Tawhid,14.00,38.00,,,,,True,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,تجريد التوحيد المفيد,39.00,45.00,True,,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,تجريد التوحيد المفيد,39.00,45.00,,True,,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,تجريد التوحيد المفيد,39.00,45.00,,,True,,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,تجريد التوحيد المفيد,39.00,45.00,,,,True,,True
+0845Maqrizi,OAI_10884186,all_ara,all_ara,‬مختصر في أخبار البشر,تجريد التوحيد المفيد,39.00,45.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_10884191,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Hawadith Duhur,15.00,20.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Hawadith Duhur,15.00,20.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Hawadith Duhur,15.00,20.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Hawadith Duhur,15.00,20.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Hawadith Duhur,15.00,20.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,حوادث الدهور في مدى الأيام و الشهور,41.00,41.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,حوادث الدهور في مدى الأيام و الشهور,41.00,41.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,حوادث الدهور في مدى الأيام و الشهور,41.00,41.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,حوادث الدهور في مدى الأيام و الشهور,41.00,41.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,حوادث الدهور في مدى الأيام و الشهور,41.00,41.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Manhal Safi,19.00,25.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Manhal Safi,19.00,25.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Manhal Safi,19.00,25.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Manhal Safi,19.00,25.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Manhal Safi,19.00,25.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,"مَنْشأ اللطافة فى ذكر من ولى الخلافة « Source de l'agrément, traité renfermant la mention de ceux qui ont rempli les fonctions de calife », par Aboû ʾl-Maḥâsin Yoûsof ibn Taghrî Bardî (en turc, تكرى وردى Deus dedit), mort en 874 de l'hégire (1469-1470 de J",al-Manhal al-Ṣāfī wa-l-Mustawfā Baʿda l-Wāfī,15.00,19.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,"مَنْشأ اللطافة فى ذكر من ولى الخلافة « Source de l'agrément, traité renfermant la mention de ceux qui ont rempli les fonctions de calife », par Aboû ʾl-Maḥâsin Yoûsof ibn Taghrî Bardî (en turc, تكرى وردى Deus dedit), mort en 874 de l'hégire (1469-1470 de J",al-Manhal al-Ṣāfī wa-l-Mustawfā Baʿda l-Wāfī,15.00,19.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,"مَنْشأ اللطافة فى ذكر من ولى الخلافة « Source de l'agrément, traité renfermant la mention de ceux qui ont rempli les fonctions de calife », par Aboû ʾl-Maḥâsin Yoûsof ibn Taghrî Bardî (en turc, تكرى وردى Deus dedit), mort en 874 de l'hégire (1469-1470 de J",al-Manhal al-Ṣāfī wa-l-Mustawfā Baʿda l-Wāfī,15.00,19.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,"مَنْشأ اللطافة فى ذكر من ولى الخلافة « Source de l'agrément, traité renfermant la mention de ceux qui ont rempli les fonctions de calife », par Aboû ʾl-Maḥâsin Yoûsof ibn Taghrî Bardî (en turc, تكرى وردى Deus dedit), mort en 874 de l'hégire (1469-1470 de J",al-Manhal al-Ṣāfī wa-l-Mustawfā Baʿda l-Wāfī,15.00,19.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,"مَنْشأ اللطافة فى ذكر من ولى الخلافة « Source de l'agrément, traité renfermant la mention de ceux qui ont rempli les fonctions de calife », par Aboû ʾl-Maḥâsin Yoûsof ibn Taghrî Bardî (en turc, تكرى وردى Deus dedit), mort en 874 de l'hégire (1469-1470 de J",al-Manhal al-Ṣāfī wa-l-Mustawfā Baʿda l-Wāfī,15.00,19.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Mawrid Latafa,22.00,24.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Mawrid Latafa,22.00,24.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Mawrid Latafa,22.00,24.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Mawrid Latafa,22.00,24.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),Mawrid Latafa,22.00,24.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,مورد اللطافة في من ولي السلطنة والخلافة :: مرد اللطافة في من ولي السلطنة والخلافة,47.00,60.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,مورد اللطافة في من ولي السلطنة والخلافة :: مرد اللطافة في من ولي السلطنة والخلافة,47.00,60.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,مورد اللطافة في من ولي السلطنة والخلافة :: مرد اللطافة في من ولي السلطنة والخلافة,47.00,60.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,مورد اللطافة في من ولي السلطنة والخلافة :: مرد اللطافة في من ولي السلطنة والخلافة,47.00,60.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,مورد اللطافة في من ولي السلطنة والخلافة :: مرد اللطافة في من ولي السلطنة والخلافة,47.00,60.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,31.00,34.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,31.00,34.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,31.00,34.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,31.00,34.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_lat,all_lat,YŪSUF ibn Taġrī Bardī (Ğamāl al-Dīn Abū al-Maḥāsin),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,31.00,34.00,,,,,True,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,النجوم الزاهرة في ملوك مصر والقاهرة,52.00,46.00,True,,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,النجوم الزاهرة في ملوك مصر والقاهرة,52.00,46.00,,True,,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,النجوم الزاهرة في ملوك مصر والقاهرة,52.00,46.00,,,True,,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,النجوم الزاهرة في ملوك مصر والقاهرة,52.00,46.00,,,,True,,True
+0874IbnTaghribirdi,OAI_11000928,all_ara,all_ara,منشا اللطافة فى ذكر من ولى الخلافة,النجوم الزاهرة في ملوك مصر والقاهرة,52.00,46.00,,,,,True,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,28.00,36.00,True,,,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,28.00,36.00,,True,,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,28.00,36.00,,,True,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,28.00,36.00,,,,True,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,28.00,36.00,,,,,True,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_ara,all_ara,النجوم الزاهرة فى ملوك مصر و القاهرة,النجوم الزاهرة في ملوك مصر والقاهرة,96.00,87.00,True,,,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_ara,all_ara,النجوم الزاهرة فى ملوك مصر و القاهرة,النجوم الزاهرة في ملوك مصر والقاهرة,96.00,87.00,,True,,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_ara,all_ara,النجوم الزاهرة فى ملوك مصر و القاهرة,النجوم الزاهرة في ملوك مصر والقاهرة,96.00,87.00,,,True,,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_ara,all_ara,النجوم الزاهرة فى ملوك مصر و القاهرة,النجوم الزاهرة في ملوك مصر والقاهرة,96.00,87.00,,,,True,,True
+0874IbnTaghribirdi.NujumZahira,OAI_11000947,all_ara,all_ara,النجوم الزاهرة فى ملوك مصر و القاهرة,النجوم الزاهرة في ملوك مصر والقاهرة,96.00,87.00,,,,,True,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_lat,all_lat,Exemplaire de la première édition.,Husn Muhadara,17.00,27.00,True,,,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_lat,all_lat,Exemplaire de la première édition.,Husn Muhadara,17.00,27.00,,True,,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_lat,all_lat,Exemplaire de la première édition.,Husn Muhadara,17.00,27.00,,,True,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_lat,all_lat,Exemplaire de la première édition.,Husn Muhadara,17.00,27.00,,,,True,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_lat,all_lat,Exemplaire de la première édition.,Husn Muhadara,17.00,27.00,,,,,True,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_ara,all_ara,كتاب حسن المحاضرة فى اخبار مصر و القاهرة,حسن المحاضرة في أخبار مصر و القاهرة,88.00,88.00,True,,,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_ara,all_ara,كتاب حسن المحاضرة فى اخبار مصر و القاهرة,حسن المحاضرة في أخبار مصر و القاهرة,88.00,88.00,,True,,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_ara,all_ara,كتاب حسن المحاضرة فى اخبار مصر و القاهرة,حسن المحاضرة في أخبار مصر و القاهرة,88.00,88.00,,,True,,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_ara,all_ara,كتاب حسن المحاضرة فى اخبار مصر و القاهرة,حسن المحاضرة في أخبار مصر و القاهرة,88.00,88.00,,,,True,,True
+0911Suyuti.HusnMuhadara,OAI_11000949,all_ara,all_ara,كتاب حسن المحاضرة فى اخبار مصر و القاهرة,حسن المحاضرة في أخبار مصر و القاهرة,88.00,88.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_lat,all_lat,AḤMAD ibn ʿAlī al-Maqrīzī (Taqī al-Dīn),al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār :: al-Ḫuṭaṭ al-Miḳrīziyyaŧ,30.00,37.00,,,,,True,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,True,,,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,True,,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,True,,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,True,,True
+0845Maqrizi.Mawaciz,OAI_11000954,all_ara,all_ara,كتاب المواعظ و الاعتبار فى ذكر الخطط و الآثار,المواعظ و الإعتبار بذكر الخطط و الآثار :: الخطط المقريزية,71.00,76.00,,,,,True,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_lat,all_lat,Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,90.00,90.00,True,,,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_lat,all_lat,Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,90.00,90.00,,True,,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_lat,all_lat,Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,90.00,90.00,,,True,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_lat,all_lat,Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,90.00,90.00,,,,True,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_lat,all_lat,Mufarriğ al-kurūb fī aḫbār mulūk Banī Ayyūb,Mufarriǧ al-kurūb fī aḫbār Banī Ayyūb,90.00,90.00,,,,,True,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_ara,all_ara,مفرّج الكروب في أخبار بني ايوب,مفرج الكروب في أخبار بني أيوب,95.00,92.00,True,,,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_ara,all_ara,مفرّج الكروب في أخبار بني ايوب,مفرج الكروب في أخبار بني أيوب,95.00,92.00,,True,,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_ara,all_ara,مفرّج الكروب في أخبار بني ايوب,مفرج الكروب في أخبار بني أيوب,95.00,92.00,,,True,,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_ara,all_ara,مفرّج الكروب في أخبار بني ايوب,مفرج الكروب في أخبار بني أيوب,95.00,92.00,,,,True,,True
+0697IbnWasil.MufarrijKurub,OAI_11001068,all_ara,all_ara,مفرّج الكروب في أخبار بني ايوب,مفرج الكروب في أخبار بني أيوب,95.00,92.00,,,,,True,True
