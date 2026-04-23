@@ -196,24 +196,32 @@ def _author_merge(
 ) -> OpenITIAuthorData:
     """Merge a TSV author with YML data (if present).
 
-    TSV overwrites name fields; YML is primary for wikidata_id and other metadata.
+    TSV provides _lat (ArabicBetaCode) name fields.
+    YML provides _lat, _ara (converted), and wikidata_id.
+    Wikidata fields are preserved from YML (source of truth).
     """
     if yml_author is None:
         # No YML data, return TSV author as-is
         return tsv_author
 
-    # Start with YML author (has wikidata_id and wd_* fields)
+    # Start with YML author (has wikidata_id, converted _ara fields, and wd_* fields)
     merged = OpenITIAuthorData(
         uri=yml_author.uri,
         death_year_ah=yml_author.death_year_ah,
         name_slug=yml_author.name_slug or tsv_author.name_slug,
-        # Use TSV name fields (more complete)
-        name_shuhra_ar=tsv_author.name_shuhra_ar or yml_author.name_shuhra_ar,
-        name_ism_ar=yml_author.name_ism_ar,
-        name_kunya_ar=yml_author.name_kunya_ar,
-        name_laqab_ar=yml_author.name_laqab_ar,
-        name_nasab_ar=yml_author.name_nasab_ar,
-        name_nisba_ar=yml_author.name_nisba_ar,
+        # Name components: prefer TSV _lat if available, otherwise YML _lat; always use YML _ara
+        name_shuhra_lat=tsv_author.name_shuhra_lat or yml_author.name_shuhra_lat,
+        name_shuhra_ara=yml_author.name_shuhra_ara,
+        name_ism_lat=tsv_author.name_ism_lat or yml_author.name_ism_lat,
+        name_ism_ara=yml_author.name_ism_ara,
+        name_kunya_lat=tsv_author.name_kunya_lat or yml_author.name_kunya_lat,
+        name_kunya_ara=yml_author.name_kunya_ara,
+        name_laqab_lat=tsv_author.name_laqab_lat or yml_author.name_laqab_lat,
+        name_laqab_ara=yml_author.name_laqab_ara,
+        name_nasab_lat=tsv_author.name_nasab_lat or yml_author.name_nasab_lat,
+        name_nasab_ara=yml_author.name_nasab_ara,
+        name_nisba_lat=tsv_author.name_nisba_lat or yml_author.name_nisba_lat,
+        name_nisba_ara=yml_author.name_nisba_ara,
         # Wikidata ID from YML (source of truth)
         wikidata_id=yml_author.wikidata_id,
         # Preserve wikidata enrichment fields from YML

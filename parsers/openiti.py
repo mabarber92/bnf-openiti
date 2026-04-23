@@ -29,12 +29,20 @@ from __future__ import annotations
 import csv
 import logging
 import re
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 from tqdm import tqdm
+
+# Add ArabicBetaCode library to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "utils" / "arabic_betacode_lib"))
+try:
+    import betaCode
+except ImportError:
+    betaCode = None
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +123,38 @@ def _clean(value: Optional[str]) -> Optional[str]:
     return value.strip()
 
 
+def _betacode_to_arabic(text: str) -> Optional[str]:
+    """Convert ArabicBetaCode text to Arabic script.
+
+    Returns None if conversion fails or betaCode module unavailable.
+    """
+    if not text or not betaCode:
+        return None
+    try:
+        return betaCode.betacodeToArabic(text)
+    except Exception as exc:
+        logger.debug(f"Failed to convert betacode '{text}': {exc}")
+        return None
+
+
+def _split_metadata(text: str) -> list[str]:
+    """Split metadata on TSV separators (:: and ¶).
+
+    Splits on :: and ¶ and returns non-empty trimmed parts.
+    Each part becomes an independent match candidate.
+    """
+    if not text:
+        return []
+    # First split on ::, then on ¶, then filter and trim
+    parts = []
+    for section in text.split("::"):
+        for subsection in section.split("¶"):
+            trimmed = subsection.strip()
+            if trimmed:
+                parts.append(trimmed)
+    return parts
+
+
 def _decompose_uri(uri: str) -> tuple[Optional[int], Optional[str], Optional[str]]:
     """Split a book URI into (death_year_ah, author_slug, title_slug).
 
@@ -154,13 +194,20 @@ class OpenITIAuthorData:
     uri: str
     death_year_ah:  Optional[int] = None
     name_slug:      Optional[str] = None  # CamelCase slug from URI (e.g. "NasirDinBaydawi")
-    # Arabic name components from YML — all may be absent
-    name_shuhra_ar: Optional[str] = None  # "known as" name — most useful for matching
-    name_ism_ar:    Optional[str] = None  # personal name
-    name_kunya_ar:  Optional[str] = None  # teknonym (Abū...)
-    name_laqab_ar:  Optional[str] = None  # honorific / epithet
-    name_nasab_ar:  Optional[str] = None  # patronymic chain (b. X b. Y...)
-    name_nisba_ar:  Optional[str] = None  # relational adjective (al-Baṣrī etc.)
+    # Name components from YML — all may be absent
+    # Each component stored in both _lat (ArabicBetaCode original) and _ara (converted to Arabic script)
+    name_shuhra_lat: Optional[str] = None  # "known as" name — most useful for matching
+    name_shuhra_ara: Optional[str] = None
+    name_ism_lat:    Optional[str] = None  # personal name
+    name_ism_ara:    Optional[str] = None
+    name_kunya_lat:  Optional[str] = None  # teknonym (Abū...)
+    name_kunya_ara:  Optional[str] = None
+    name_laqab_lat:  Optional[str] = None  # honorific / epithet
+    name_laqab_ara:  Optional[str] = None
+    name_nasab_lat:  Optional[str] = None  # patronymic chain (b. X b. Y...)
+    name_nasab_ara:  Optional[str] = None
+    name_nisba_lat:  Optional[str] = None  # relational adjective (al-Baṣrī etc.)
+    name_nisba_ara:  Optional[str] = None
     wikidata_id:    Optional[str] = None
     # Wikidata enrichment — populated by enrich_wikidata.py; absent until that stage runs
     wd_label_ar:    Optional[str]  = None
@@ -289,16 +336,43 @@ class OpenITIAuthorYml(OpenITIYml):
         extid_raw     = self._get("EXTID") or ""
         wikidata_match = _WIKIDATA_RE.search(extid_raw)
 
+        # Extract name components: store original as _lat, conversion as _ara
+        def extract_name_component(field_name: str) -> tuple[Optional[str], Optional[str]]:
+            """Extract and convert a name component field.
+
+            Returns (lat_value, ara_value) where lat is the original ArabicBetaCode
+            and ara is the converted Arabic script version. Both may be None.
+            """
+            raw_value = self._get(field_name)
+            if not raw_value:
+                return None, None
+            # raw_value is the ArabicBetaCode (stored as _lat)
+            ara_value = _betacode_to_arabic(raw_value)
+            return raw_value, ara_value
+
+        shuhra_lat, shuhra_ara = extract_name_component("SHUHRA")
+        ism_lat, ism_ara       = extract_name_component("ISM")
+        kunya_lat, kunya_ara   = extract_name_component("KUNYA")
+        laqab_lat, laqab_ara   = extract_name_component("LAQAB")
+        nasab_lat, nasab_ara   = extract_name_component("NASAB")
+        nisba_lat, nisba_ara   = extract_name_component("NISBA")
+
         return OpenITIAuthorData(
             uri           = self.uri,
             death_year_ah = death_year_ah,
             name_slug     = name_slug,
-            name_shuhra_ar = self._get("SHUHRA"),
-            name_ism_ar    = self._get("ISM"),
-            name_kunya_ar  = self._get("KUNYA"),
-            name_laqab_ar  = self._get("LAQAB"),
-            name_nasab_ar  = self._get("NASAB"),
-            name_nisba_ar  = self._get("NISBA"),
+            name_shuhra_lat = shuhra_lat,
+            name_shuhra_ara = shuhra_ara,
+            name_ism_lat    = ism_lat,
+            name_ism_ara    = ism_ara,
+            name_kunya_lat  = kunya_lat,
+            name_kunya_ara  = kunya_ara,
+            name_laqab_lat  = laqab_lat,
+            name_laqab_ara  = laqab_ara,
+            name_nasab_lat  = nasab_lat,
+            name_nasab_ara  = nasab_ara,
+            name_nisba_lat  = nisba_lat,
+            name_nisba_ara  = nisba_ara,
             wikidata_id    = wikidata_match.group(1) if wikidata_match else None,
         )
 
@@ -495,14 +569,22 @@ class OpenITITSV:
         for book_uri, book_fields in books_data.items():
             death_year_ah, author_slug, title_slug = _decompose_uri(book_uri)
 
+            # Split title metadata on :: and ¶ to create multiple candidate matches
+            # If split produces parts, use them; otherwise use original
+            title_lat = book_fields["title_lat"] or ""
+            title_ara = book_fields["title_ar"] or ""
+
+            title_lat_parts = _split_metadata(title_lat) or ([title_lat] if title_lat else [])
+            title_ara_parts = _split_metadata(title_ara) or ([title_ara] if title_ara else [])
+
             self.books[book_uri] = OpenITIBookData(
                 uri=book_uri,
                 author_uri=book_fields["author_uri"],
                 death_year_ah=death_year_ah,
                 author_slug=author_slug,
                 title_slug=title_slug,
-                title_lat=book_fields["title_lat"],
-                title_ara=book_fields["title_ar"],
+                title_lat=title_lat_parts,
+                title_ara=title_ara_parts,
             )
 
         # Build author records from aggregated data
@@ -513,7 +595,7 @@ class OpenITITSV:
                 uri=author_uri,
                 death_year_ah=death_year_ah,
                 name_slug=author_slug,
-                name_shuhra_ar=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra
+                name_shuhra_lat=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra
             )
 
     def __repr__(self) -> str:
