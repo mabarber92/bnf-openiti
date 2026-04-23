@@ -20,8 +20,11 @@ class FuzzyScorer:
         """
         Compute fuzzy similarity score between two strings.
 
-        Uses token_sort_ratio from fuzzywuzzy, which is robust to
-        word order variations (important for author names and titles).
+        Uses token_set_ratio from fuzzywuzzy, which handles:
+        - Word order variations (important for author names and titles)
+        - Duplicate/redundant tokens (e.g., "al-Tabari al-Tabari" vs "al-Tabari")
+
+        This matches the scoring function used in the original parameter testing.
 
         Parameters
         ----------
@@ -44,8 +47,8 @@ class FuzzyScorer:
         if key in self._cache:
             return self._cache[key]
 
-        # Compute score using token_sort_ratio (handles word order)
-        score_val = float(fuzz.token_sort_ratio(str1, str2))
+        # Compute score using token_set_ratio (handles word order + set deduplication)
+        score_val = float(fuzz.token_set_ratio(str1, str2))
         self._cache[key] = score_val
 
         return score_val
