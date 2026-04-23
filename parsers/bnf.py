@@ -356,7 +356,7 @@ class BNFRecord:
     # Short non-boilerplate description strings promoted as matching candidates
     # (potential titles or author names embedded in dc:description), split by script
     description_candidates_lat: list[str] = field(default_factory=list)
-    description_candidates_ara: list[str] = field(default_factory=list)
+    description_candidates_ara: list[str] = field(default_factory=list)  # was: description_candidates_ar
 
     # Labels for each description candidate, keyed by relation type or None if unlabeled
     description_candidate_labels_lat: list[Optional[str]] = field(default_factory=list)
@@ -383,53 +383,66 @@ class BNFRecord:
     detected_relations: list[DetectedRelation] = field(default_factory=list)
     signal_count:       int = 0
 
-    def matching_data(self) -> dict[str, list[str]]:
-        """Return all strings useful for OpenITI matching, keyed by script.
-
-        Returns {"lat": [...], "ar": [...]} — deduplicated lists ready to
-        query or embed against OpenITI data.
-
-        Each list includes:
-        - All parts of dc:title strings, split on '. ' (surfaces both the
-          embedded author-name prefix and the actual title as separate items)
-        - dc:creator names (dates and role suffixes already stripped)
-        - description_candidates (short non-boilerplate description strings)
-
-        Use "lat" for Latin-script fuzzy / embedding matching and "ar" for
-        Arabic-script matching.
+    def matching_candidates(self, norm_strategy: str = "fuzzy") -> dict[str, list[str]]:
         """
+        Extract matching candidates with optional normalization.
+
+        Returns normalized, deduplicated candidates ready for fuzzy matching
+        or embedding. Includes all title parts, creators, and description
+        candidates across both scripts.
+
+        Parameters
+        ----------
+        norm_strategy : str
+            Normalization strategy: "fuzzy" (aggressive), "embedding" (moderate),
+            or "raw" (no normalization).
+
+        Returns
+        -------
+        dict[str, list[str]]
+            {"lat": [...], "ara": [...]} with normalized, deduplicated candidates.
+        """
+        from utils.normalize import normalize
+
         lat: list[str] = []
-        ar:  list[str] = []
+        ara: list[str] = []
         seen_lat: set[str] = set()
-        seen_ar:  set[str] = set()
+        seen_ara: set[str] = set()
 
-        def add(s: str, dest: list[str], seen: set[str]) -> None:
-            s = s.strip().rstrip(".")
-            if s and s not in seen:
-                seen.add(s)
-                dest.append(s)
+        def add(raw: str, script: str, dest: list[str], seen: set[str]) -> None:
+            raw = raw.strip().rstrip(".")
+            if not raw:
+                return
+            # Normalize based on strategy
+            norm = normalize(raw, script, norm_strategy)
+            if norm and norm not in seen:
+                seen.add(norm)
+                dest.append(norm)
 
+        # Titles (split on '. ' to surface embedded author names)
         for title in self.title_lat:
             for part in title.split(". "):
-                add(part, lat, seen_lat)
+                add(part, "lat", lat, seen_lat)
 
         for title in self.title_ara:
             for part in title.split(". "):
-                add(part, ar, seen_ar)
+                add(part, "ara", ara, seen_ara)
 
+        # Creators
         for name in self.creator_lat:
-            add(name, lat, seen_lat)
+            add(name, "lat", lat, seen_lat)
 
         for name in self.creator_ara:
-            add(name, ar, seen_ar)
+            add(name, "ara", ara, seen_ara)
 
+        # Description candidates
         for cand in self.description_candidates_lat:
-            add(cand, lat, seen_lat)
+            add(cand, "lat", lat, seen_lat)
 
-        for cand in self.description_candidates_ar:
-            add(cand, ar, seen_ar)
+        for cand in self.description_candidates_ara:
+            add(cand, "ara", ara, seen_ara)
 
-        return {"lat": lat, "ar": ar}
+        return {"lat": lat, "ara": ara}
 
 
 # ---------------------------------------------------------------------------

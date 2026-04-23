@@ -218,6 +218,50 @@ class OpenITIAuthorData:
     wd_fetched_at:  Optional[str]  = None
     wd_error:       Optional[str]  = None
 
+    def matching_candidates(self, norm_strategy: str = "fuzzy") -> dict[str, list[str]]:
+        """Extract all author name variants with optional normalization."""
+        from utils.normalize import normalize
+
+        lat: list[str] = []
+        ara: list[str] = []
+
+        # Add all name variants
+        for name_field in [self.name_slug, self.wd_label_en]:
+            if name_field:
+                norm = normalize(name_field, "lat", norm_strategy)
+                if norm and norm not in lat:
+                    lat.append(norm)
+
+        for aliases in [self.wd_aliases_en]:
+            for alias in (aliases or []):
+                norm = normalize(alias, "lat", norm_strategy)
+                if norm and norm not in lat:
+                    lat.append(norm)
+
+        # Name components (Latin)
+        for field in [self.name_shuhra_lat, self.name_ism_lat, self.name_kunya_lat,
+                      self.name_laqab_lat, self.name_nasab_lat, self.name_nisba_lat]:
+            if field:
+                norm = normalize(field, "lat", norm_strategy)
+                if norm and norm not in lat:
+                    lat.append(norm)
+
+        # Name components and Wikidata (Arabic)
+        for field in [self.name_shuhra_ara, self.name_ism_ara, self.name_kunya_ara,
+                      self.name_laqab_ara, self.name_nasab_ara, self.name_nisba_ara,
+                      self.wd_label_ar]:
+            if field:
+                norm = normalize(field, "ara", norm_strategy)
+                if norm and norm not in ara:
+                    ara.append(norm)
+
+        for alias in (self.wd_aliases_ar or []):
+            norm = normalize(alias, "ara", norm_strategy)
+            if norm and norm not in ara:
+                ara.append(norm)
+
+        return {"lat": lat, "ara": ara}
+
 
 @dataclass
 class OpenITIBookData:
@@ -232,6 +276,32 @@ class OpenITIBookData:
     viaf_id:        Optional[str] = None
     # Populated after loading by OpenITIMetaYmls._attach_version_links()
     version_links:  list[str] = field(default_factory=list)
+
+    def matching_candidates(self, norm_strategy: str = "fuzzy") -> dict[str, list[str]]:
+        """Extract title candidates with optional normalization."""
+        from utils.normalize import normalize
+
+        lat: list[str] = []
+        ara: list[str] = []
+
+        # Title (primary)
+        if self.title_lat:
+            norm = normalize(self.title_lat, "lat", norm_strategy)
+            if norm and norm not in lat:
+                lat.append(norm)
+
+        if self.title_ara:
+            norm = normalize(self.title_ara, "ara", norm_strategy)
+            if norm and norm not in ara:
+                ara.append(norm)
+
+        # Title slug (fallback)
+        if self.title_slug and not self.title_lat:
+            norm = normalize(self.title_slug, "lat", norm_strategy)
+            if norm and norm not in lat:
+                lat.append(norm)
+
+        return {"lat": lat, "ara": ara}
 
 
 @dataclass
