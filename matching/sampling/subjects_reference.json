@@ -1,0 +1,2019 @@
+{
+  "metadata": {
+    "sample_size": 500,
+    "total_subject_tags": 552,
+    "unique_subjects": 243
+  },
+  "subjects": {
+    "Médecine": {
+      "count": 22,
+      "percentage": 4.4,
+      "record_ids": [
+        "OAI_08406174",
+        "OAI_10030176",
+        "OAI_10031054",
+        "OAI_10884472",
+        "OAI_10884482",
+        "OAI_11001801",
+        "OAI_11002049",
+        "OAI_11002051",
+        "OAI_11002052",
+        "OAI_11002061",
+        "OAI_11002063",
+        "OAI_11002102",
+        "OAI_11002114",
+        "OAI_11002118",
+        "OAI_11002183",
+        "OAI_11002207",
+        "OAI_11002393",
+        "OAI_11002410",
+        "OAI_11002612",
+        "OAI_11002631",
+        "OAI_11002635",
+        "OAI_11002668"
+      ]
+    },
+    "Grammaire": {
+      "count": 21,
+      "percentage": 4.2,
+      "record_ids": [
+        "OAI_10030612",
+        "OAI_10884605",
+        "OAI_11003466",
+        "OAI_11003485",
+        "OAI_11003491",
+        "OAI_11003496",
+        "OAI_11003497",
+        "OAI_11003503",
+        "OAI_11003508",
+        "OAI_11003523",
+        "OAI_11003539",
+        "OAI_11003543",
+        "OAI_11003548",
+        "OAI_11003577",
+        "OAI_11003586",
+        "OAI_11003589",
+        "OAI_11003595",
+        "OAI_11003610",
+        "OAI_11003661",
+        "OAI_11003676",
+        "OAI_52520098"
+      ]
+    },
+    "Divans et qaṣîdas": {
+      "count": 19,
+      "percentage": 3.8,
+      "record_ids": [
+        "OAI_10030535",
+        "OAI_11001871",
+        "OAI_11001939",
+        "OAI_11001949",
+        "OAI_11002136",
+        "OAI_11002160",
+        "OAI_11002232",
+        "OAI_11002316",
+        "OAI_11002424",
+        "OAI_11002426",
+        "OAI_11002429",
+        "OAI_11002441",
+        "OAI_11002707",
+        "OAI_11002720",
+        "OAI_11002723",
+        "OAI_11002738",
+        "OAI_11003813",
+        "OAI_52503993",
+        "OAI_52520098"
+      ]
+    },
+    "Collections et anthologies": {
+      "count": 12,
+      "percentage": 2.4,
+      "record_ids": [
+        "OAI_11002810",
+        "OAI_11002831",
+        "OAI_11002838",
+        "OAI_11002868",
+        "OAI_11002886",
+        "OAI_11002887",
+        "OAI_11002898",
+        "OAI_11002901",
+        "OAI_11002915",
+        "OAI_11002936",
+        "OAI_11002950",
+        "OAI_11002960"
+      ]
+    },
+    "Fables, apologues et récits divers": {
+      "count": 11,
+      "percentage": 2.2,
+      "record_ids": [
+        "OAI_08415218",
+        "OAI_08458261",
+        "OAI_10884550",
+        "OAI_10884555",
+        "OAI_11002790",
+        "OAI_11002908",
+        "OAI_11002976",
+        "OAI_11002991",
+        "OAI_11003025",
+        "OAI_11003065",
+        "OAI_11003171"
+      ]
+    },
+    "Magie": {
+      "count": 10,
+      "percentage": 2.0,
+      "record_ids": [
+        "OAI_10884404",
+        "OAI_10884406",
+        "OAI_10884754",
+        "OAI_11002018",
+        "OAI_11002020",
+        "OAI_11002230",
+        "OAI_11002286",
+        "OAI_11002472",
+        "OAI_11002554",
+        "OAI_11002723"
+      ]
+    },
+    "Romans de chevalerie": {
+      "count": 10,
+      "percentage": 2.0,
+      "record_ids": [
+        "OAI_11003097",
+        "OAI_11003230",
+        "OAI_11003263",
+        "OAI_11003311",
+        "OAI_11003376",
+        "OAI_11003386",
+        "OAI_11003387",
+        "OAI_11003393",
+        "OAI_11003431",
+        "OAI_11003437"
+      ]
+    },
+    "Dictionnaires": {
+      "count": 9,
+      "percentage": 1.8,
+      "record_ids": [
+        "OAI_11003493",
+        "OAI_11003622",
+        "OAI_11003732",
+        "OAI_11003735",
+        "OAI_11003741",
+        "OAI_11003751",
+        "OAI_11003844",
+        "OAI_11003883",
+        "OAI_11003888"
+      ]
+    },
+    "Philosophie": {
+      "count": 9,
+      "percentage": 1.8,
+      "record_ids": [
+        "OAI_10030137",
+        "OAI_10030273",
+        "OAI_10031056",
+        "OAI_10031059",
+        "OAI_10031803",
+        "OAI_11002574",
+        "OAI_11002585",
+        "OAI_11002591",
+        "OAI_11004745"
+      ]
+    },
+    "Marie": {
+      "count": 9,
+      "percentage": 1.8,
+      "record_ids": [
+        "OAI_10031502",
+        "OAI_11004241",
+        "OAI_11004241",
+        "OAI_11004241",
+        "OAI_11004737",
+        "OAI_11004737",
+        "OAI_11004737",
+        "OAI_11004737",
+        "OAI_11004737"
+      ]
+    },
+    "FIQH. Furūʿ hanéfites": {
+      "count": 8,
+      "percentage": 1.6,
+      "record_ids": [
+        "OAI_11000375",
+        "OAI_11000520",
+        "OAI_11000525",
+        "OAI_11000557",
+        "OAI_11000616",
+        "OAI_11000643",
+        "OAI_11001340",
+        "OAI_11001512"
+      ]
+    },
+    "FIQH. Furūʿ, fragments en notes": {
+      "count": 8,
+      "percentage": 1.6,
+      "record_ids": [
+        "OAI_11000520",
+        "OAI_11000564",
+        "OAI_11000620",
+        "OAI_11000633",
+        "OAI_11000657",
+        "OAI_11001448",
+        "OAI_11001474",
+        "OAI_11005171"
+      ]
+    },
+    "Contes et romans": {
+      "count": 8,
+      "percentage": 1.6,
+      "record_ids": [
+        "OAI_11003053",
+        "OAI_11003135",
+        "OAI_11003137",
+        "OAI_11003185",
+        "OAI_11003186",
+        "OAI_11003188",
+        "OAI_11003198",
+        "OAI_11003265"
+      ]
+    },
+    "CULTE. Prières et formules efficaces. Notes": {
+      "count": 8,
+      "percentage": 1.6,
+      "record_ids": [
+        "OAI_11000418",
+        "OAI_11000497",
+        "OAI_11000520",
+        "OAI_11000540",
+        "OAI_11000620",
+        "OAI_11001186",
+        "OAI_11001195",
+        "OAI_11004586"
+      ]
+    },
+    "Histoire d'Égypte": {
+      "count": 7,
+      "percentage": 1.4,
+      "record_ids": [
+        "OAI_11000924",
+        "OAI_11000934",
+        "OAI_11000963",
+        "OAI_11001007",
+        "OAI_11001024",
+        "OAI_11001259",
+        "OAI_11001264"
+      ]
+    },
+    "Théologie chrétienne": {
+      "count": 7,
+      "percentage": 1.4,
+      "record_ids": [
+        "OAI_10031359",
+        "OAI_10031712",
+        "OAI_11004580",
+        "OAI_11004619",
+        "OAI_11004745",
+        "OAI_11004794",
+        "OAI_11004838"
+      ]
+    },
+    "Histoire": {
+      "count": 6,
+      "percentage": 1.2,
+      "record_ids": [
+        "OAI_10030270",
+        "OAI_10030350",
+        "OAI_10031202",
+        "OAI_10031247",
+        "OAI_10535164",
+        "OAI_11004189"
+      ]
+    },
+    "Encyclopédies": {
+      "count": 6,
+      "percentage": 1.2,
+      "record_ids": [
+        "OAI_11001894",
+        "OAI_11001980",
+        "OAI_11002000",
+        "OAI_11002469",
+        "OAI_11002481",
+        "OAI_52524367"
+      ]
+    },
+    "Biographies": {
+      "count": 6,
+      "percentage": 1.2,
+      "record_ids": [
+        "OAI_10884211",
+        "OAI_10884714",
+        "OAI_11001611",
+        "OAI_11001826",
+        "OAI_11001865",
+        "OAI_11002076"
+      ]
+    },
+    "FIQH. Uṣūl": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_11000497",
+        "OAI_11000540",
+        "OAI_11001274",
+        "OAI_11004595",
+        "OAI_53205385"
+      ]
+    },
+    "CULTE. Prières": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_11001220",
+        "OAI_11001243",
+        "OAI_11001309",
+        "OAI_11001492",
+        "OAI_11005243"
+      ]
+    },
+    "ŠIʿR. Notes": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_11001186",
+        "OAI_11001195",
+        "OAI_11001474",
+        "OAI_11001517",
+        "OAI_11005171"
+      ]
+    },
+    "Chroniques et Histoire des dynasties": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_10884190",
+        "OAI_11000818",
+        "OAI_11000821",
+        "OAI_11001075",
+        "OAI_11002318"
+      ]
+    },
+    "Astronomie": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_10037475",
+        "OAI_10037478",
+        "OAI_10037488",
+        "OAI_10037515",
+        "OAI_10037522"
+      ]
+    },
+    "PARENESE. Notes": {
+      "count": 5,
+      "percentage": 1.0,
+      "record_ids": [
+        "OAI_11000497",
+        "OAI_11000564",
+        "OAI_11000730",
+        "OAI_11001186",
+        "OAI_11004586"
+      ]
+    },
+    "Ouvrages érotiques": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10884418",
+        "OAI_10884509",
+        "OAI_11001663",
+        "OAI_52519211"
+      ]
+    },
+    "Histoire de l'Afrique et de l'Espagne": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11001889",
+        "OAI_11002332",
+        "OAI_11002333",
+        "OAI_52520098"
+      ]
+    },
+    "Vie de Mahomet": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11001537",
+        "OAI_11001540",
+        "OAI_11002247",
+        "OAI_52520098"
+      ]
+    },
+    "Al-Fiqh": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030115",
+        "OAI_10030236",
+        "OAI_10030304",
+        "OAI_10849796"
+      ]
+    },
+    "Rhétorique": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11003835",
+        "OAI_11003867",
+        "OAI_11003930",
+        "OAI_11003945"
+      ]
+    },
+    "Al-Adab al-šiʿrī": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030240",
+        "OAI_10031137",
+        "OAI_10031150",
+        "OAI_10031151"
+      ]
+    },
+    "Poésie arabe": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030240",
+        "OAI_10031137",
+        "OAI_10031150",
+        "OAI_10031151"
+      ]
+    },
+    "TRADITION (Ḥadīṯ). Notes": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11000418",
+        "OAI_11000520",
+        "OAI_11000564",
+        "OAI_11004586"
+      ]
+    },
+    "HISTOIRE. Notes": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11000418",
+        "OAI_11000525",
+        "OAI_11000620",
+        "OAI_11000643"
+      ]
+    },
+    "Théologie mystique": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_11001939",
+        "OAI_11002441",
+        "OAI_11002738",
+        "OAI_11002838"
+      ]
+    },
+    "Al-Falsafa": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030137",
+        "OAI_10030273",
+        "OAI_10031056",
+        "OAI_10031059"
+      ]
+    },
+    "Al-Tawḥīd wa-ʿilm al-Kalām": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030273",
+        "OAI_10031103",
+        "OAI_10031215",
+        "OAI_53196525"
+      ]
+    },
+    "Théologie islamique": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10030273",
+        "OAI_10031103",
+        "OAI_10031215",
+        "OAI_53196525"
+      ]
+    },
+    "Histoire universelle et antéislamique": {
+      "count": 4,
+      "percentage": 0.8,
+      "record_ids": [
+        "OAI_10884190",
+        "OAI_11000821",
+        "OAI_11000878",
+        "OAI_11001334"
+      ]
+    },
+    "Biographies locales": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_11001742",
+        "OAI_11001813",
+        "OAI_11001949"
+      ]
+    },
+    "Al-Taʾrīḫ": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10030270",
+        "OAI_10030350",
+        "OAI_10031247"
+      ]
+    },
+    "Bibliographie": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_11003816",
+        "OAI_11003960",
+        "OAI_11003975"
+      ]
+    },
+    "ADAB NAṯRĪ. Notes": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_11000418",
+        "OAI_11001195",
+        "OAI_11005171"
+      ]
+    },
+    "Prophète et premiers califes": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10884190",
+        "OAI_11000821",
+        "OAI_11002318"
+      ]
+    },
+    "RÉCEPTION DE LA TRANSMISSION (Taḥammul al-ʿilm)": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_11000356",
+        "OAI_11000471",
+        "OAI_11000643"
+      ]
+    },
+    "TRADITION (Ḥadīṯ). Six livres": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_11000356",
+        "OAI_11000471",
+        "OAI_11000473"
+      ]
+    },
+    "Dogmatique": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10031359",
+        "OAI_11004745",
+        "OAI_11004838"
+      ]
+    },
+    "Duʿāʾ": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10030329",
+        "OAI_10031091",
+        "OAI_10884872"
+      ]
+    },
+    "Prières": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10030329",
+        "OAI_10031091",
+        "OAI_10884872"
+      ]
+    },
+    "Lexicographie": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10031064",
+        "OAI_10031210",
+        "OAI_10884758"
+      ]
+    },
+    "Georges": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10030691",
+        "OAI_10030691",
+        "OAI_11004241"
+      ]
+    },
+    "Géographie spéciale": {
+      "count": 3,
+      "percentage": 0.6,
+      "record_ids": [
+        "OAI_10888138",
+        "OAI_11002373",
+        "OAI_11002645"
+      ]
+    },
+    "Cosmographie": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10884218",
+        "OAI_11002346"
+      ]
+    },
+    "CULTE. Ouvrages sur la prière": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001448",
+        "OAI_11001449"
+      ]
+    },
+    "Waqf. Notes": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001309",
+        "OAI_53205385"
+      ]
+    },
+    "Druzes": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030128",
+        "OAI_10884768"
+      ]
+    },
+    "Bible. A.T": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11004184",
+        "OAI_11004919"
+      ]
+    },
+    "FIQH. Furūʿ ?āfiʿites": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001422",
+        "OAI_11001517"
+      ]
+    },
+    "Astronomie et astrologie": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_08406157",
+        "OAI_10030193"
+      ]
+    },
+    "Botanique": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_08406174",
+        "OAI_11001726"
+      ]
+    },
+    "KALAM. Uṣūl al-Dīn. Ouvrages généraux. Méthodologie": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000493",
+        "OAI_11000774"
+      ]
+    },
+    "Al-Rūḥāniyyāt": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001835",
+        "OAI_52509786"
+      ]
+    },
+    "Voyages": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001814",
+        "OAI_11002084"
+      ]
+    },
+    "Histoire universelle": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11004345",
+        "OAI_11004802"
+      ]
+    },
+    "Chronologie": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11004345",
+        "OAI_11004838"
+      ]
+    },
+    "Liturgie. Rite melkite. Calendrier et comput": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10031359",
+        "OAI_10031932"
+      ]
+    },
+    "Droit islamique": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030236",
+        "OAI_10030304"
+      ]
+    },
+    "Al-Ṣarf wa-al-naḥw": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030151",
+        "OAI_10031232"
+      ]
+    },
+    "Grammaire arabe": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030151",
+        "OAI_10031232"
+      ]
+    },
+    "Luġa": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10031064",
+        "OAI_10884758"
+      ]
+    },
+    "Conciles": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11004212",
+        "OAI_11004780"
+      ]
+    },
+    "Controverses": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11004619",
+        "OAI_11004794"
+      ]
+    },
+    "KALAM. Uṣūl al-Dīn. Notes": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000418",
+        "OAI_11000493"
+      ]
+    },
+    "KALAM. Uṣūl al-Dīn. Noms divins. Unicité": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000764",
+        "OAI_11001492"
+      ]
+    },
+    "CALLIGRAPHIE (Notes)": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001186",
+        "OAI_11004595"
+      ]
+    },
+    "Hippologie et hippiatrique": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11002030",
+        "OAI_11002032"
+      ]
+    },
+    "Liturgie. Rite copte. Synaxaire": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030637",
+        "OAI_11004239"
+      ]
+    },
+    "Traditions": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030146",
+        "OAI_10031218"
+      ]
+    },
+    "Droit musulman": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030115",
+        "OAI_10849796"
+      ]
+    },
+    "Vies des patriarches et prophètes": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001943",
+        "OAI_11002091"
+      ]
+    },
+    "Écoles non déterminées": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030535",
+        "OAI_10884865"
+      ]
+    },
+    "Histoire locale. Hebron": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000910",
+        "OAI_11000913"
+      ]
+    },
+    "Histoire locale. Jérusalem": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000910",
+        "OAI_11000913"
+      ]
+    },
+    "Poésie": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000878",
+        "OAI_11002460"
+      ]
+    },
+    "DIVINATION/MAGIE. Notes (Amulettes à Carrés magiques)": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000727",
+        "OAI_11001474"
+      ]
+    },
+    "MÉDECINE. Notes": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000643",
+        "OAI_11000727"
+      ]
+    },
+    "Vies des saints et des soufis": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001591",
+        "OAI_11002071"
+      ]
+    },
+    "Al-Ṭibb": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030176",
+        "OAI_10031054"
+      ]
+    },
+    "Théologie morale": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_10030559",
+        "OAI_11002071"
+      ]
+    },
+    "FIQH. Furūʿ malékites": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000657",
+        "OAI_11001474"
+      ]
+    },
+    "FIQH. Farāʾiḍ": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11000564",
+        "OAI_11000620"
+      ]
+    },
+    "KALAM. Uṣūl al-Dīn. Druses": {
+      "count": 2,
+      "percentage": 0.4,
+      "record_ids": [
+        "OAI_11001186",
+        "OAI_52501147"
+      ]
+    },
+    "Histoire. Diplôme d'ordination": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004670"
+      ]
+    },
+    "Notes historiques. Ǧirǧis, diacre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004670"
+      ]
+    },
+    "Ǧirǧis, diacre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004670"
+      ]
+    },
+    "Liban": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10884768"
+      ]
+    },
+    "Raslān": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10884768"
+      ]
+    },
+    "Al-Hayʾa wa-al-tanğīm": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030193"
+      ]
+    },
+    "Coran. Commentaire (Tafsīr)": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11005171"
+      ]
+    },
+    "Coran. Notes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11005171"
+      ]
+    },
+    "CULTE. Prière sur le Prophète": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11005171"
+      ]
+    },
+    "Magie et divination": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001835"
+      ]
+    },
+    "Alchimie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10037585"
+      ]
+    },
+    "Histoire locale. ŠŠām": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000857"
+      ]
+    },
+    "POLEMIQUE. Controverse": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001295"
+      ]
+    },
+    "Notes historiques": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004838"
+      ]
+    },
+    "Dignités byzantines": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004838"
+      ]
+    },
+    "Notes historiques. Yuʾannis, patriarche d'Alexandrie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004838"
+      ]
+    },
+    "Liturgie. Rite copte. Rituel": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004838"
+      ]
+    },
+    "Yuʾannis, patriarche d'Alexandrie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004838"
+      ]
+    },
+    "Liturgie. Rite melkite. Prières": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000391"
+      ]
+    },
+    "Littérature chrétienne, Évangiles, liturgie, prières, vies des Saints": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030474"
+      ]
+    },
+    "Évangiles et Écritures chrétiennes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030474"
+      ]
+    },
+    "Sciences. Mathématiques": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001304"
+      ]
+    },
+    "Kalîla et Dimna. كليلة و دمنة. عبد الله بن المقفع. ʿAbd Allāh ibn al-Muqaffaʿ. أحمد بن الجمالي عبد الله بن محمد البدوي. شمس الدين محمد ابن عبد الطيف ابن ابي الفضل. ابن المدرّس السيوطي. شمس الدين محمد ابن عبد الرحمن ابن ابي بكر الطولوني. على بن الشاه الفارسي. يهودا ابن سبحوان الفارسي. اقبال ابن عبد الله. محمود ابو المواهب. عبد الرحمن الجبرتي. Fables, apologues et récits divers": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10884494"
+      ]
+    },
+    "Notes historiques. Aḥmad ibn ʿAlī, vizir": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004576"
+      ]
+    },
+    "Notes historiques. Ibrāhīm Bāšā": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004576"
+      ]
+    },
+    "Liturgie. Rite copte. Calendrier et comput": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004576"
+      ]
+    },
+    "Aḥmad ibn ʿAlī, vizir": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004576"
+      ]
+    },
+    "Ibrāhīm Bāšā": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004576"
+      ]
+    },
+    "Antoine": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Dorothée": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Aristarche": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Armenius": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Théodore": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Jean Calybite": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030691"
+      ]
+    },
+    "Mécanique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08406177"
+      ]
+    },
+    "Notes historiques. Muṣṭafā Bey al-Baqǧalī": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004619"
+      ]
+    },
+    "Muṣṭafā Bey al-Baqǧalī": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004619"
+      ]
+    },
+    "CULTE. Notes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000418"
+      ]
+    },
+    "DIVINATION/MAGIE": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001492"
+      ]
+    },
+    "Divination et magie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_52509786"
+      ]
+    },
+    "Histoire. Diplômes de nomination": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10889610"
+      ]
+    },
+    "Notes historiques. Ṣalīb ibn Abī al-Faraǧ, diacre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10889610"
+      ]
+    },
+    "Ṣalīb ibn Abī al-Faraǧ, diacre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10889610"
+      ]
+    },
+    "Ta'rīḫ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10535164"
+      ]
+    },
+    "Qādiriyya": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10535164"
+      ]
+    },
+    "Bakkāʾī, Aḥmad ibn Muḥammad (1803?-1865)": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10535164"
+      ]
+    },
+    "المختار ابن أحمد بن أبي بكر الكنتي": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10535164"
+      ]
+    },
+    "Liturgie. Rite melkite. Octoèque": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000333"
+      ]
+    },
+    "ÉTHIQUE": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000796"
+      ]
+    },
+    "ADAB NAṯRĪ. Ḥikāyāt": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000796"
+      ]
+    },
+    "LEXICOGRAPHIE. Notes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000497"
+      ]
+    },
+    "Druzes (Traités sur la religion des)": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030804"
+      ]
+    },
+    "Ascétisme": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004229"
+      ]
+    },
+    "Hagiographie. Jean Climaque": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004229"
+      ]
+    },
+    "Jean Climaque": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004229"
+      ]
+    },
+    "Littérature arabe chrétienne. فتح الله ولد يوسف سيور الشامي": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030256"
+      ]
+    },
+    "Astrologie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10037558"
+      ]
+    },
+    "Al-Luġa": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031210"
+      ]
+    },
+    "Histoire des contrées orientales": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002341"
+      ]
+    },
+    "Vies des descendants d'ʿAlî": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001587"
+      ]
+    },
+    "Al-Ḥadīṯ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031218"
+      ]
+    },
+    "Péricopes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000340"
+      ]
+    },
+    "Liturgie. Rite melkite. Péricopes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000340"
+      ]
+    },
+    "CULTE. ʿIbādāt": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000540"
+      ]
+    },
+    "Prières et invocations": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002838"
+      ]
+    },
+    "Vies des Compagnons": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002838"
+      ]
+    },
+    "Kitāb al-diryāq. كتاب الدرياق. Médecine": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08422960"
+      ]
+    },
+    "Al-Manṭiq": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031059"
+      ]
+    },
+    "Logique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031059"
+      ]
+    },
+    "Proverbes et sentences": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11003367"
+      ]
+    },
+    "Cyriaque": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004241"
+      ]
+    },
+    "Pantaléon": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004241"
+      ]
+    },
+    "Élie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004241"
+      ]
+    },
+    "Irène": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004241"
+      ]
+    },
+    "Maqâmât": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11003404"
+      ]
+    },
+    "Notes historiques. Qūryāqūs, prêtre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Notes historiques. Yūsuf II, patriarche chaldéen": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Notes historiques. Yūsuf III, patriarche chaldéen": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Qūryāqūs, prêtre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Yūsuf II, patriarche chaldéen": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Yūsuf III, patriarche chaldéen": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004225"
+      ]
+    },
+    "Bahnām": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031783"
+      ]
+    },
+    "Abbā Kawah": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031783"
+      ]
+    },
+    "Pisentius": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031783"
+      ]
+    },
+    "Hélène": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031783"
+      ]
+    },
+    "Marcien": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031783"
+      ]
+    },
+    "Liturgie. Rite maronite. Péricopes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000306"
+      ]
+    },
+    "Onirocritie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_52524405"
+      ]
+    },
+    "Anecdotes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10884190"
+      ]
+    },
+    "Histoire de la Syrie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030573"
+      ]
+    },
+    "Anbā André": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030692"
+      ]
+    },
+    "Claude": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030692"
+      ]
+    },
+    "Mercure": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030692"
+      ]
+    },
+    "Maxime": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030692"
+      ]
+    },
+    "Victor": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030692"
+      ]
+    },
+    "Mystique musulmane": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030218"
+      ]
+    },
+    "Al-Taṣawwuf": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030218"
+      ]
+    },
+    "Histoire des califes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_52520098"
+      ]
+    },
+    "TAṣAWWUF. Ethique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000727"
+      ]
+    },
+    "ḤIKAM": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000727"
+      ]
+    },
+    "Al-Qirāʾāt wa-al-tağwīd": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030322"
+      ]
+    },
+    "Lecture et Orthoépie du Coran": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030322"
+      ]
+    },
+    "Inschâ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11003770"
+      ]
+    },
+    "Patriarches d'Alexandrie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004189"
+      ]
+    },
+    "Histoire du Yémen": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030612"
+      ]
+    },
+    "Prosodie et métrique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030612"
+      ]
+    },
+    "GRAMMAIRE ET CONJUGAISON. Notes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000730"
+      ]
+    },
+    "Histoire locale. Šām": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000851"
+      ]
+    },
+    "Commentaires du Coran": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11003813"
+      ]
+    },
+    "Calendrier": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10037543"
+      ]
+    },
+    "Riḥla": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030334"
+      ]
+    },
+    "Récit de voyage": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030334"
+      ]
+    },
+    "مصطفى بن علي. مخيي الدين. Histoire d'Égypte": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000923"
+      ]
+    },
+    "Chroniques et Histoire des dynasties. Ottomans": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002460"
+      ]
+    },
+    "Sciences. Divination": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002460"
+      ]
+    },
+    "Sérapion": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004786"
+      ]
+    },
+    "Marc de Tarmaqā": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004786"
+      ]
+    },
+    "Théodora": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004786"
+      ]
+    },
+    "Basile": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004786"
+      ]
+    },
+    "Onuphre": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004786"
+      ]
+    },
+    "Spiritualité": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031379"
+      ]
+    },
+    "Droit hanéfite": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030535"
+      ]
+    },
+    "Kalîla et Dimna. كليلة و دمنة. عبد الله بن المقفع. ʿAbd Allāh ibn al-Muqaffaʿ. زايد بن عبدالفتاح بن سليمان الدميني. على بن الشاه الفارسي. يهودا ابن سبحوان الفارسي. Fables, apologues et récits divers": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10884535"
+      ]
+    },
+    "Médecine. كتاب (جالينوس) فى منافع الاعضاء. ʿABD AL-RAḤMĀN ibn ʿAlī ibn abī Ṣādiq (Abū al-Qāsim). HONAYN ibn Isḥāq (Abū Yazīd). GALIEN. Nīkrūz ibn Ḫiḍr Šāh [dit Nīkrūz ibn Ḫiḍr Šāh [dit Quṭb Kirmānī]. Quṭb Kirmānī": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001886"
+      ]
+    },
+    "Profession de Foi": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004580"
+      ]
+    },
+    "Apologétique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031712"
+      ]
+    },
+    "Ḥadīṯ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030146"
+      ]
+    },
+    "Liturgie. Rite melkite. Euchologe": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031928"
+      ]
+    },
+    "PARENESE": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001195"
+      ]
+    },
+    "ARITHMÉTIQUE (Ḥisāb). Notes": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11001195"
+      ]
+    },
+    "Mathématiques": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031077"
+      ]
+    },
+    "Al-Riyāḍiyyāt": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031077"
+      ]
+    },
+    "Histoire locale. Egypte": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000821"
+      ]
+    },
+    "Matières diverses de théologie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030551"
+      ]
+    },
+    "Al-Hay'a wa-al-tanğīm": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08406157"
+      ]
+    },
+    "FIQH. Droit spécial": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000525"
+      ]
+    },
+    "Physionomique": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002290"
+      ]
+    },
+    "Al-Bayṭara wa-al-ḥayawān": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030320"
+      ]
+    },
+    "Zoologie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10030320"
+      ]
+    },
+    "Bible. N.T": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000395"
+      ]
+    },
+    "Géographie générale": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11002370"
+      ]
+    },
+    "Notes HISTORIQUES": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11000643"
+      ]
+    },
+    "Hagiographie. Barlaam": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08453973"
+      ]
+    },
+    "Barlaam": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08453973"
+      ]
+    },
+    "Ǧalʿād": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_08453973"
+      ]
+    },
+    "Ḫaṭṭ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031091"
+      ]
+    },
+    "Calligraphie": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031091"
+      ]
+    },
+    "Notes historiques. Yūsuf, métropolite": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031359"
+      ]
+    },
+    "Yūsuf, métropolite": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031359"
+      ]
+    },
+    "TRADITION (Ḥadīṯ). Autres collections": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_11004586"
+      ]
+    },
+    "Al-Ta'rīḫ": {
+      "count": 1,
+      "percentage": 0.2,
+      "record_ids": [
+        "OAI_10031202"
+      ]
+    }
+  }
+}

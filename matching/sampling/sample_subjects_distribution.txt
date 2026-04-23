@@ -1,0 +1,51 @@
+Total subject tags: 552
+Unique subjects: 243
+
+Top 40 subject keywords:
+
+Subject                                            Count      %
+------------------------------------------------------------
+Médecine                                              22   4.4%
+Grammaire                                             21   4.2%
+Divans et qaṣîdas                                     19   3.8%
+Collections et anthologies                            12   2.4%
+Fables, apologues et récits divers                    11   2.2%
+Magie                                                 10   2.0%
+Romans de chevalerie                                  10   2.0%
+Dictionnaires                                          9   1.8%
+Philosophie                                            9   1.8%
+Marie                                                  9   1.8%
+FIQH. Furūʿ hanéfites                                  8   1.6%
+FIQH. Furūʿ, fragments en notes                        8   1.6%
+Contes et romans                                       8   1.6%
+CULTE. Prières et formules efficaces. Notes            8   1.6%
+Histoire d'Égypte                                      7   1.4%
+Théologie chrétienne                                   7   1.4%
+Histoire                                               6   1.2%
+Encyclopédies                                          6   1.2%
+Biographies                                            6   1.2%
+FIQH. Uṣūl                                             5   1.0%
+CULTE. Prières                                         5   1.0%
+ŠIʿR. Notes                                            5   1.0%
+Chroniques et Histoire des dynasties                   5   1.0%
+Astronomie                                             5   1.0%
+PARENESE. Notes                                        5   1.0%
+Ouvrages érotiques                                     4   0.8%
+Histoire de l'Afrique et de l'Espagne                  4   0.8%
+Vie de Mahomet                                         4   0.8%
+Al-Fiqh                                                4   0.8%
+Rhétorique                                             4   0.8%
+Al-Adab al-šiʿrī                                       4   0.8%
+Poésie arabe                                           4   0.8%
+TRADITION (Ḥadīṯ). Notes                               4   0.8%
+HISTOIRE. Notes                                        4   0.8%
+Théologie mystique                                     4   0.8%
+Al-Falsafa                                             4   0.8%
+Al-Tawḥīd wa-ʿilm al-Kalām                             4   0.8%
+Théologie islamique                                    4   0.8%
+Histoire universelle et antéislamique                  4   0.8%
+Biographies locales                                    3   0.6%
+
+... and 203 more unique subjects
+
+Coverage: top 40 subjects account for 285 tags
