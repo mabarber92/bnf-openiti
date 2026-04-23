@@ -10,6 +10,7 @@ Structure:
 - title_index: {normalized_title_string: [BNF_IDs]}
 """
 
+import re
 from typing import Optional
 from tqdm import tqdm
 
@@ -36,24 +37,92 @@ class BNFCandidateIndex:
 
     def _build_indices(self) -> None:
         """Build author and title indices from all records."""
+        from utils.normalize import normalize
+
         print(f"Building BNF candidate indices ({len(self.bnf_records)} records)...")
 
         for bnf_id, record in tqdm(self.bnf_records.items(), desc="Indexing BNF"):
-            # Author candidates
-            author_cands = record.matching_candidates(norm_strategy=self.norm_strategy)
-            for candidate in author_cands.get("lat", []) + author_cands.get("ara", []):
-                if candidate not in self.author_index:
-                    self.author_index[candidate] = []
-                if bnf_id not in self.author_index[candidate]:
-                    self.author_index[candidate].append(bnf_id)
+            # Get raw candidates split by script (may contain mixed-script contamination)
+            try:
+                author_cands = record.matching_candidates(norm_strategy="raw")
+            except Exception:
+                # If even raw extraction fails, skip this record
+                continue
 
-            # Title candidates (same set as author, but indexed separately for clarity)
-            title_cands = record.matching_candidates(norm_strategy=self.norm_strategy)
-            for candidate in title_cands.get("lat", []) + title_cands.get("ara", []):
-                if candidate not in self.title_index:
-                    self.title_index[candidate] = []
-                if bnf_id not in self.title_index[candidate]:
-                    self.title_index[candidate].append(bnf_id)
+            # Process Arabic candidates, detecting and splitting mixed-script
+            for raw_candidate in author_cands.get("ara", []):
+                self._process_candidate(raw_candidate, "ara", bnf_id, "author", normalize)
+
+            # Process Latin candidates, detecting and splitting mixed-script
+            for raw_candidate in author_cands.get("lat", []):
+                self._process_candidate(raw_candidate, "lat", bnf_id, "author", normalize)
+
+            # Title candidates (same logic)
+            try:
+                title_cands = record.matching_candidates(norm_strategy="raw")
+            except Exception:
+                continue
+
+            for raw_candidate in title_cands.get("ara", []):
+                self._process_candidate(raw_candidate, "ara", bnf_id, "title", normalize)
+
+            for raw_candidate in title_cands.get("lat", []):
+                self._process_candidate(raw_candidate, "lat", bnf_id, "title", normalize)
+
+    def _process_candidate(self, raw: str, script: str, bnf_id: str, cand_type: str, normalize_fn) -> None:
+        """Process a single candidate, handling mixed-script splitting."""
+        raw = raw.strip()
+        if not raw:
+            return
+
+        # Try to normalize as-is first
+        try:
+            norm = normalize_fn(raw, script, self.norm_strategy)
+            if norm:
+                self._add_to_index(norm, bnf_id, cand_type)
+            return
+        except ValueError:
+            # Mixed-script contamination detected; split and re-route
+            pass
+
+        # Split mixed-script text and route appropriately
+        ara_pattern = r"[\u0600-\u06FF\u0750-\u077F]+"
+        lat_pattern = r"[A-Za-z0-9\u0100-\u017F\u0180-\u024F]+"
+
+        # Extract Arabic segments
+        for match in re.finditer(ara_pattern, raw):
+            segment = match.group().strip()
+            if segment:
+                try:
+                    norm = normalize_fn(segment, "ara", self.norm_strategy)
+                    if norm:
+                        self._add_to_index(norm, bnf_id, cand_type)
+                except ValueError:
+                    pass
+
+        # Extract Latin segments
+        for match in re.finditer(lat_pattern, raw):
+            segment = match.group().strip()
+            if segment:
+                try:
+                    norm = normalize_fn(segment, "lat", self.norm_strategy)
+                    if norm:
+                        self._add_to_index(norm, bnf_id, cand_type)
+                except ValueError:
+                    pass
+
+    def _add_to_index(self, norm_candidate: str, bnf_id: str, cand_type: str) -> None:
+        """Add normalized candidate to appropriate index."""
+        if cand_type == "author":
+            if norm_candidate not in self.author_index:
+                self.author_index[norm_candidate] = []
+            if bnf_id not in self.author_index[norm_candidate]:
+                self.author_index[norm_candidate].append(bnf_id)
+        elif cand_type == "title":
+            if norm_candidate not in self.title_index:
+                self.title_index[norm_candidate] = []
+            if bnf_id not in self.title_index[norm_candidate]:
+                self.title_index[norm_candidate].append(bnf_id)
 
     def get_bnf_records_with_author_candidate(self, candidate: str) -> list[str]:
         """Get BNF IDs that have this normalized author candidate."""

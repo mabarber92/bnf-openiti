@@ -1,0 +1,43 @@
+GREEDY SEARCH TEST REPORT (WITH NORMALIZATION)
+================================================================================
+
+Test setup:
+  BNF records searched: 10
+  OpenITI books in corpus: 9539
+  Total search operations: 50
+
+PERFORMANCE BY THRESHOLD
+--------------------------------------------------------------------------------
+Threshold    Recall     Precision    F1-Score   Avg Time        False Pos   
+--------------------------------------------------------------------------------
+0.70         90.0     % 3.1        % 0.060      1386.3        ms 281         
+0.75         90.0     % 5.7        % 0.107      1389.2        ms 149         
+0.80         90.0     % 11.5       % 0.205      1393.9        ms 69          
+0.85         60.0     % 10.5       % 0.179      1363.4        ms 51          
+0.90         40.0     % 8.5        % 0.140      1388.9        ms 43          
+
+METRICS EXPLAINED
+--------------------------------------------------------------------------------
+  Recall: % of correct matches found (high = fewer missed matches)
+  Precision: % of matches that were correct (high = fewer false positives)
+  F1-Score: harmonic mean of precision and recall (best = 1.0)
+  Avg Time: average search time per BNF record (ms)
+  False Pos: total incorrect matches found
+
+RECOMMENDATION
+--------------------------------------------------------------------------------
+Best threshold: 0.80
+  Recall: 90.0% (correct matches found)
+  Precision: 11.5% (accuracy of matches)
+  F1-Score: 0.205
+  Avg search time: 1393.9ms per record
+
+[NOTE] GOOD: One metric is strong, but review the weaker one.
+  False positives are a concern - threshold may be too loose.
+
+Timing analysis:
+  @ 0.7: 1386.3ms per record -> ~10813s for 7825 records
+  @ 0.75: 1389.2ms per record -> ~10836s for 7825 records
+  @ 0.8: 1393.9ms per record -> ~10872s for 7825 records
+  @ 0.85: 1363.4ms per record -> ~10634s for 7825 records
+  @ 0.9: 1388.9ms per record -> ~10833s for 7825 records

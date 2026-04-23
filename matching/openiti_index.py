@@ -32,18 +32,19 @@ class OpenITIIndex:
         """Build author_uri → [book_uris] mapping (precomputed once)."""
         index: dict[str, list[str]] = {}
         for book_uri, book in self.books.items():
-            author_uri = book.author_uri
+            # Handle both dict and dataclass access
+            author_uri = book["author_uri"] if isinstance(book, dict) else book.author_uri
             if author_uri not in index:
                 index[author_uri] = []
             index[author_uri].append(book_uri)
         return index
 
     def get_book(self, book_uri: str):
-        """Retrieve a book by URI."""
+        """Retrieve a book by URI. Returns dict or dataclass object."""
         return self.books.get(book_uri)
 
     def get_author(self, author_uri: str):
-        """Retrieve an author by URI."""
+        """Retrieve an author by URI. Returns dict or dataclass object."""
         return self.authors.get(author_uri)
 
     def get_books_for_authors(self, author_uris: list[str]) -> list[str]:

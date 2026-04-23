@@ -1,0 +1,9 @@
+BNF Record: OAI_11000928
+Expected URIs: ['0874IbnTaghribirdi']
+Title Latin: []
+Traceback (most recent call last):
+  File "<stdin>", line 32, in <module>
+  File "C:\Users\Mathew.Barber\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 16-21: character maps to <undefined>

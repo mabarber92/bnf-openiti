@@ -413,7 +413,6 @@ class BNFRecord:
             raw = raw.strip().rstrip(".")
             if not raw:
                 return
-            # Normalize based on strategy
             norm = normalize(raw, script, norm_strategy)
             if norm and norm not in seen:
                 seen.add(norm)
@@ -956,3 +955,35 @@ class BNFMetadata:
 
     def __repr__(self) -> str:
         return f"BNFMetadata(records={len(self.records)}, failed={len(self.failed)})"
+
+
+# ---------------------------------------------------------------------------
+# Data loaders (deserialize JSON to dataclass objects)
+# ---------------------------------------------------------------------------
+
+def load_bnf_records(path: str) -> dict:
+    """
+    Load BNF records from JSON, deserializing to dataclass objects.
+
+    Parameters
+    ----------
+    path : str
+        Path to bnf_parsed.json or bnf_sample_*.json file
+
+    Returns
+    -------
+    dict
+        {bnf_id: BNFRecord, ...}
+    """
+    import json as _json
+    from dataclasses import fields, is_dataclass
+
+    with open(path, encoding="utf-8") as f:
+        data = _json.load(f)
+
+    records = {}
+    for bnf_id, record_dict in data.get("records", {}).items():
+        # Deserialize to BNFRecord dataclass
+        records[bnf_id] = BNFRecord(**record_dict)
+
+    return records

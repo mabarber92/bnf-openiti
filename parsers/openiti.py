@@ -745,3 +745,42 @@ class OpenITIMetaYmls:
             f"versions={len(self.versions)}, "
             f"failed={len(self.failed)})"
         )
+
+
+# ---------------------------------------------------------------------------
+# Data loaders (deserialize JSON to dataclass objects)
+# ---------------------------------------------------------------------------
+
+def load_openiti_corpus(path: str) -> dict:
+    """
+    Load OpenITI corpus from JSON, deserializing to dataclass objects.
+
+    Parameters
+    ----------
+    path : str
+        Path to openiti_corpus_*.json file
+
+    Returns
+    -------
+    dict
+        {
+            "books": {book_uri: OpenITIBookData, ...},
+            "authors": {author_uri: OpenITIAuthorData, ...}
+        }
+    """
+    import json as _json
+
+    with open(path, encoding="utf-8") as f:
+        data = _json.load(f)
+
+    # Deserialize books
+    books = {}
+    for uri, book_dict in data.get("books", {}).items():
+        books[uri] = OpenITIBookData(**book_dict)
+
+    # Deserialize authors
+    authors = {}
+    for uri, author_dict in data.get("authors", {}).items():
+        authors[uri] = OpenITIAuthorData(**author_dict)
+
+    return {"books": books, "authors": authors}

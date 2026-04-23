@@ -1,0 +1,86 @@
+ANALYZING FALSE POSITIVES
+====================================================================================================
+
+OAI_11000434 -> 0620IbnQudamaMaqdisi.DhammTawil
+  Author: 0620IbnQudamaMaqdisi
+  Author matches found: 3 total
+    'aynabd allah ibn aynumar al baydawi' vs 'aynabd allah' = 100
+    'aynabd allah ibn aynumar al baydawi' vs 'aynabd allah' = 100
+    'aynabd allah ibn aynumar al baydawi.' vs 'aynabd allah' = 100
+  Title matches found: 1 total
+    'انوار التنزيل واسرار التاويل' vs 'ذم التاويل' = 82
+
+OAI_10030933 -> 0843IbnKhatibNasiriyya.DurrMuntakhab
+  Author: 0843IbnKhatibNasiriyya
+  Author matches found: 20 total
+    'aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya (aynala al din)' vs 'ibn hatib al nasiriyya' = 84
+    'aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya (aynala al din)' vs 'aynali' = 100
+    'aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya (aynala al din)' vs 'abu al hasan' = 80
+  Title matches found: 1 total
+    'al dourr al mountakhab fi taʾrikh halab' vs 'al durr al muntahab fi takmilaŧ taʾrih halab' = 83
+
+OAI_10030933 -> 0385Daraqutni.FawaidMuntaqatDhuhli
+  Author: 0385Daraqutni
+  Author matches found: 13 total
+    'aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya (aynala al din)' vs 'aynali' = 100
+    'aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya (aynala al din)' vs 'abu al hasan' = 80
+    'aynala al din aboul hasan aynali ibn mohammad al djibrini ibn khatib al nasiriyya' vs 'aynali' = 100
+  Title matches found: 5 total
+    'aboul qasim aynomar ibn ahmad ibn al aynadim (kamal al din)' vs 'ahmad b' = 83
+    'kamal al din aboul qasim aynomar ibn ahmad ibn al aynadim' vs 'ahmad b' = 83
+    'al dourr al mountakhab fi taʾrikh halab, supplement, contenant les biographies des hommes celebres daynalep, depuis 658 de laynhegire, par ala al din aboul hasan ali ibn mohammad al djibrini ibn khatib al nasiriyya, au boughiat al talab fi taʾrikh halab, par kamal al din aboul qasim omar ibn ahmad ibn al aynadim' vs 'ahmad b' = 83
+
+OAI_10882524 -> 0385Daraqutni.FawaidMuntaqatDhuhli
+  Author: 0385Daraqutni
+  Author matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'aynali' = 100
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'aynali' = 100
+  Title matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'ahmad b' = 83
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'ahmad b' = 83
+
+OAI_10884186 -> 0385Daraqutni.FawaidMuntaqatDhuhli
+  Author: 0385Daraqutni
+  Author matches found: 2 total
+    'ahmad ibn aynali al maqrizi.' vs 'aynali' = 100
+    'ismaaynil ibn aynali abu al fidaʾ al hamawi al malik al muʾayyad.' vs 'aynali' = 100
+  Title matches found: 1 total
+    'ahmad ibn aynali al maqrizi.' vs 'ahmad b' = 83
+
+OAI_10884191 -> 0385Daraqutni.FawaidMuntaqatDhuhli
+  Author: 0385Daraqutni
+  Author matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'aynali' = 100
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'aynali' = 100
+  Title matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'ahmad b' = 83
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'ahmad b' = 83
+
+OAI_11000947 -> 0385Daraqutni.FawaidMuntaqatDhuhli
+  Author: 0385Daraqutni
+  Author matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'aynali' = 100
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'aynali' = 100
+  Title matches found: 2 total
+    'ahmad ibn aynali al maqrizi (taqi al din)' vs 'ahmad b' = 83
+    'ahmad ibn aynali al maqrizi (taqi al din).' vs 'ahmad b' = 83
+
+OAI_11001068 -> 0580IbnCimrani.InbaFiTarikhKhulafa
+  Author: 0580IbnCimrani
+  Author matches found: 5 total
+    'ibn wasil, muhammad ibn salim' vs 'muhammad' = 100
+    'muhammad ibn salim ibn nasr allah ibn salim ibn wasil al hamawi (gamal al din)' vs 'muhammad' = 100
+    'sams al din ahmad ibn ahmad ibn muhammad al zayni. auteur pretendu du texte' vs 'muhammad' = 100
+  Title matches found: 1 total
+    'تاريخ الواصلين في اخبار الخلفاء والملوك والسلاطين' vs 'الانباء في تاريخ الخلفاء :: الانباء في تاريخ الخلفاء' = 80
+
+====================================================================================================
+DARAQUTNI TITLE ANALYSIS
+====================================================================================================
+
+Daraqutni title_lat length: 263 chars
+  Separators: '::' count=1, '|' count=0
+
+Split by '::' gives 2 parts
+  Part 1 (144 chars): al-Fawāʾid al-muntaqāŧ min al-uṣūl min ḥadīṯ al-qāḍī¶    Abī
+  Part 2 (115 chars): Ḥadīṯ Abī al-Ṭāhir Muḥammad b. Aḥmad b. ʿAbd Allāh b.¶    Na
