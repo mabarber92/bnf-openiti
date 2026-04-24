@@ -1,0 +1,6 @@
+BNF_ID,Expected_Book,Expected_Author,Expected_Title,False_Positive_Book,False_Author,False_Title
+OAI_10030933,0660IbnCadim.BughyatTalab,0660IbnCadim,Buġyaŧ al-ṭalab fī tārīḫ Ḥalab,0241IbnHanbal.MasailRiwayatCabdAllah,0241IbnHanbal,Masāʾil al-imām Aḥmad b. Ḥanbal riwāyaŧ ibnihi ʿAbd
+OAI_10882524,0845Maqrizi.Mawaciz,0845Maqrizi,al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār,0241IbnHanbal.MasailRiwayatCabdAllah,0241IbnHanbal,Masāʾil al-imām Aḥmad b. Ḥanbal riwāyaŧ ibnihi ʿAbd
+OAI_10884186,0732AbuFida.MukhtasarFiAkhbar,0732AbuFida,al-Muḫtaṣar fī aḫbār al-bašar,0241IbnHanbal.MasailRiwayatCabdAllah,0241IbnHanbal,Masāʾil al-imām Aḥmad b. Ḥanbal riwāyaŧ ibnihi ʿAbd
+OAI_10884191,0845Maqrizi.Mawaciz,0845Maqrizi,al-Mawāʿiẓ wa al-ʾiʿtibār bi-ḏikr al-ḫuṭaṭ wa al-āṯār,0241IbnHanbal.MasailRiwayatCabdAllah,0241IbnHanbal,Masāʾil al-imām Aḥmad b. Ḥanbal riwāyaŧ ibnihi ʿAbd
+OAI_11000947,0874IbnTaghribirdi.NujumZahira,0874IbnTaghribirdi,al-Nuǧūm al-zāhiraŧ fī mulūk Miṣr wa-l-Qāhiraŧ,0241IbnHanbal.MasailRiwayatCabdAllah,0241IbnHanbal,Masāʾil al-imām Aḥmad b. Ḥanbal riwāyaŧ ibnihi ʿAbd

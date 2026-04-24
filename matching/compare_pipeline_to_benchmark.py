@@ -35,7 +35,7 @@ from fuzzywuzzy import fuzz
 
 def load_correspondence():
     """Load test correspondences."""
-    with open("data_samplers/correspondence.json") as f:
+    with open("data_samplers/correspondence.json", encoding='utf-8') as f:
         correspondences = json.load(f)
 
     test_pairs = {}
@@ -48,21 +48,21 @@ def load_correspondence():
     return test_pairs
 
 
-def benchmark_search(bnf_id, expected_uris, threshold):
-    """Run benchmark search for one record at one threshold."""
+def benchmark_search(bnf_id, expected_uris, author_threshold, title_threshold):
+    """Run benchmark search for one record at specified thresholds."""
     # Load locally to avoid circular imports
-    with open(BNF_FULL_PATH) as f:
+    with open(BNF_FULL_PATH, encoding='utf-8') as f:
         bnf_records = json.load(f)["records"]
-    with open(OPENITI_CORPUS_PATH) as f:
+    with open(OPENITI_CORPUS_PATH, encoding='utf-8') as f:
         openiti_data = json.load(f)
 
     bnf_record = bnf_records.get(bnf_id)
     if not bnf_record:
         return None, None, None
 
-    # Call benchmark functions
-    matched_authors, _ = search_authors(bnf_id, threshold)
-    matched_books, _ = search_titles(bnf_id, threshold)
+    # Call benchmark functions with separate thresholds
+    matched_authors, _ = search_authors(bnf_id, author_threshold)
+    matched_books, _ = search_titles(bnf_id, title_threshold)
 
     # Stage 3: Combine
     combined = []
@@ -118,56 +118,56 @@ def run_validation():
     print("\nComparing results...")
     mismatches = []
 
-    # Test at optimal thresholds
-    test_thresholds = [0.80, 0.85]
+    # Import thresholds from config
+    from matching.config import AUTHOR_THRESHOLD, TITLE_THRESHOLD
 
     for bnf_id in test_bnf_ids:
         expected_uris = test_pairs[bnf_id]
 
-        for threshold in test_thresholds:
-            # Benchmark
-            bench_authors, bench_books, bench_combined = benchmark_search(
-                bnf_id, expected_uris, threshold
-            )
+        # Benchmark (use same thresholds as pipeline)
+        bench_authors, bench_books, bench_combined = benchmark_search(
+            bnf_id, expected_uris, AUTHOR_THRESHOLD, TITLE_THRESHOLD
+        )
 
-            # Pipeline (use fixed optimal thresholds)
-            pipe_authors, pipe_books, pipe_combined = pipeline_search(pipeline, bnf_id)
+        # Pipeline (use fixed optimal thresholds)
+        pipe_authors, pipe_books, pipe_combined = pipeline_search(pipeline, bnf_id)
 
-            # Compare Stage 1
-            if bench_authors != pipe_authors:
-                mismatches.append({
-                    "bnf_id": bnf_id,
-                    "threshold": threshold,
-                    "stage": 1,
-                    "benchmark_count": len(bench_authors),
-                    "pipeline_count": len(pipe_authors),
-                    "benchmark": sorted(bench_authors)[:3],  # First 3 for display
-                    "pipeline": sorted(pipe_authors)[:3],
-                })
+        # Compare Stage 1
+        if bench_authors != pipe_authors:
+            mismatches.append({
+                "bnf_id": bnf_id,
+                "stage": 1,
+                "benchmark_count": len(bench_authors),
+                "pipeline_count": len(pipe_authors),
+                "benchmark": sorted(bench_authors)[:3],  # First 3 for display
+                "pipeline": sorted(pipe_authors)[:3],
+                "in_bench_not_pipe": sorted(set(bench_authors) - set(pipe_authors))[:3],
+                "in_pipe_not_bench": sorted(set(pipe_authors) - set(bench_authors))[:3],
+            })
 
-            # Compare Stage 2
-            if bench_books != pipe_books:
-                mismatches.append({
-                    "bnf_id": bnf_id,
-                    "threshold": threshold,
-                    "stage": 2,
-                    "benchmark_count": len(bench_books),
-                    "pipeline_count": len(pipe_books),
-                    "benchmark": sorted(bench_books)[:3],
-                    "pipeline": sorted(pipe_books)[:3],
-                })
+        # Compare Stage 2
+        if bench_books != pipe_books:
+            mismatches.append({
+                "bnf_id": bnf_id,
+                "stage": 2,
+                "benchmark_count": len(bench_books),
+                "pipeline_count": len(pipe_books),
+                "benchmark": sorted(bench_books)[:3],
+                "pipeline": sorted(pipe_books)[:3],
+                "in_bench_not_pipe": sorted(set(bench_books) - set(pipe_books))[:3],
+                "in_pipe_not_bench": sorted(set(pipe_books) - set(bench_books))[:3],
+            })
 
-            # Compare Stage 3
-            if bench_combined != pipe_combined:
-                mismatches.append({
-                    "bnf_id": bnf_id,
-                    "threshold": threshold,
-                    "stage": 3,
-                    "benchmark_count": len(bench_combined),
-                    "pipeline_count": len(pipe_combined),
-                    "benchmark": sorted(bench_combined),
-                    "pipeline": sorted(pipe_combined),
-                })
+        # Compare Stage 3
+        if bench_combined != pipe_combined:
+            mismatches.append({
+                "bnf_id": bnf_id,
+                "stage": 3,
+                "benchmark_count": len(bench_combined),
+                "pipeline_count": len(pipe_combined),
+                "benchmark": sorted(bench_combined),
+                "pipeline": sorted(pipe_combined),
+            })
 
     # Report
     print("\n" + "="*70)
@@ -181,9 +181,10 @@ def run_validation():
             if stage_mismatches:
                 print(f"\nStage {stage} Mismatches ({len(stage_mismatches)}):")
                 for m in stage_mismatches[:5]:  # Show first 5
-                    print(f"  {m['bnf_id']} @ {m['threshold']}: benchmark {m['benchmark_count']} vs pipeline {m['pipeline_count']}")
-                    print(f"    Benchmark: {m['benchmark']}")
-                    print(f"    Pipeline:  {m['pipeline']}")
+                    print(f"  {m['bnf_id']}: benchmark {m['benchmark_count']} vs pipeline {m['pipeline_count']}")
+                    if stage < 3:
+                        print(f"    In benchmark not in pipeline: {m.get('in_bench_not_pipe', [])}")
+                        print(f"    In pipeline not in benchmark: {m.get('in_pipe_not_bench', [])}")
 
         return False
     else:

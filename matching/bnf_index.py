@@ -37,7 +37,7 @@ class BNFCandidateIndex:
 
     def _build_indices(self) -> None:
         """Build author and title indices from all records."""
-        from utils.normalize import normalize
+        from matching.normalize import normalize_transliteration
 
         print(f"Building BNF candidate indices ({len(self.bnf_records)} records)...")
 
@@ -49,13 +49,13 @@ class BNFCandidateIndex:
                 # If even raw extraction fails, skip this record
                 continue
 
-            # Process Arabic candidates, detecting and splitting mixed-script
+            # Process Arabic candidates (same normalization as benchmark test)
             for raw_candidate in author_cands.get("ara", []):
-                self._process_candidate(raw_candidate, "ara", bnf_id, "author", normalize)
+                self._process_candidate(raw_candidate, bnf_id, "author", normalize_transliteration)
 
-            # Process Latin candidates, detecting and splitting mixed-script
+            # Process Latin candidates (same normalization as benchmark test)
             for raw_candidate in author_cands.get("lat", []):
-                self._process_candidate(raw_candidate, "lat", bnf_id, "author", normalize)
+                self._process_candidate(raw_candidate, bnf_id, "author", normalize_transliteration)
 
             # Title candidates (same logic)
             try:
@@ -64,52 +64,21 @@ class BNFCandidateIndex:
                 continue
 
             for raw_candidate in title_cands.get("ara", []):
-                self._process_candidate(raw_candidate, "ara", bnf_id, "title", normalize)
+                self._process_candidate(raw_candidate, bnf_id, "title", normalize_transliteration)
 
             for raw_candidate in title_cands.get("lat", []):
-                self._process_candidate(raw_candidate, "lat", bnf_id, "title", normalize)
+                self._process_candidate(raw_candidate, bnf_id, "title", normalize_transliteration)
 
-    def _process_candidate(self, raw: str, script: str, bnf_id: str, cand_type: str, normalize_fn) -> None:
-        """Process a single candidate, handling mixed-script splitting."""
+    def _process_candidate(self, raw: str, bnf_id: str, cand_type: str, normalize_fn) -> None:
+        """Process a single candidate using normalize_transliteration (same as benchmark)."""
         raw = raw.strip()
         if not raw:
             return
 
-        # Try to normalize as-is first
-        try:
-            norm = normalize_fn(raw, script, self.norm_strategy)
-            if norm:
-                self._add_to_index(norm, bnf_id, cand_type)
-            return
-        except ValueError:
-            # Mixed-script contamination detected; split and re-route
-            pass
-
-        # Split mixed-script text and route appropriately
-        ara_pattern = r"[\u0600-\u06FF\u0750-\u077F]+"
-        lat_pattern = r"[A-Za-z0-9\u0100-\u017F\u0180-\u024F]+"
-
-        # Extract Arabic segments
-        for match in re.finditer(ara_pattern, raw):
-            segment = match.group().strip()
-            if segment:
-                try:
-                    norm = normalize_fn(segment, "ara", self.norm_strategy)
-                    if norm:
-                        self._add_to_index(norm, bnf_id, cand_type)
-                except ValueError:
-                    pass
-
-        # Extract Latin segments
-        for match in re.finditer(lat_pattern, raw):
-            segment = match.group().strip()
-            if segment:
-                try:
-                    norm = normalize_fn(segment, "lat", self.norm_strategy)
-                    if norm:
-                        self._add_to_index(norm, bnf_id, cand_type)
-                except ValueError:
-                    pass
+        # Normalize candidate using same function as benchmark test
+        norm = normalize_fn(raw)
+        if norm:
+            self._add_to_index(norm, bnf_id, cand_type)
 
     def _add_to_index(self, norm_candidate: str, bnf_id: str, cand_type: str) -> None:
         """Add normalized candidate to appropriate index."""

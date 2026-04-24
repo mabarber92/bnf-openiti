@@ -13,36 +13,70 @@ from functools import partial
 from tqdm import tqdm
 from matching.config import AUTHOR_THRESHOLD
 from matching.fuzzy_scorer import FuzzyScorer
+from matching.candidate_builders import build_author_candidates_by_script
 
 
-def _match_author_candidate(candidate, authors_dict, threshold):
+def _match_author_candidate(candidate, authors_candidates, threshold, norm_strategy="fuzzy"):
     """
-    Standalone function for parallel processing of a single author candidate.
+    Standalone function for parallel processing of a single BNF author candidate.
+
+    Replicates exact scoring logic from test_fuzzy_with_author_comprehensive.py.
 
     Parameters
     ----------
     candidate : str
-        Normalized author candidate
-    authors_dict : dict
-        {author_uri: author_name} mapping
+        Raw author candidate from BNF
+    authors_candidates : dict
+        {author_uri: {"lat": [...], "ara": [...]}} - per-script candidates
     threshold : float
-        Matching threshold
+        Matching threshold (0-1 range)
+    norm_strategy : str
+        Normalization strategy used
 
     Returns
     -------
     tuple
         (candidate, [matching_author_uris])
     """
-    from matching.fuzzy_scorer import FuzzyScorer
+    from fuzzywuzzy import fuzz
+    from matching.normalize import normalize_transliteration
 
-    scorer = FuzzyScorer()
     matches = []
 
-    for author_uri, author_name in authors_dict.items():
-        if not author_name:
-            continue
-        score = scorer.score(candidate, author_name)
-        if score >= threshold:
+    # Normalize BNF candidate (using same function as original test)
+    norm_candidate = normalize_transliteration(candidate)
+
+    if not norm_candidate:
+        return (candidate, matches)
+
+    # Score against all author candidates for each author (exact logic from original test)
+    for author_uri, author_candidates_by_script in authors_candidates.items():
+        author_matched = False
+
+        # Try both scripts (matching original test exactly)
+        for script in ["lat", "ara"]:
+            if not author_candidates_by_script.get(script):
+                continue
+
+            for author_str in author_candidates_by_script[script]:
+                if not author_str:
+                    continue
+
+                # Normalize author candidate
+                norm_author_str = normalize_transliteration(author_str)
+                if not norm_author_str:
+                    continue
+
+                # Use token_set_ratio exactly like original test
+                score = fuzz.token_set_ratio(norm_candidate, norm_author_str)
+                if score >= threshold * 100:  # threshold is 0-1 range, score is 0-100
+                    author_matched = True
+                    break
+
+            if author_matched:
+                break
+
+        if author_matched:
             matches.append(author_uri)
 
     return (candidate, matches)
@@ -51,7 +85,7 @@ def _match_author_candidate(candidate, authors_dict, threshold):
 class AuthorMatcher:
     """Match BNF author candidates to OpenITI authors."""
 
-    def __init__(self, verbose: bool = True, num_workers: int = None):
+    def __init__(self, verbose: bool = True, num_workers: int = None, use_parallel: bool = True):
         """
         Initialize the author matcher.
 
@@ -61,9 +95,12 @@ class AuthorMatcher:
             Print progress information
         num_workers : int, optional
             Number of parallel workers. If None, uses CPU count.
+        use_parallel : bool
+            Use parallelization. If False, run sequentially for debugging.
         """
         self.verbose = verbose
         self.num_workers = num_workers
+        self.use_parallel = use_parallel
 
     def execute(self, pipeline) -> None:
         """
@@ -87,14 +124,11 @@ class AuthorMatcher:
             print(f"Matching {total_candidates} unique author candidates...")
 
         # Prepare author data for parallel processing
-        authors_dict = {}
+        authors_candidates = {}
         for author_uri, author_data in pipeline.openiti_index.authors.items():
-            if isinstance(author_data, dict):
-                author_name = author_data.get("name_slug", "")
-            else:
-                author_name = author_data.name_slug
-            if author_name:
-                authors_dict[author_uri] = author_name
+            candidates = build_author_candidates_by_script(author_data)
+            if candidates["lat"] or candidates["ara"]:
+                authors_candidates[author_uri] = candidates
 
         # Prepare candidates and BNF mapping
         candidates_list = []
@@ -103,17 +137,25 @@ class AuthorMatcher:
             candidates_list.append(candidate)
             candidate_to_bnf_ids[candidate] = bnf_ids
 
-        # Parallel matching
-        with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-            match_fn = partial(_match_author_candidate, authors_dict=authors_dict, threshold=AUTHOR_THRESHOLD)
-            results = list(
-                tqdm(
-                    executor.map(match_fn, candidates_list, chunksize=10),
-                    desc="Author matching",
-                    disable=not self.verbose,
-                    total=len(candidates_list),
+        # Matching (parallel or sequential)
+        if self.use_parallel:
+            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+                results = list(
+                    tqdm(
+                        executor.map(match_fn, candidates_list, chunksize=10),
+                        desc="Author matching",
+                        disable=not self.verbose,
+                        total=len(candidates_list),
+                    )
                 )
-            )
+        else:
+            # Sequential processing for debugging
+            results = []
+            match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+            for candidate in tqdm(candidates_list, desc="Author matching", disable=not self.verbose):
+                result = match_fn(candidate)
+                results.append(result)
 
         # Store results in pipeline
         for candidate, matched_authors in results:

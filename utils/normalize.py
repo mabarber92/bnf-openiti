@@ -42,14 +42,18 @@ def _normalize_latin_fuzzy(text: str) -> str:
     Aggressive Latin normalization for fuzzy matching.
 
     - Lowercase
+    - Convert C/c to ayn (ʿayn convention in OpenITI URIs)
     - Normalize ʿayn variants to canonical form
     - Strip diacritics (accents, macrons, etc.)
-    - Collapse whitespace
+    - Collapse whitespace (including removing hyphens)
     """
     # Lowercase
     text = text.lower()
 
-    # Normalize ʿayn variants
+    # Convert C/c to ayn (OpenITI convention: C always = ʿayn in transliteration)
+    text = re.sub(r"[Cc]", "ayn", text)
+
+    # Normalize other ʿayn variants
     text = normalise_ayn(text)
 
     # Strip diacritics using NFD decomposition
@@ -57,8 +61,9 @@ def _normalize_latin_fuzzy(text: str) -> str:
     text = unicodedata.normalize("NFD", text)
     text = "".join(c for c in text if unicodedata.category(c) != "Mn")
 
-    # Collapse whitespace
-    text = " ".join(text.split())
+    # Collapse whitespace and normalize hyphens
+    text = re.sub(r"-+", " ", text)  # Replace hyphens with spaces
+    text = " ".join(text.split())     # Collapse whitespace
 
     return text
 

@@ -385,54 +385,57 @@ class BNFRecord:
 
     def matching_candidates(self, norm_strategy: str = "fuzzy") -> dict[str, list[str]]:
         """
-        Extract matching candidates with optional normalization.
+        Extract raw matching candidates (no normalization).
 
-        Returns normalized, deduplicated candidates ready for fuzzy matching
-        or embedding. Includes all title parts, creators, and description
-        candidates across both scripts.
+        Returns raw, deduplicated candidates. Deduplication and normalization
+        are handled by the matching pipeline to preserve all case variants.
+        Includes creators, contributors, and description candidates.
 
         Parameters
         ----------
         norm_strategy : str
-            Normalization strategy: "fuzzy" (aggressive), "embedding" (moderate),
-            or "raw" (no normalization).
+            Ignored (kept for API compatibility). Raw candidates are always returned.
 
         Returns
         -------
         dict[str, list[str]]
-            {"lat": [...], "ara": [...]} with normalized, deduplicated candidates.
+            {"lat": [...], "ara": [...]} with raw, deduplicated candidates.
         """
-        from utils.normalize import normalize
-
         lat: list[str] = []
         ara: list[str] = []
         seen_lat: set[str] = set()
         seen_ara: set[str] = set()
 
         def add(raw: str, script: str, dest: list[str], seen: set[str]) -> None:
-            raw = raw.strip().rstrip(".")
-            if not raw:
-                return
-            norm = normalize(raw, script, norm_strategy)
-            if norm and norm not in seen:
-                seen.add(norm)
-                dest.append(norm)
+            # Deduplicate on RAW value only, without stripping (matching original test)
+            if raw and raw not in seen:
+                seen.add(raw)
+                dest.append(raw)  # Return RAW, not normalized
 
-        # Titles (split on '. ' to surface embedded author names)
-        for title in self.title_lat:
-            for part in title.split(". "):
-                add(part, "lat", lat, seen_lat)
-
-        for title in self.title_ara:
-            for part in title.split(". "):
-                add(part, "ara", ara, seen_ara)
-
-        # Creators
+        # Creators (matching original test logic: no title processing)
         for name in self.creator_lat:
             add(name, "lat", lat, seen_lat)
 
         for name in self.creator_ara:
             add(name, "ara", ara, seen_ara)
+
+        # Contributors (previous owners, copyists, etc. - included in original test)
+        for name in self.contributor_lat:
+            add(name, "lat", lat, seen_lat)
+
+        for name in self.contributor_ara:
+            add(name, "ara", ara, seen_ara)
+
+        # Titles (author names often appear in titles - included in original test)
+        for title in self.title_lat:
+            for part in title.split(". "):
+                part = part.strip().rstrip(".")
+                add(part, "lat", lat, seen_lat)
+
+        for title in self.title_ara:
+            for part in title.split(". "):
+                part = part.strip().rstrip(".")
+                add(part, "ara", ara, seen_ara)
 
         # Description candidates
         for cand in self.description_candidates_lat:
