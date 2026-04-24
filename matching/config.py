@@ -75,6 +75,11 @@ USE_DIACRITIC_CONVERSION_TABLE = False  # Disabled: new normalizer breaks matchi
 # MATCHING BEHAVIOR
 # ============================================================================
 
+# Token-level IDF weighting: suppress false positives on common name/title fragments
+# WARNING: Current implementation introduces as many false positives as it suppresses
+# Investigate further before enabling
+USE_TOKEN_IDF_WEIGHTING = False
+
 # Fuzzy matching backend: "fuzzywuzzy" or "polyfuzz"
 # Note: PolyFuzz requires batch architecture; current parallel loop uses fuzzywuzzy
 FUZZY_MATCHER = "fuzzywuzzy"

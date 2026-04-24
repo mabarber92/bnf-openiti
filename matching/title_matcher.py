@@ -226,39 +226,44 @@ class TitleMatcher:
             if candidates["lat"] or candidates["ara"]:
                 books_candidates[book_uri] = candidates
 
-        # Build token-level IDF weights from combined BNF + OpenITI datasets
-        if self.verbose:
-            print("  Building IDF weights from full BNF + OpenITI datasets...")
+        # Build token-level IDF weights if enabled
+        from matching.config import USE_TOKEN_IDF_WEIGHTING
 
-        # Load full BNF dataset for IDF computation
-        from matching.config import BNF_FULL_PATH
-        from parsers.bnf import load_bnf_records
-        full_bnf_records = load_bnf_records(BNF_FULL_PATH)
+        if USE_TOKEN_IDF_WEIGHTING:
+            if self.verbose:
+                print("  Building IDF weights from full BNF + OpenITI datasets...")
 
-        # Build BNF title candidates from all records
-        bnf_candidates_for_idf = {}
-        for bnf_id, bnf_record in full_bnf_records.items():
-            # Extract titles from BNF record (dataclass attributes)
-            titles_lat = getattr(bnf_record, "title_lat", []) or []
-            titles_ara = getattr(bnf_record, "title_ara", []) or []
+            # Load full BNF dataset for IDF computation
+            from matching.config import BNF_FULL_PATH
+            from parsers.bnf import load_bnf_records
+            full_bnf_records = load_bnf_records(BNF_FULL_PATH)
 
-            # Create entries for IDF computation
-            for title in titles_lat:
-                if title:
-                    key = f"bnf_{bnf_id}_lat_{len(bnf_candidates_for_idf)}"
-                    bnf_candidates_for_idf[key] = {"lat": [title], "ara": []}
+            # Build BNF title candidates from all records
+            bnf_candidates_for_idf = {}
+            for bnf_id, bnf_record in full_bnf_records.items():
+                # Extract titles from BNF record (dataclass attributes)
+                titles_lat = getattr(bnf_record, "title_lat", []) or []
+                titles_ara = getattr(bnf_record, "title_ara", []) or []
 
-            for title in titles_ara:
-                if title:
-                    key = f"bnf_{bnf_id}_ara_{len(bnf_candidates_for_idf)}"
-                    bnf_candidates_for_idf[key] = {"lat": [], "ara": [title]}
+                # Create entries for IDF computation
+                for title in titles_lat:
+                    if title:
+                        key = f"bnf_{bnf_id}_lat_{len(bnf_candidates_for_idf)}"
+                        bnf_candidates_for_idf[key] = {"lat": [title], "ara": []}
 
-        # Combine BNF and OpenITI candidates for IDF computation
-        combined_candidates = {**books_candidates, **bnf_candidates_for_idf}
-        idf_weights = _build_token_idf_weights(combined_candidates)
+                for title in titles_ara:
+                    if title:
+                        key = f"bnf_{bnf_id}_ara_{len(bnf_candidates_for_idf)}"
+                        bnf_candidates_for_idf[key] = {"lat": [], "ara": [title]}
 
-        if self.verbose:
-            print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(combined_candidates)} total candidate sources")
+            # Combine BNF and OpenITI candidates for IDF computation
+            combined_candidates = {**books_candidates, **bnf_candidates_for_idf}
+            idf_weights = _build_token_idf_weights(combined_candidates)
+
+            if self.verbose:
+                print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(combined_candidates)} total candidate sources")
+        else:
+            idf_weights = None
 
         # Prepare candidates and BNF mapping
         candidates_list = []
