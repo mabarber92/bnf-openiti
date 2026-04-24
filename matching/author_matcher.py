@@ -36,12 +36,12 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
     Returns
     -------
     tuple
-        (candidate, [matching_author_uris])
+        (candidate, {matching_author_uri: score}) - matches with confidence scores
     """
     from fuzzywuzzy import fuzz
     from matching.normalize import normalize_transliteration
 
-    matches = []
+    matches = {}  # {author_uri: score}
 
     # Normalize BNF candidate (using same function as original test)
     norm_candidate = normalize_transliteration(candidate)
@@ -51,7 +51,7 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
 
     # Score against all author candidates for each author (exact logic from original test)
     for author_uri, author_candidates_by_script in authors_candidates.items():
-        author_matched = False
+        best_score = 0
 
         # Try both scripts (matching original test exactly)
         for script in ["lat", "ara"]:
@@ -69,15 +69,12 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
 
                 # Use token_set_ratio exactly like original test
                 score = fuzz.token_set_ratio(norm_candidate, norm_author_str)
-                if score >= threshold * 100:  # threshold is 0-1 range, score is 0-100
-                    author_matched = True
-                    break
+                if score > best_score:
+                    best_score = score
 
-            if author_matched:
-                break
-
-        if author_matched:
-            matches.append(author_uri)
+        # Store match with its score (0-100 range, convert to 0-1)
+        if best_score >= threshold * 100:
+            matches[author_uri] = best_score / 100.0
 
     return (candidate, matches)
 
@@ -158,14 +155,22 @@ class AuthorMatcher:
                 results.append(result)
 
         # Store results in pipeline
-        for candidate, matched_authors in results:
+        for candidate, matched_authors_dict in results:
             bnf_ids = candidate_to_bnf_ids[candidate]
             for bnf_id in bnf_ids:
+                # Update author URIs list
                 current = pipeline.get_stage1_result(bnf_id)
                 if current is None:
                     current = []
-                current = list(set(current + matched_authors))
+                current = list(set(current + list(matched_authors_dict.keys())))
                 pipeline.set_stage1_result(bnf_id, current)
+
+                # Update scores (keep max score for each author)
+                current_scores = pipeline.get_stage1_scores(bnf_id)
+                for author_uri, score in matched_authors_dict.items():
+                    if author_uri not in current_scores or score > current_scores[author_uri]:
+                        current_scores[author_uri] = score
+                pipeline.set_stage1_scores(bnf_id, current_scores)
 
         if self.verbose:
             print(f"Stage 1 complete.")

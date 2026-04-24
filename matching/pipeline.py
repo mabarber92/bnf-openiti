@@ -62,7 +62,9 @@ class MatchingPipeline:
 
         # Result state (stages write here)
         self._stage1_results = {}  # {BNF_ID: [author_URIs]}
+        self._stage1_scores = {}   # {BNF_ID: {author_URI: score}}
         self._stage2_results = {}  # {BNF_ID: [book_URIs]}
+        self._stage2_scores = {}   # {BNF_ID: {book_URI: score}}
         self._stage3_results = {}  # {BNF_ID: [book_URIs where author matches]}
         self._classified = {}      # {BNF_ID: tier}
 
@@ -110,6 +112,14 @@ class MatchingPipeline:
         """Retrieve Stage 1 results for a BNF record."""
         return self._stage1_results.get(bnf_id, [])
 
+    def set_stage1_scores(self, bnf_id: str, scores: dict) -> None:
+        """Stage 1 writes match confidence scores."""
+        self._stage1_scores[bnf_id] = scores
+
+    def get_stage1_scores(self, bnf_id: str) -> dict:
+        """Retrieve Stage 1 scores for a BNF record."""
+        return self._stage1_scores.get(bnf_id, {})
+
     def set_stage2_result(self, bnf_id: str, book_uris: list[str]) -> None:
         """Stage 2 writes title matches."""
         self._stage2_results[bnf_id] = book_uris
@@ -117,6 +127,14 @@ class MatchingPipeline:
     def get_stage2_result(self, bnf_id: str) -> list[str]:
         """Retrieve Stage 2 results for a BNF record."""
         return self._stage2_results.get(bnf_id, [])
+
+    def set_stage2_scores(self, bnf_id: str, scores: dict) -> None:
+        """Stage 2 writes match confidence scores."""
+        self._stage2_scores[bnf_id] = scores
+
+    def get_stage2_scores(self, bnf_id: str) -> dict:
+        """Retrieve Stage 2 scores for a BNF record."""
+        return self._stage2_scores.get(bnf_id, {})
 
     def set_stage3_result(self, bnf_id: str, book_uris: list[str]) -> None:
         """Stage 3 writes combined (intersected) matches."""

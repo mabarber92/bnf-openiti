@@ -12,7 +12,7 @@ from tqdm import tqdm
 class CombinedMatcher:
     """Filter title matches by matched authors (intersection)."""
 
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True, use_confidence_filtering: bool = False):
         """
         Initialize the combined matcher.
 
@@ -20,8 +20,12 @@ class CombinedMatcher:
         ----------
         verbose : bool
             Print progress information
+        use_confidence_filtering : bool
+            If True, apply confidence-dependent filtering to reduce false positives.
+            Marginal author matches (0.80-0.85) require higher title scores.
         """
         self.verbose = verbose
+        self.use_confidence_filtering = use_confidence_filtering
 
     def execute(self, pipeline) -> None:
         """
@@ -31,11 +35,16 @@ class CombinedMatcher:
         1. Get Stage 1 results (matched author URIs)
         2. Get Stage 2 results (matched book URIs)
         3. Keep only books whose author_uri is in matched authors
-        4. Store intersection as Stage 3 result
+        4. (Optional) Apply confidence-dependent filtering to reduce marginal false positives
+        5. Store intersection as Stage 3 result
 
-        This enforces that matched books must have authors that were
-        matched in Stage 1, eliminating false positives where title
-        matches but author differs.
+        If use_confidence_filtering is True:
+        - Author score >= 0.90: Accept any title match
+        - Author score 0.85-0.89: Require title score >= 0.90
+        - Author score 0.80-0.84: Require title score >= 0.95
+
+        This helps eliminate false positives from marginal author matches when
+        combined with average title matches.
 
         Parameters
         ----------
@@ -44,6 +53,8 @@ class CombinedMatcher:
         """
         if self.verbose:
             print("\n--- Stage 3: Combined Matching (Intersection) ---")
+            if self.use_confidence_filtering:
+                print("  (Using confidence-dependent filtering)")
 
         # Iterate through all BNF records
         bnf_ids = list(pipeline.bnf_records.keys())
@@ -62,6 +73,13 @@ class CombinedMatcher:
                 pipeline.set_stage3_result(bnf_id, [])
                 continue
 
+            # Get scores if using confidence filtering
+            stage1_scores = {}
+            stage2_scores = {}
+            if self.use_confidence_filtering:
+                stage1_scores = pipeline.get_stage1_scores(bnf_id) or {}
+                stage2_scores = pipeline.get_stage2_scores(bnf_id) or {}
+
             # Get book data to access author URIs
             intersection = []
             for book_uri in stage2_books:
@@ -75,8 +93,33 @@ class CombinedMatcher:
                 else:
                     book_author_uri = book.author_uri
 
-                # Keep only if author matches
-                if book_author_uri in stage1_authors:
+                # Check if author matches
+                if book_author_uri not in stage1_authors:
+                    continue
+
+                # If not using confidence filtering, accept the match
+                if not self.use_confidence_filtering:
+                    intersection.append(book_uri)
+                    continue
+
+                # Apply confidence-dependent filtering
+                author_score = stage1_scores.get(book_author_uri, 1.0)
+                title_score = stage2_scores.get(book_uri, 1.0)
+
+                keep_match = False
+                if author_score >= 0.90:
+                    # High confidence author match - accept any title match
+                    keep_match = True
+                elif author_score >= 0.85:
+                    # Moderate confidence - require strong title confirmation
+                    if title_score >= 0.90:
+                        keep_match = True
+                elif author_score >= 0.80:
+                    # Low confidence author match - require very strong title
+                    if title_score >= 0.95:
+                        keep_match = True
+
+                if keep_match:
                     intersection.append(book_uri)
 
             pipeline.set_stage3_result(bnf_id, intersection)

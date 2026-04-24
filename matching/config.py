@@ -70,6 +70,11 @@ def get_output_files(run_dir: Path) -> dict:
 # (Composite manuscripts can legitimately have many authors)
 MAX_AUTHOR_CANDIDATES = 50
 
+# Confidence-dependent filtering in Stage 3 (Combined Matching)
+# If True, marginal author matches require higher title scores to be combined
+# Helps reduce false positives from generic name fragments matching multiple authors
+USE_CONFIDENCE_FILTERING = False  # Set to True to enable
+
 # ============================================================================
 # PARALLELIZATION
 # ============================================================================
