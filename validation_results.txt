@@ -1,0 +1,50 @@
+Loading OpenITI corpus...
+  9539 books, 3639 authors
+Loading BNF records...
+  7825 records loaded
+Loading test correspondences...
+  10 test records
+
+======================================================================
+PIPELINE VALIDATION: Compare to Benchmark Test
+======================================================================
+
+Loading data...
+  BNF records: 7825
+  OpenITI books: 9539
+  Test pairs: 10
+
+Running pipeline...
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3329.08it/s]
+
+Comparing results...
+
+======================================================================
+VALIDATION FAILED: 7 mismatches found
+======================================================================
+
+Stage 1 Mismatches (4):
+  OAI_11000434: benchmark 85 vs pipeline 84
+    In benchmark not in pipeline: ['0895AbuCabdAllahSanusi']
+    In pipeline not in benchmark: []
+  OAI_10884186: benchmark 241 vs pipeline 238
+    In benchmark not in pipeline: ['0333IbnMarwanDinawari', '0429AbuMansurThacalibi', '0893CamiriHaradi']
+    In pipeline not in benchmark: []
+  OAI_11000949: benchmark 34 vs pipeline 33
+    In benchmark not in pipeline: ['0370AbuQasimAmidi']
+    In pipeline not in benchmark: []
+  OAI_11001068: benchmark 245 vs pipeline 246
+    In benchmark not in pipeline: ['0290IbnAhmadIbnHanbal', '0333IbnMarwanDinawari']
+    In pipeline not in benchmark: ['0341AbuNasrBukhari', '0461AbuZakariyaBukhari', '0709IbnCataAllahSikandari']
+
+Stage 2 Mismatches (2):
+  OAI_11000954: benchmark 4 vs pipeline 5
+    In benchmark not in pipeline: []
+    In pipeline not in benchmark: ['1377MuhammadCabdAllahDarraz.Din']
+  OAI_11001068: benchmark 7 vs pipeline 9
+    In benchmark not in pipeline: []
+    In pipeline not in benchmark: ['0241IbnHanbal.MasailRiwayatCabdAllah', '1383CabbasMahmudCaqqad.Allah']
+
+Stage 3 Mismatches (1):
+  OAI_11001068: benchmark 1 vs pipeline 2
