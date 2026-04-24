@@ -63,8 +63,8 @@ def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fu
     """
     Weight a fuzzy score by the rarity of tokens that contributed to the match.
 
-    Rare token matches (e.g., "al-Quduri" in both) boost confidence.
-    Common-only matches (e.g., only "ibn" in both) reduce confidence.
+    Aggressively penalizes matches with only common tokens.
+    Does not boost—relies on fuzzy matching for good candidates.
 
     Parameters
     ----------
@@ -80,7 +80,7 @@ def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fu
     Returns
     -------
     float
-        Weighted fuzzy score (0-100 range, adjusted for token rarity)
+        Weighted fuzzy score (0-100 range, aggressively penalized for common-token matches)
     """
     candidate_tokens = set(norm_candidate.lower().split())
     author_tokens = set(norm_author_str.lower().split())
@@ -92,27 +92,26 @@ def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fu
     matched_tokens = candidate_tokens & author_tokens
 
     if not matched_tokens:
-        # No token overlap - heavily penalize
+        # No token overlap - block completely
         return 0
 
-    # Average IDF of matched tokens (signal strength)
+    # Average IDF of matched tokens
     matched_idf_values = [idf_weights.get(t, 0.1) for t in matched_tokens]
     avg_matched_idf = sum(matched_idf_values) / len(matched_tokens)
 
-    # Typical IDF weight threshold (tokens with IDF > ~1.1 are reasonably specific)
-    # IDF values: common tokens (0.7), rare tokens (1.6+)
+    # IDF threshold: ~1.1 is where tokens become reasonably specific
+    # Below this: mostly common tokens (ibn, ahmad, muhammad, al, fi, etc.)
     rarity_threshold = 1.1
 
     if avg_matched_idf < rarity_threshold:
-        # Matched tokens are mostly common (e.g., "ibn", "ahmad", "muhammad")
-        # Strong penalty for relying only on common tokens
-        penalty_factor = (avg_matched_idf / rarity_threshold) ** 2
+        # Matched tokens are mostly common words - aggressively penalize
+        # Cubic penalty: score *= (avg_idf / threshold)^3
+        penalty_factor = (avg_matched_idf / rarity_threshold) ** 3
         weighted_score = fuzzy_score * penalty_factor
     else:
-        # Matched tokens include some rare ones (e.g., "al-Quduri", "al-Dhahabi")
-        # Slight boost since rarer tokens are more meaningful
-        boost_factor = min(avg_matched_idf / rarity_threshold, 1.5)
-        weighted_score = fuzzy_score * boost_factor
+        # Matched tokens include rare ones - accept fuzzy score as-is
+        # Don't boost, just don't penalize
+        weighted_score = fuzzy_score
 
     return min(max(weighted_score, 0), 100)  # Clamp to [0, 100]
 
@@ -221,6 +220,8 @@ class AuthorMatcher:
         3. Map matched author URIs to all BNF records with this candidate
 
         Uses multiprocessing to parallelize candidate matching across CPU cores.
+        Token-level IDF weighting is computed from full BNF and OpenITI datasets
+        to suppress false positives on common author name fragments.
 
         Parameters
         ----------
@@ -232,17 +233,47 @@ class AuthorMatcher:
             total_candidates = pipeline.bnf_index.author_candidate_count()
             print(f"Matching {total_candidates} unique author candidates...")
 
-        # Prepare author data for parallel processing
+        # Prepare OpenITI author data for matching
         authors_candidates = {}
         for author_uri, author_data in pipeline.openiti_index.authors.items():
             candidates = build_author_candidates_by_script(author_data)
             if candidates["lat"] or candidates["ara"]:
                 authors_candidates[author_uri] = candidates
 
-        # Build token-level IDF weights for false positive suppression
-        idf_weights = _build_token_idf_weights(authors_candidates)
+        # Build token-level IDF weights from combined BNF + OpenITI datasets
+        # This ensures IDF reflects true token rarity across both corpora
         if self.verbose:
-            print(f"  Built IDF weights for {len(idf_weights)} unique tokens")
+            print("  Building IDF weights from full BNF + OpenITI datasets...")
+
+        # Load full BNF dataset for IDF computation
+        from matching.config import BNF_FULL_PATH
+        from parsers.bnf import load_bnf_records
+        full_bnf_records = load_bnf_records(BNF_FULL_PATH)
+
+        # Build BNF author candidates from all records
+        bnf_candidates_for_idf = {}
+        for bnf_id, bnf_record in full_bnf_records.items():
+            # Extract author names from BNF record (dataclass attributes)
+            creators_lat = getattr(bnf_record, "creator_lat", []) or []
+            creators_ara = getattr(bnf_record, "creator_ara", []) or []
+
+            # Create entries for IDF computation
+            for creator in creators_lat:
+                if creator:
+                    key = f"bnf_{bnf_id}_lat_{len(bnf_candidates_for_idf)}"
+                    bnf_candidates_for_idf[key] = {"lat": [creator], "ara": []}
+
+            for creator in creators_ara:
+                if creator:
+                    key = f"bnf_{bnf_id}_ara_{len(bnf_candidates_for_idf)}"
+                    bnf_candidates_for_idf[key] = {"lat": [], "ara": [creator]}
+
+        # Combine BNF and OpenITI candidates for IDF computation
+        combined_candidates = {**authors_candidates, **bnf_candidates_for_idf}
+        idf_weights = _build_token_idf_weights(combined_candidates)
+
+        if self.verbose:
+            print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(combined_candidates)} total candidate sources")
 
         # Prepare candidates and BNF mapping
         candidates_list = []

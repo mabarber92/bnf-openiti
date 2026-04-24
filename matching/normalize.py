@@ -102,6 +102,7 @@ def normalize_for_matching(text: str) -> str:
     Main entry point for normalization.
 
     Pipeline:
+    0. Split camelCase (OpenITI URIs like IbnKhayyat need tokenization)
     1. Apply hardcoded OpenITI transliteration conversions (C→ʿ, ī→i, etc.)
     2. Apply parametrized diacritic table if enabled (for library-specific chars)
     3. Pass through legacy normalizer (handles hyphens, diacritics, spacing)
@@ -111,6 +112,9 @@ def normalize_for_matching(text: str) -> str:
     """
     # Import here to avoid circular dependency
     from matching.config import USE_DIACRITIC_CONVERSION_TABLE
+
+    # Step 0: Split camelCase before conversions (e.g., "IbnKhayyat" → "Ibn Khayyat")
+    text = re.sub(r"([a-z])([A-Z])", r"\1 \2", text)
 
     # Step 1: Apply hardcoded OpenITI conversions (both BNF and OpenITI)
     text = _apply_openiti_conversions(text)

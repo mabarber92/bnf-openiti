@@ -56,8 +56,8 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     """
     Weight a fuzzy score by the rarity of tokens that contributed to the match.
 
-    Rare title tokens (e.g., "Tarikh", "Sharh") boost confidence.
-    Common-only matches (e.g., only "al", "fi") reduce confidence.
+    Aggressively penalizes matches with only common tokens.
+    Does not boost—relies on fuzzy matching for good candidates.
 
     Parameters
     ----------
@@ -73,7 +73,7 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     Returns
     -------
     float
-        Weighted fuzzy score (0-100 range, adjusted for token rarity)
+        Weighted fuzzy score (0-100 range, aggressively penalized for common-token matches)
     """
     candidate_tokens = set(norm_candidate.lower().split())
     title_tokens = set(norm_title_str.lower().split())
@@ -92,11 +92,12 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     rarity_threshold = 1.1
 
     if avg_matched_idf < rarity_threshold:
-        penalty_factor = (avg_matched_idf / rarity_threshold) ** 2
+        # Cubic penalty for common-word-only matches
+        penalty_factor = (avg_matched_idf / rarity_threshold) ** 3
         weighted_score = fuzzy_score * penalty_factor
     else:
-        boost_factor = min(avg_matched_idf / rarity_threshold, 1.5)
-        weighted_score = fuzzy_score * boost_factor
+        # Rare tokens present - accept fuzzy score
+        weighted_score = fuzzy_score
 
     return min(max(weighted_score, 0), 100)
 
@@ -205,6 +206,8 @@ class TitleMatcher:
         3. Map matched book URIs to all BNF records with this candidate
 
         Uses multiprocessing to parallelize candidate matching across CPU cores.
+        Token-level IDF weighting is computed from full BNF and OpenITI datasets
+        to suppress false positives on common title words.
 
         Parameters
         ----------
@@ -216,16 +219,46 @@ class TitleMatcher:
             total_candidates = pipeline.bnf_index.title_candidate_count()
             print(f"Matching {total_candidates} unique title candidates...")
 
-        # Prepare book title candidates (extract title parts by script)
+        # Prepare OpenITI book title candidates
         books_candidates = {}
         for book_uri, book_data in pipeline.openiti_index.books.items():
             candidates = build_book_candidates_by_script(book_data)
             if candidates["lat"] or candidates["ara"]:
                 books_candidates[book_uri] = candidates
 
-        # Token-level IDF weighting disabled for titles (different token distribution from authors)
-        # TODO: tune weighting parameters for titles, or apply threshold adjustments
-        idf_weights = None
+        # Build token-level IDF weights from combined BNF + OpenITI datasets
+        if self.verbose:
+            print("  Building IDF weights from full BNF + OpenITI datasets...")
+
+        # Load full BNF dataset for IDF computation
+        from matching.config import BNF_FULL_PATH
+        from parsers.bnf import load_bnf_records
+        full_bnf_records = load_bnf_records(BNF_FULL_PATH)
+
+        # Build BNF title candidates from all records
+        bnf_candidates_for_idf = {}
+        for bnf_id, bnf_record in full_bnf_records.items():
+            # Extract titles from BNF record (dataclass attributes)
+            titles_lat = getattr(bnf_record, "title_lat", []) or []
+            titles_ara = getattr(bnf_record, "title_ara", []) or []
+
+            # Create entries for IDF computation
+            for title in titles_lat:
+                if title:
+                    key = f"bnf_{bnf_id}_lat_{len(bnf_candidates_for_idf)}"
+                    bnf_candidates_for_idf[key] = {"lat": [title], "ara": []}
+
+            for title in titles_ara:
+                if title:
+                    key = f"bnf_{bnf_id}_ara_{len(bnf_candidates_for_idf)}"
+                    bnf_candidates_for_idf[key] = {"lat": [], "ara": [title]}
+
+        # Combine BNF and OpenITI candidates for IDF computation
+        combined_candidates = {**books_candidates, **bnf_candidates_for_idf}
+        idf_weights = _build_token_idf_weights(combined_candidates)
+
+        if self.verbose:
+            print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(combined_candidates)} total candidate sources")
 
         # Prepare candidates and BNF mapping
         candidates_list = []
