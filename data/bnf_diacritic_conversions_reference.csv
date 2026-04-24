@@ -1,0 +1,30 @@
+character,unicode_code,unicode_name,category,openiti_equivalent,notes
+ʿ,U+02BE,MODIFIER LETTER APOSTROPHE,Lm,ʿ,Ayn - PRESERVE in both BNF and OpenITI for character-to-character matching
+ʾ,U+0BE,ARABIC LETTER HAMZA,Lo,,Dropped in OpenITI URI
+ā,U+0101,LATIN SMALL LETTER A WITH MACRON,Ll,a,Long vowel macron - strip per spec
+ē,U+0113,LATIN SMALL LETTER E WITH MACRON,Ll,e,Long vowel - strip
+ī,U+012B,LATIN SMALL LETTER I WITH MACRON,Ll,i,Long vowel - strip
+ō,U+014D,LATIN SMALL LETTER O WITH MACRON,Ll,o,Long vowel - strip
+ū,U+016B,LATIN SMALL LETTER U WITH MACRON,Ll,u,Long vowel - strip
+á,U+00E1,LATIN SMALL LETTER A WITH ACUTE,Ll,a,French diacritic
+é,U+00E9,LATIN SMALL LETTER E WITH ACUTE,Ll,e,French diacritic
+è,U+00E8,LATIN SMALL LETTER E WITH GRAVE,Ll,e,French diacritic
+ç,U+00E7,LATIN SMALL LETTER C WITH CEDILLA,Ll,c,French cedilla
+ǧ,U+01A7,LATIN SMALL LETTER G WITH CARON,Ll,gh,G with caron - OpenITI equivalent
+ḏ,U+1E0F,LATIN SMALL LETTER D WITH DOT BELOW,Ll,dh,D with dot - OpenITI equivalent
+ḥ,U+1E25,LATIN SMALL LETTER H WITH DOT BELOW,Ll,h,H with dot - remove dot
+ḫ,U+1E2B,LATIN SMALL LETTER H WITH BREVE BELOW,Ll,kh,Kh sound - OpenITI equivalent
+ḳ,U+1E33,LATIN SMALL LETTER K WITH DOT BELOW,Ll,q,Q/K variant
+ṃ,U+1E43,LATIN SMALL LETTER M WITH DOT BELOW,Ll,m,M variant
+ṅ,U+1E47,LATIN SMALL LETTER N WITH DOT BELOW,Ll,n,N variant
+ṭ,U+1E6D,LATIN SMALL LETTER T WITH DOT BELOW,Ll,t,T with dot - remove dot
+ẓ,U+1E93,LATIN SMALL LETTER Z WITH DOT BELOW,Ll,z,Z with dot - remove dot
+š,U+0161,LATIN SMALL LETTER S WITH CARON,Ll,sh,Š - OpenITI equivalent
+ṛ,U+1E5B,LATIN SMALL LETTER R WITH DOT ABOVE,Ll,r,R variant
+—,U+2014,EM DASH,Po,,Punctuation - remove
+–,U+2013,EN DASH,Po,,Punctuation - remove
+',U+2019,RIGHT SINGLE QUOTATION MARK,Po,,Curly quote - remove
+"""",U+201C,LEFT DOUBLE QUOTATION MARK,Po,,Curly quote - remove
+"""",U+201D,RIGHT DOUBLE QUOTATION MARK,Po,,Curly quote - remove
+°,U+00B0,DEGREE SIGN,So,,Degree symbol - remove
+×,U+00D7,MULTIPLICATION SIGN,Sm,,Math symbol - remove

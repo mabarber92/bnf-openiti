@@ -37,7 +37,7 @@ class BNFCandidateIndex:
 
     def _build_indices(self) -> None:
         """Build author and title indices from all records."""
-        from matching.normalize import normalize_transliteration
+        from matching.normalize import normalize_for_matching
 
         print(f"Building BNF candidate indices ({len(self.bnf_records)} records)...")
 
@@ -49,13 +49,13 @@ class BNFCandidateIndex:
                 # If even raw extraction fails, skip this record
                 continue
 
-            # Process Arabic candidates (same normalization as benchmark test)
+            # Process Arabic candidates (using parametrized diacritic conversion or legacy normalization)
             for raw_candidate in author_cands.get("ara", []):
-                self._process_candidate(raw_candidate, bnf_id, "author", normalize_transliteration)
+                self._process_candidate(raw_candidate, bnf_id, "author", normalize_for_matching)
 
-            # Process Latin candidates (same normalization as benchmark test)
+            # Process Latin candidates (using parametrized diacritic conversion or legacy normalization)
             for raw_candidate in author_cands.get("lat", []):
-                self._process_candidate(raw_candidate, bnf_id, "author", normalize_transliteration)
+                self._process_candidate(raw_candidate, bnf_id, "author", normalize_for_matching)
 
             # Title candidates (same logic)
             try:
@@ -64,13 +64,13 @@ class BNFCandidateIndex:
                 continue
 
             for raw_candidate in title_cands.get("ara", []):
-                self._process_candidate(raw_candidate, bnf_id, "title", normalize_transliteration)
+                self._process_candidate(raw_candidate, bnf_id, "title", normalize_for_matching)
 
             for raw_candidate in title_cands.get("lat", []):
-                self._process_candidate(raw_candidate, bnf_id, "title", normalize_transliteration)
+                self._process_candidate(raw_candidate, bnf_id, "title", normalize_for_matching)
 
     def _process_candidate(self, raw: str, bnf_id: str, cand_type: str, normalize_fn) -> None:
-        """Process a single candidate using normalize_transliteration (same as benchmark)."""
+        """Process a single candidate using parametrized normalization (diacritics or legacy)."""
         raw = raw.strip()
         if not raw:
             return

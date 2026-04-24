@@ -63,8 +63,21 @@ def get_output_files(run_dir: Path) -> dict:
     }
 
 # ============================================================================
+# NORMALIZATION
+# ============================================================================
+
+# Use parametrized diacritic conversion table (bnf_diacritic_conversions.csv)
+# If True: applies conversions (ayn handling, diacritic mappings, etc.)
+# If False: simple character removal (legacy behavior)
+USE_DIACRITIC_CONVERSION_TABLE = False  # Disabled: new normalizer breaks matching (hyphen handling, uppercase diacritics, ayn representation)
+
+# ============================================================================
 # MATCHING BEHAVIOR
 # ============================================================================
+
+# Fuzzy matching backend: "fuzzywuzzy" or "polyfuzz"
+# Note: PolyFuzz requires batch architecture; current parallel loop uses fuzzywuzzy
+FUZZY_MATCHER = "fuzzywuzzy"
 
 # Maximum author candidates to pass forward from fuzzy matching
 # (Composite manuscripts can legitimately have many authors)
@@ -80,7 +93,7 @@ USE_CONFIDENCE_FILTERING = False  # Set to True to enable
 # ============================================================================
 
 BATCH_SIZE = 100  # Process BNF records in batches of N
-NUM_WORKERS = 4   # Number of parallel processes
+NUM_WORKERS = 10   # Number of parallel processes
 
 # ============================================================================
 # LOGGING & PROGRESS

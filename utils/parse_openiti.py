@@ -209,19 +209,20 @@ def _author_merge(
         uri=yml_author.uri,
         death_year_ah=yml_author.death_year_ah,
         name_slug=yml_author.name_slug or tsv_author.name_slug,
-        # Name components: prefer TSV _lat if available, otherwise YML _lat; always use YML _ara
+        # Name components: prefer TSV _lat if available, otherwise YML _lat
+        # For _ara: prefer YML (converted from BetaCode), fallback to TSV if YML missing
         name_shuhra_lat=tsv_author.name_shuhra_lat or yml_author.name_shuhra_lat,
-        name_shuhra_ara=yml_author.name_shuhra_ara,
+        name_shuhra_ara=yml_author.name_shuhra_ara or tsv_author.name_shuhra_ara,
         name_ism_lat=tsv_author.name_ism_lat or yml_author.name_ism_lat,
-        name_ism_ara=yml_author.name_ism_ara,
+        name_ism_ara=yml_author.name_ism_ara or tsv_author.name_ism_ara,
         name_kunya_lat=tsv_author.name_kunya_lat or yml_author.name_kunya_lat,
-        name_kunya_ara=yml_author.name_kunya_ara,
+        name_kunya_ara=yml_author.name_kunya_ara or tsv_author.name_kunya_ara,
         name_laqab_lat=tsv_author.name_laqab_lat or yml_author.name_laqab_lat,
-        name_laqab_ara=yml_author.name_laqab_ara,
+        name_laqab_ara=yml_author.name_laqab_ara or tsv_author.name_laqab_ara,
         name_nasab_lat=tsv_author.name_nasab_lat or yml_author.name_nasab_lat,
-        name_nasab_ara=yml_author.name_nasab_ara,
+        name_nasab_ara=yml_author.name_nasab_ara or tsv_author.name_nasab_ara,
         name_nisba_lat=tsv_author.name_nisba_lat or yml_author.name_nisba_lat,
-        name_nisba_ara=yml_author.name_nisba_ara,
+        name_nisba_ara=yml_author.name_nisba_ara or tsv_author.name_nisba_ara,
         # Wikidata ID from YML (source of truth)
         wikidata_id=yml_author.wikidata_id,
         # Preserve wikidata enrichment fields from YML

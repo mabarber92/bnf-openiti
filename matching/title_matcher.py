@@ -5,9 +5,12 @@ Uses global deduplication: each unique normalized title candidate is scored
 once against all OpenITI book titles. Matches above TITLE_THRESHOLD are mapped
 back to all BNF records that contain the candidate.
 
+Token-level IDF weighting suppresses false positives on common title words.
 Parallelized across CPU cores for efficiency on large candidate sets.
 """
 
+import math
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from tqdm import tqdm
@@ -16,11 +19,94 @@ from matching.fuzzy_scorer import FuzzyScorer
 from matching.candidate_builders import build_book_candidates_by_script
 
 
-def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy="fuzzy"):
+def _build_token_idf_weights(books_candidates):
+    """
+    Build IDF (Inverse Document Frequency) weights for all tokens in title candidates.
+
+    Rarer tokens (appearing in few titles) get higher weights.
+    Common tokens (appearing in many titles) get lower weights.
+
+    Returns dict: {token: idf_weight, ...}
+    """
+    token_doc_freq = defaultdict(set)
+    total_docs = 0
+
+    for book_uri, book_candidates_by_script in books_candidates.items():
+        total_docs += 1
+        tokens_seen = set()
+
+        for script in ["lat", "ara"]:
+            for title_str in book_candidates_by_script.get(script, []):
+                if title_str:
+                    for token in title_str.lower().split():
+                        tokens_seen.add(token)
+
+        for token in tokens_seen:
+            token_doc_freq[token].add(book_uri)
+
+    idf_weights = {}
+    for token, doc_set in token_doc_freq.items():
+        doc_freq = len(doc_set)
+        idf_weights[token] = math.log(1.0 + total_docs / max(doc_freq, 1))
+
+    return idf_weights
+
+
+def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuzzy_score):
+    """
+    Weight a fuzzy score by the rarity of tokens that contributed to the match.
+
+    Rare title tokens (e.g., "Tarikh", "Sharh") boost confidence.
+    Common-only matches (e.g., only "al", "fi") reduce confidence.
+
+    Parameters
+    ----------
+    norm_candidate : str
+        Normalized BNF title candidate
+    norm_title_str : str
+        Normalized OpenITI title string
+    idf_weights : dict
+        {token: idf_weight, ...}
+    fuzzy_score : float
+        Raw fuzzy match score (0-100)
+
+    Returns
+    -------
+    float
+        Weighted fuzzy score (0-100 range, adjusted for token rarity)
+    """
+    candidate_tokens = set(norm_candidate.lower().split())
+    title_tokens = set(norm_title_str.lower().split())
+
+    if not candidate_tokens:
+        return 0
+
+    matched_tokens = candidate_tokens & title_tokens
+
+    if not matched_tokens:
+        return 0
+
+    matched_idf_values = [idf_weights.get(t, 0.1) for t in matched_tokens]
+    avg_matched_idf = sum(matched_idf_values) / len(matched_tokens)
+
+    rarity_threshold = 1.1
+
+    if avg_matched_idf < rarity_threshold:
+        penalty_factor = (avg_matched_idf / rarity_threshold) ** 2
+        weighted_score = fuzzy_score * penalty_factor
+    else:
+        boost_factor = min(avg_matched_idf / rarity_threshold, 1.5)
+        weighted_score = fuzzy_score * boost_factor
+
+    return min(max(weighted_score, 0), 100)
+
+
+def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy="fuzzy", idf_weights=None):
     """
     Standalone function for parallel processing of a single BNF title candidate.
 
-    Scores against all title candidates for each OpenITI book (matching original test logic).
+    Scores against all title candidates for each OpenITI book with optional token-level
+    IDF weighting to suppress false positives on common title words.
 
     Parameters
     ----------
@@ -32,6 +118,8 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
         Matching threshold (0-1 range)
     norm_strategy : str
         Normalization strategy used
+    idf_weights : dict, optional
+        {token: idf_weight, ...} for token weighting. If None, uses raw fuzzy scores.
 
     Returns
     -------
@@ -39,12 +127,12 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
         (candidate, {matching_book_uri: score}) - matches with confidence scores
     """
     from fuzzywuzzy import fuzz
-    from matching.normalize import normalize_transliteration
+    from matching.normalize import normalize_for_matching
 
     matches = {}  # {book_uri: score}
 
-    # Normalize the BNF candidate once (using same function as original test)
-    norm_candidate = normalize_transliteration(candidate)
+    # Normalize the BNF candidate using parametrized diacritic conversion or legacy normalization
+    norm_candidate = normalize_for_matching(candidate)
 
     if not norm_candidate:
         return (candidate, matches)
@@ -62,14 +150,21 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
                 if not book_title:
                     continue
 
-                # Normalize the OpenITI book title the same way BNF candidates were normalized
-                norm_book_title = normalize_transliteration(book_title)
+                # Normalize the OpenITI book title using parametrized diacritic conversion or legacy normalization
+                norm_book_title = normalize_for_matching(book_title)
 
                 if not norm_book_title:
                     continue
 
-                # Use token_set_ratio exactly like author matcher
-                score = fuzz.token_set_ratio(norm_candidate, norm_book_title)
+                # Get raw fuzzy score
+                raw_score = fuzz.token_set_ratio(norm_candidate, norm_book_title)
+
+                # Apply token-level IDF weighting if available
+                if idf_weights:
+                    score = _score_with_token_weighting(norm_candidate, norm_book_title, idf_weights, raw_score)
+                else:
+                    score = raw_score
+
                 if score > best_score:
                     best_score = score
 
@@ -128,6 +223,10 @@ class TitleMatcher:
             if candidates["lat"] or candidates["ara"]:
                 books_candidates[book_uri] = candidates
 
+        # Token-level IDF weighting disabled for titles (different token distribution from authors)
+        # TODO: tune weighting parameters for titles, or apply threshold adjustments
+        idf_weights = None
+
         # Prepare candidates and BNF mapping
         candidates_list = []
         candidate_to_bnf_ids = {}
@@ -138,7 +237,7 @@ class TitleMatcher:
         # Matching (parallel or sequential)
         if self.use_parallel:
             with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                match_fn = partial(_match_title_candidate, books_candidates=books_candidates, threshold=TITLE_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+                match_fn = partial(_match_title_candidate, books_candidates=books_candidates, threshold=TITLE_THRESHOLD, norm_strategy=pipeline.norm_strategy, idf_weights=idf_weights)
                 results = list(
                     tqdm(
                         executor.map(match_fn, candidates_list, chunksize=10),
@@ -150,7 +249,7 @@ class TitleMatcher:
         else:
             # Sequential processing for debugging
             results = []
-            match_fn = partial(_match_title_candidate, books_candidates=books_candidates, threshold=TITLE_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+            match_fn = partial(_match_title_candidate, books_candidates=books_candidates, threshold=TITLE_THRESHOLD, norm_strategy=pipeline.norm_strategy, idf_weights=idf_weights)
             for candidate in tqdm(candidates_list, desc="Title matching", disable=not self.verbose):
                 result = match_fn(candidate)
                 results.append(result)

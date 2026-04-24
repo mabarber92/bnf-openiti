@@ -665,7 +665,8 @@ class OpenITITSV:
                 uri=author_uri,
                 death_year_ah=death_year_ah,
                 name_slug=author_slug,
-                name_shuhra_lat=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra
+                name_shuhra_lat=author_fields["author_lat_shuhra"],  # TSV uses this for shuhra (Latin)
+                name_shuhra_ara=author_fields.get("author_ar") or None,  # Use full author_ar as shuhra fallback (Arabic)
             )
 
     def __repr__(self) -> str:

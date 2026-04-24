@@ -31,6 +31,7 @@ import csv
 import json
 import math
 import sys
+import unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,6 +39,7 @@ from xml.etree import ElementTree as ET
 
 from tqdm import tqdm
 import yaml  # pip install pyyaml
+import pandas as pd  # pip install pandas
 
 # Ensure project root is on sys.path when running as a script.
 _ROOT = Path(__file__).resolve().parent.parent
@@ -438,6 +440,88 @@ def _suggest_boilerplate(
 
 
 # ---------------------------------------------------------------------------
+# Diacritic conversion table generation
+# ---------------------------------------------------------------------------
+
+def _extract_special_chars_from_xml(data_dir: str, sample: int | None = None, seed: int = 42) -> dict:
+    """
+    Extract all non-ASCII characters from BNF XML records.
+
+    Returns {character: {'count': int, 'unicode_name': str, 'category': str}}
+    """
+    special_chars = {}
+
+    xml_files = sorted(Path(data_dir).glob("OAI_*.xml"))
+    if sample:
+        import random
+        random.seed(seed)
+        xml_files = random.sample(xml_files, min(sample, len(xml_files)))
+
+    for xml_file in tqdm(xml_files, desc="Extracting special characters", disable=len(xml_files) < 100):
+        try:
+            tree = ET.parse(xml_file)
+            root = tree.getroot()
+
+            for elem in root.iter():
+                if elem.text:
+                    for char in elem.text:
+                        if ord(char) > 127:  # Non-ASCII
+                            if char not in special_chars:
+                                try:
+                                    name = unicodedata.name(char)
+                                except ValueError:
+                                    name = "UNKNOWN"
+                                category = unicodedata.category(char)
+
+                                special_chars[char] = {
+                                    'count': 0,
+                                    'unicode_name': name,
+                                    'category': category,
+                                }
+                            special_chars[char]['count'] += 1
+        except ET.ParseError:
+            pass  # Skip malformed XML
+
+    return special_chars
+
+
+def _generate_diacritic_conversions(data_dir: str, out_dir: Path, sample: int | None = None, seed: int = 42) -> Path:
+    """
+    Generate diacritic conversion table CSV from XML records.
+
+    Returns path to the generated CSV.
+    """
+    special_chars = _extract_special_chars_from_xml(data_dir, sample=sample, seed=seed)
+
+    if not special_chars:
+        # Empty table if no special chars found
+        special_chars = {}
+
+    # Convert to DataFrame sorted by frequency
+    sorted_chars = sorted(special_chars.items(), key=lambda x: x[1]['count'], reverse=True)
+
+    data = [
+        {
+            'character': char,
+            'unicode_code': f"U+{ord(char):04X}",
+            'unicode_name': info['unicode_name'],
+            'category': info['category'],
+            'openiti_equivalent': '',  # Empty for user to fill in
+            'notes': f"Frequency: {info['count']}",
+        }
+        for char, info in sorted_chars
+    ]
+
+    df = pd.DataFrame(data)
+
+    # Write with utf-8-sig encoding for proper IDE rendering
+    output_path = out_dir / "diacritic_conversions.csv"
+    df.to_csv(output_path, index=False, encoding='utf-8-sig')
+
+    return output_path
+
+
+# ---------------------------------------------------------------------------
 # Public pipeline functions
 # ---------------------------------------------------------------------------
 
@@ -521,6 +605,15 @@ def build(
     print(f"                            relation:commentary, relation:abridgement,")
     print(f"                            relation:continuation, date:copy")
 
+    # Generate diacritic conversion table
+    diacritic_path = _generate_diacritic_conversions(data_dir, out_dir, sample=sample, seed=seed)
+    print(f"\n  diacritic_conversions.csv → {diacritic_path}")
+    print(f"  Review instructions:")
+    print(f"    Fill in the 'openiti_equivalent' column with:")
+    print(f"    - Conversion (e.g., 'gh' for ǧ)")
+    print(f"    - Preservation (e.g., 'ʿ' for ayn to keep as-is)")
+    print(f"    - Removal (leave blank)")
+
     # Record per-field thresholds used in manifest parameters
     field_params = {
         fname: {
@@ -545,13 +638,17 @@ def build(
             "sample":         sample,
             "seed":           seed if sample is not None else None,
         },
-        "outputs": ["summary.json", "ngrams.json", "boilerplate_review.csv"],
+        "outputs": ["summary.json", "ngrams.json", "boilerplate_review.csv", "diacritic_conversions.csv"],
     }
     manifest["stages"].pop("apply_review", None)   # invalidated by a new build
     _save_manifest(out_dir, manifest)
 
-    print(f"\nNext: review {review_path}")
-    print(f"      set keep=no for false positives, then run: apply-review")
+    print(f"\nNext: review both CSV files")
+    print(f"  1. {review_path}")
+    print(f"     Set keep=no for false positives")
+    print(f"  2. {diacritic_path}")
+    print(f"     Fill in openiti_equivalent column for each character")
+    print(f"  Then run: python utils/survey_bnf.py apply-review")
     return out_dir
 
 

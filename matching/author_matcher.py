@@ -5,9 +5,15 @@ Uses global deduplication: each unique normalized author candidate is scored
 once against all OpenITI authors. Matches above AUTHOR_THRESHOLD are mapped
 back to all BNF records that contain the candidate.
 
+Token-level IDF weighting suppresses false positives on common name parts
+by weighting rare tokens (e.g., "al-Quduri") more heavily than common ones
+(e.g., "Ahmad", "ibn", "Muhammad").
+
 Parallelized across CPU cores for efficiency on large candidate sets.
 """
 
+import math
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from tqdm import tqdm
@@ -16,11 +22,108 @@ from matching.fuzzy_scorer import FuzzyScorer
 from matching.candidate_builders import build_author_candidates_by_script
 
 
-def _match_author_candidate(candidate, authors_candidates, threshold, norm_strategy="fuzzy"):
+def _build_token_idf_weights(authors_candidates):
+    """
+    Build IDF (Inverse Document Frequency) weights for all tokens in author candidates.
+
+    Rarer tokens (appearing in few author records) get higher weights.
+    Common tokens (appearing in many records) get lower weights.
+
+    Returns dict: {token: idf_weight, ...}
+    """
+    token_doc_freq = defaultdict(set)  # {token: set of author_uris containing it}
+    total_docs = 0
+
+    # Count document frequency for each token
+    for author_uri, author_candidates_by_script in authors_candidates.items():
+        total_docs += 1
+        tokens_seen = set()
+
+        for script in ["lat", "ara"]:
+            for author_str in author_candidates_by_script.get(script, []):
+                if author_str:
+                    # Split on whitespace to get tokens
+                    for token in author_str.lower().split():
+                        tokens_seen.add(token)
+
+        for token in tokens_seen:
+            token_doc_freq[token].add(author_uri)
+
+    # Calculate IDF: log(total_docs / document_frequency)
+    idf_weights = {}
+    for token, doc_set in token_doc_freq.items():
+        doc_freq = len(doc_set)
+        # Add 1 to avoid division by zero; use log(1+) to scale appropriately
+        idf_weights[token] = math.log(1.0 + total_docs / max(doc_freq, 1))
+
+    return idf_weights
+
+
+def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fuzzy_score):
+    """
+    Weight a fuzzy score by the rarity of tokens that contributed to the match.
+
+    Rare token matches (e.g., "al-Quduri" in both) boost confidence.
+    Common-only matches (e.g., only "ibn" in both) reduce confidence.
+
+    Parameters
+    ----------
+    norm_candidate : str
+        Normalized BNF candidate
+    norm_author_str : str
+        Normalized OpenITI author string
+    idf_weights : dict
+        {token: idf_weight, ...}
+    fuzzy_score : float
+        Raw fuzzy match score (0-100)
+
+    Returns
+    -------
+    float
+        Weighted fuzzy score (0-100 range, adjusted for token rarity)
+    """
+    candidate_tokens = set(norm_candidate.lower().split())
+    author_tokens = set(norm_author_str.lower().split())
+
+    if not candidate_tokens:
+        return 0
+
+    # Find which candidate tokens matched author tokens
+    matched_tokens = candidate_tokens & author_tokens
+
+    if not matched_tokens:
+        # No token overlap - heavily penalize
+        return 0
+
+    # Average IDF of matched tokens (signal strength)
+    matched_idf_values = [idf_weights.get(t, 0.1) for t in matched_tokens]
+    avg_matched_idf = sum(matched_idf_values) / len(matched_tokens)
+
+    # Typical IDF weight threshold (tokens with IDF > ~1.1 are reasonably specific)
+    # IDF values: common tokens (0.7), rare tokens (1.6+)
+    rarity_threshold = 1.1
+
+    if avg_matched_idf < rarity_threshold:
+        # Matched tokens are mostly common (e.g., "ibn", "ahmad", "muhammad")
+        # Strong penalty for relying only on common tokens
+        penalty_factor = (avg_matched_idf / rarity_threshold) ** 2
+        weighted_score = fuzzy_score * penalty_factor
+    else:
+        # Matched tokens include some rare ones (e.g., "al-Quduri", "al-Dhahabi")
+        # Slight boost since rarer tokens are more meaningful
+        boost_factor = min(avg_matched_idf / rarity_threshold, 1.5)
+        weighted_score = fuzzy_score * boost_factor
+
+    return min(max(weighted_score, 0), 100)  # Clamp to [0, 100]
+
+
+def _match_author_candidate(candidate, authors_candidates, threshold, norm_strategy="fuzzy", idf_weights=None):
     """
     Standalone function for parallel processing of a single BNF author candidate.
 
-    Replicates exact scoring logic from test_fuzzy_with_author_comprehensive.py.
+    Uses token-level IDF weighting to suppress false positives: rare tokens
+    (like "al-Quduri") contribute more to the score than common tokens
+    (like "Ahmad", "ibn", "Muhammad").
 
     Parameters
     ----------
@@ -32,28 +135,30 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
         Matching threshold (0-1 range)
     norm_strategy : str
         Normalization strategy used
+    idf_weights : dict, optional
+        {token: idf_weight, ...} for token weighting. If None, uses raw fuzzy scores.
 
     Returns
     -------
     tuple
-        (candidate, {matching_author_uri: score}) - matches with confidence scores
+        (candidate, {matching_author_uri: score}) - matches with confidence scores (0-1)
     """
     from fuzzywuzzy import fuzz
-    from matching.normalize import normalize_transliteration
+    from matching.normalize import normalize_for_matching
 
     matches = {}  # {author_uri: score}
 
-    # Normalize BNF candidate (using same function as original test)
-    norm_candidate = normalize_transliteration(candidate)
+    # Normalize BNF candidate
+    norm_candidate = normalize_for_matching(candidate)
 
     if not norm_candidate:
         return (candidate, matches)
 
-    # Score against all author candidates for each author (exact logic from original test)
+    # Score against all author candidates for each author
     for author_uri, author_candidates_by_script in authors_candidates.items():
         best_score = 0
 
-        # Try both scripts (matching original test exactly)
+        # Try both scripts
         for script in ["lat", "ara"]:
             if not author_candidates_by_script.get(script):
                 continue
@@ -63,12 +168,19 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
                     continue
 
                 # Normalize author candidate
-                norm_author_str = normalize_transliteration(author_str)
+                norm_author_str = normalize_for_matching(author_str)
                 if not norm_author_str:
                     continue
 
-                # Use token_set_ratio exactly like original test
-                score = fuzz.token_set_ratio(norm_candidate, norm_author_str)
+                # Get raw fuzzy score
+                raw_score = fuzz.token_set_ratio(norm_candidate, norm_author_str)
+
+                # Apply token-level IDF weighting if available
+                if idf_weights:
+                    score = _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, raw_score)
+                else:
+                    score = raw_score
+
                 if score > best_score:
                     best_score = score
 
@@ -127,6 +239,11 @@ class AuthorMatcher:
             if candidates["lat"] or candidates["ara"]:
                 authors_candidates[author_uri] = candidates
 
+        # Build token-level IDF weights for false positive suppression
+        idf_weights = _build_token_idf_weights(authors_candidates)
+        if self.verbose:
+            print(f"  Built IDF weights for {len(idf_weights)} unique tokens")
+
         # Prepare candidates and BNF mapping
         candidates_list = []
         candidate_to_bnf_ids = {}
@@ -137,7 +254,7 @@ class AuthorMatcher:
         # Matching (parallel or sequential)
         if self.use_parallel:
             with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+                match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy, idf_weights=idf_weights)
                 results = list(
                     tqdm(
                         executor.map(match_fn, candidates_list, chunksize=10),
@@ -149,7 +266,7 @@ class AuthorMatcher:
         else:
             # Sequential processing for debugging
             results = []
-            match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy)
+            match_fn = partial(_match_author_candidate, authors_candidates=authors_candidates, threshold=AUTHOR_THRESHOLD, norm_strategy=pipeline.norm_strategy, idf_weights=idf_weights)
             for candidate in tqdm(candidates_list, desc="Author matching", disable=not self.verbose):
                 result = match_fn(candidate)
                 results.append(result)
