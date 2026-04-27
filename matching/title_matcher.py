@@ -92,8 +92,10 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     rarity_threshold = 1.1
 
     if avg_matched_idf < rarity_threshold:
-        # Cubic penalty for common-word-only matches
-        penalty_factor = (avg_matched_idf / rarity_threshold) ** 3
+        # Common-word-only matches - apply aggressive penalty
+        from matching.config import TOKEN_IDF_PENALTY_EXPONENT
+        # Penalty exponent: higher = more aggressive (e.g., 3 for cubic, 4 for quartic)
+        penalty_factor = (avg_matched_idf / rarity_threshold) ** TOKEN_IDF_PENALTY_EXPONENT
         weighted_score = fuzzy_score * penalty_factor
     else:
         # Rare tokens present - accept fuzzy score
