@@ -85,7 +85,7 @@ class CombinedMatcher:
             stage2_scores = pipeline.get_stage2_scores(bnf_id) or {}
 
             # Filter pairs based on combined scoring
-            combined_matches = []
+            combined_matches = []  # List of (book_uri, combined_score) tuples
             for book_uri in stage2_books:
                 book = pipeline.openiti_index.get_book(book_uri)
                 if book is None:
@@ -112,9 +112,19 @@ class CombinedMatcher:
                 # Gate 4: Combined score must be >= COMBINED_THRESHOLD
                 combined_score = (author_score + title_score) / 2.0
                 if combined_score >= COMBINED_THRESHOLD:
-                    combined_matches.append(book_uri)
+                    combined_matches.append((book_uri, combined_score))
 
-            pipeline.set_stage3_result(bnf_id, combined_matches)
+            # Normalize scores: divide all by max so best score = 1.0
+            if combined_matches:
+                max_score = max(score for _, score in combined_matches)
+                normalized_matches = [(uri, score / max_score) for uri, score in combined_matches]
+                # Sort by normalized score descending (best first)
+                normalized_matches.sort(key=lambda x: x[1], reverse=True)
+                # Store URIs in ranked order
+                ranked_uris = [uri for uri, _ in normalized_matches]
+                pipeline.set_stage3_result(bnf_id, ranked_uris)
+            else:
+                pipeline.set_stage3_result(bnf_id, [])
 
         if self.verbose:
             print("Stage 3 complete. Combined scoring applied.")

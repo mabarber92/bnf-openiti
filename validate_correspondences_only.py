@@ -85,8 +85,9 @@ for bnf_id, expected_book_uri in expected_matches.items():
 
 # Calculate metrics
 total = len(expected_matches)
-false_positives = sum(1 for r in results_by_id.values() if r['stage3'] and not r['correct'])
-precision = correct / (correct + false_positives) if (correct + false_positives) > 0 else 0
+# Precision: of all candidates that passed the threshold, how many are correct?
+total_candidates_passed = sum(len(r['stage3']) for r in results_by_id.values())
+precision = correct / total_candidates_passed if total_candidates_passed > 0 else 0
 recall = correct / total if total > 0 else 0
 f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 

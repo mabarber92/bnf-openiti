@@ -89,13 +89,18 @@ USE_TITLE_IDF_WEIGHTING = True
 
 # IDF rarity threshold: tokens with IDF >= this are considered "rare" and trigger boost
 # Measured against OpenITI domain (authors/books only, not BNF)
-# 1.5 = tokens appearing in ~20% of documents (too common, e.g., "ahmad")
-# 2.5 = tokens appearing in ~8% of documents (reasonably rare, e.g., unique author surnames)
-# 3.0 = tokens appearing in ~5% of documents (quite rare)
-TOKEN_RARITY_THRESHOLD = 2.5
+# Common tokens (Ahmad, Muhammad, ibn, al): IDF 0.99 (appearing in nearly all authors)
+# Rare tokens (unique surnames, book titles): IDF 7.3–8.0 (appearing in <1% of corpus)
+# 5.0 = threshold to catch only truly discriminative tokens
+TOKEN_RARITY_THRESHOLD = 5.0
 
-# Boost factor for matches with rare tokens (e.g., 1.15 = 15% boost)
-# Example: fuzzy_score=85 with rare token → 85 * 1.15 = 97.75 (clamped to 100)
+# Separate boost factors for author and title matching
+# Authors: smaller boost (many cluster at 100% on common names like Ahmad/Muhammad)
+# Titles: larger boost (more discriminative, rare tokens matter more)
+AUTHOR_RARE_TOKEN_BOOST_FACTOR = 1.10
+TITLE_RARE_TOKEN_BOOST_FACTOR = 1.15
+
+# Legacy parameter (deprecated, kept for compatibility)
 RARE_TOKEN_BOOST_FACTOR = 1.15
 
 # Fuzzy matching backend: "fuzzywuzzy" or "polyfuzz"

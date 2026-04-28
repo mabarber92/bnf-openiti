@@ -49,7 +49,7 @@ def _build_token_idf_weights(authors_candidates):
                     # Normalize first (remove diacritics, apply conversions)
                     # This matches what the matching pipeline does
                     # Use split_camelcase=True because these are OpenITI author names
-                    norm_str = normalize_for_matching(author_str, split_camelcase=True)
+                    norm_str = normalize_for_matching(author_str, split_camelcase=True, is_openiti=True)
                     if norm_str:
                         # Then split on whitespace to get tokens
                         for token in norm_str.lower().split():
@@ -110,7 +110,7 @@ def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fu
         return 0
 
     # Check if any matched token is rare (IDF >= rarity_threshold)
-    from matching.config import TOKEN_RARITY_THRESHOLD, RARE_TOKEN_BOOST_FACTOR
+    from matching.config import TOKEN_RARITY_THRESHOLD, AUTHOR_RARE_TOKEN_BOOST_FACTOR
 
     rare_tokens_found = [t for t in matched_tokens if idf_weights.get(t, 0.1) >= TOKEN_RARITY_THRESHOLD]
     has_rare_token = len(rare_tokens_found) > 0
@@ -123,7 +123,7 @@ def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fu
 
     if has_rare_token:
         # Rare tokens present - boost the score to reward specificity
-        weighted_score = fuzzy_score * RARE_TOKEN_BOOST_FACTOR
+        weighted_score = fuzzy_score * AUTHOR_RARE_TOKEN_BOOST_FACTOR
     else:
         # Only common tokens matched - accept score as-is, no penalty
         weighted_score = fuzzy_score
@@ -168,7 +168,7 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
     matches = {}  # {author_uri: score}
 
     # Normalize BNF candidate (without camelcase splitting - it's a regular name, not an OpenITI slug)
-    norm_candidate = normalize_for_matching(candidate, split_camelcase=False)
+    norm_candidate = normalize_for_matching(candidate, split_camelcase=False, is_openiti=False)
 
     if not norm_candidate:
         return (candidate, matches)
@@ -189,7 +189,7 @@ def _match_author_candidate(candidate, authors_candidates, threshold, norm_strat
                 if not author_str:
                     continue
                 # Normalize OpenITI author candidate (with camelcase splitting - it may be a slug like IbnKhayyat)
-                norm_str = normalize_for_matching(author_str, split_camelcase=True)
+                norm_str = normalize_for_matching(author_str, split_camelcase=True, is_openiti=True)
                 if norm_str:
                     normalized_candidates.append(norm_str)
 

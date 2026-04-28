@@ -13,14 +13,16 @@ Key design:
 - Falls back to removing unmapped special characters
 """
 
-import csv
 from pathlib import Path
 from functools import lru_cache
+import pandas as pd
 
 
 def load_conversion_table(csv_path: str) -> tuple[dict, bool]:
     """
-    Load diacritic conversion table from CSV.
+    Load diacritic conversion table from CSV using pandas.
+
+    Handles Excel-saved CSVs (with BOM) gracefully.
 
     Returns:
         (conversions_dict, is_populated) where:
@@ -31,18 +33,19 @@ def load_conversion_table(csv_path: str) -> tuple[dict, bool]:
     has_conversions = False
 
     try:
-        with open(csv_path, encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                char = row['character']
-                equiv = row['openiti_equivalent'].strip()
+        # pandas handles BOM and encoding issues automatically
+        df = pd.read_csv(csv_path)
 
-                if char and equiv:
-                    conversions[char] = equiv
-                    has_conversions = True
-                elif char:
-                    # No mapping provided - will remove the character
-                    conversions[char] = ''
+        for _, row in df.iterrows():
+            char = row['character']
+            equiv = str(row['openiti_equivalent']).strip() if pd.notna(row['openiti_equivalent']) else ''
+
+            if char and equiv and equiv != 'nan':
+                conversions[char] = equiv
+                has_conversions = True
+            # elif char and char != 'nan':
+            #     # No mapping provided - will remove the character
+            #     conversions[char] = ''
 
     except FileNotFoundError:
         print(f"Warning: Conversion table not found at {csv_path}")
@@ -73,22 +76,29 @@ def get_conversion_table() -> tuple[dict, bool]:
 
 def normalize_with_diacritics(text: str, use_table: bool = True, warn_once: dict = {}) -> str:
     """
-    Normalize text using diacritic conversion table.
+    Normalize text using diacritic conversion table with Unicode decomposition fallback.
+
+    Processing logic:
+    - If character has a mapping in table: use the mapped value
+    - If character is ASCII: keep as-is
+    - If character is non-ASCII unmapped: apply Unicode decomposition (remove combining marks)
 
     Parameters
     ----------
     text : str
         Input text
     use_table : bool
-        If True, use CSV conversion table. If False, just remove all non-ASCII.
+        If True, use CSV conversion table. If False, apply Unicode decomposition only.
 
     Returns
     -------
     str
-        Normalized text (lowercase, diacritics converted/removed)
+        Normalized text (lowercase, diacritics converted/decomposed)
     """
     if not text:
         return ""
+
+    from matching.normalize import _decompose_and_strip_combining_marks
 
     conversions = {}
     is_populated = True
@@ -98,20 +108,25 @@ def normalize_with_diacritics(text: str, use_table: bool = True, warn_once: dict
         # Warn once if table is not populated
         if not is_populated and 'warned' not in warn_once:
             print("WARNING: Conversion table has not been populated.")
-            print("         All non-standard Latin characters will be normalised to their standard variants.")
+            print("         Unmapped diacritics will be handled via Unicode decomposition.")
             warn_once['warned'] = True
 
     result = []
     for char in text:
-        # Check if character has a mapping
+        # Check if character has a mapping in the table
         if char in conversions:
             result.append(conversions[char])
-        # ASCII characters and spaces - keep as-is
+        # ASCII characters - keep as-is
         elif ord(char) <= 127:
             result.append(char)
-        # Unmapped non-ASCII - remove it
+        # Arabic script - keep as-is (table is for Latin diacritics only)
+        # Arabic block: U+0600 to U+06FF
+        elif 0x0600 <= ord(char) <= 0x06FF:
+            result.append(char)
+        # Other non-ASCII unmapped: apply Unicode decomposition (e.g., Latin diacritics)
         else:
-            pass
+            decomposed = _decompose_and_strip_combining_marks(char)
+            result.append(decomposed)
 
     # Convert to lowercase and clean up whitespace
     normalized = ''.join(result).lower().strip()
