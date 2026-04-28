@@ -136,8 +136,8 @@ class OpenITIIndex:
                 continue
 
     
-            # Cull author tokens from book fields (Arabic only, Latin too risky)
-            fields_to_cull = ["title_ara", "title_lat"]
+            # Cull author tokens from book fields (Arabic only; Latin too generic, hurts recall)
+            fields_to_cull = ["title_ara"]
 
             book_modified = False
             for field in fields_to_cull:
