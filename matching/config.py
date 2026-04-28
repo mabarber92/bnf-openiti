@@ -81,6 +81,12 @@ USE_DIACRITIC_CONVERSION_TABLE = True  # Disabled: new normalizer breaks matchin
 # MATCHING BEHAVIOR
 # ============================================================================
 
+# Remove author data from OpenITI book fields at index build time
+# Prevents author name tokens from boosting title matches
+# If True: cull author tokens from book title/description during indexing
+# If False: keep book data as-is (original behavior)
+CULL_AUTHOR_DATA_FROM_BOOKS = True
+
 # Token-level IDF weighting: reward matches with rare tokens, allow common-only matches through
 # If any matched token has IDF >= TOKEN_RARITY_THRESHOLD, boost the fuzzy score
 # If no rare tokens matched, keep fuzzy score as-is (no penalty)

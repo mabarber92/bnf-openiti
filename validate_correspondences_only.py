@@ -43,13 +43,13 @@ print(f"Loaded {len(test_bnf_records)} test BNF records\n")
 
 # Run pipeline on test records only
 # (IDF is computed from full OpenITI)
-print("Running matching pipeline with author string stripping...")
+print("Running matching pipeline...")
 pipeline = MatchingPipeline(test_bnf_records, openiti_data, verbose=True)
 pipeline.register_stage(AuthorMatcher(verbose=True, use_parallel=False))
 pipeline.register_stage(TitleMatcher(verbose=True, use_parallel=False))
 pipeline.register_stage(CombinedMatcher(verbose=True))
 pipeline.register_stage(Classifier(verbose=True))
-pipeline.run_with_candidate_filtering()
+pipeline.run()
 
 # Evaluate
 print("\nEvaluating results...\n")

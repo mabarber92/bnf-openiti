@@ -313,8 +313,6 @@ class AuthorMatcher:
                 results.append(result)
 
         # Store results in pipeline
-        MATCHED_CANDIDATE_THRESHOLD = 0.95  # Track candidates that matched with this score
-
         for candidate, matched_authors_dict in results:
             bnf_ids = candidate_to_bnf_ids[candidate]
             for bnf_id in bnf_ids:
@@ -331,14 +329,6 @@ class AuthorMatcher:
                     if author_uri not in current_scores or score > current_scores[author_uri]:
                         current_scores[author_uri] = score
                 pipeline.set_stage1_scores(bnf_id, current_scores)
-
-                # Track matched author candidate strings (for token removal in stage 2)
-                # If this candidate matched any author with high confidence, record it
-                if any(score >= MATCHED_CANDIDATE_THRESHOLD for score in matched_authors_dict.values()):
-                    current_matched = pipeline.get_stage1_matched_candidates(bnf_id)
-                    if candidate not in current_matched:
-                        current_matched.append(candidate)
-                    pipeline.set_stage1_matched_candidates(bnf_id, current_matched)
 
         if self.verbose:
             print(f"Stage 1 complete.")
