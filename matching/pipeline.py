@@ -63,6 +63,7 @@ class MatchingPipeline:
         # Result state (stages write here)
         self._stage1_results = {}  # {BNF_ID: [author_URIs]}
         self._stage1_scores = {}   # {BNF_ID: {author_URI: score}}
+        self._stage1_matched_candidates = {}  # {BNF_ID: [candidate_strings that matched]}
         self._stage2_results = {}  # {BNF_ID: [book_URIs]}
         self._stage2_scores = {}   # {BNF_ID: {book_URI: score}}
         self._stage3_results = {}  # {BNF_ID: [book_URIs where author matches]}
@@ -100,6 +101,41 @@ class MatchingPipeline:
             print("PIPELINE COMPLETE")
             print(f"{'='*60}")
 
+    def run_with_candidate_filtering(self) -> None:
+        """
+        Execute all registered stages with author string stripping and reindexing.
+
+        After stage 1 (author matching), strips matched author name strings from BNF
+        records' title/creator/description fields, then rebuilds the candidate index
+        for stage 2. This prevents matched author names from triggering rare-token
+        boosts in title matching.
+
+        Only use this when running the full 3-stage pipeline (author → title → combined).
+        """
+        if self.verbose:
+            print(f"\n{'='*60}")
+            print(f"MATCHING PIPELINE (with author string stripping): {self.run_id}")
+            print(f"{'='*60}")
+            print(f"BNF records: {len(self.bnf_records)}")
+            print(f"OpenITI books: {self.openiti_index.book_count()}")
+            print(f"OpenITI authors: {self.openiti_index.author_count()}")
+            print(f"Unique author candidates: {self.bnf_index.author_candidate_count()}")
+            print(f"Unique title candidates: {self.bnf_index.title_candidate_count()}")
+
+        for i, stage in enumerate(self.stages):
+            if self.verbose:
+                print(f"\n--- {stage.__class__.__name__} ---")
+            stage.execute(self)
+
+            # After stage 1 (AuthorMatcher), strip matched author strings and rebuild candidate index
+            if i == 0 and stage.__class__.__name__ == "AuthorMatcher":
+                self._strip_matched_author_strings_and_reindex()
+
+        if self.verbose:
+            print(f"\n{'='*60}")
+            print("PIPELINE COMPLETE")
+            print(f"{'='*60}")
+
     # =========================================================================
     # Stage interface: get/set results
     # =========================================================================
@@ -119,6 +155,14 @@ class MatchingPipeline:
     def get_stage1_scores(self, bnf_id: str) -> dict:
         """Retrieve Stage 1 scores for a BNF record."""
         return self._stage1_scores.get(bnf_id, {})
+
+    def set_stage1_matched_candidates(self, bnf_id: str, candidates: list[str]) -> None:
+        """Stage 1 records which author candidate strings matched (high confidence)."""
+        self._stage1_matched_candidates[bnf_id] = candidates
+
+    def get_stage1_matched_candidates(self, bnf_id: str) -> list[str]:
+        """Retrieve matched author candidate strings for a BNF record."""
+        return self._stage1_matched_candidates.get(bnf_id, [])
 
     def set_stage2_result(self, bnf_id: str, book_uris: list[str]) -> None:
         """Stage 2 writes title matches."""
@@ -151,6 +195,97 @@ class MatchingPipeline:
     def get_classification(self, bnf_id: str) -> Optional[str]:
         """Retrieve classification for a BNF record."""
         return self._classified.get(bnf_id)
+
+    def _strip_matched_author_strings_and_reindex(self) -> None:
+        """
+        Strip matched author names from BNF records and rebuild candidate index.
+
+        After stage 1:
+        1. For each BNF record that matched an author
+        2. Get the author names from OpenITI
+        3. Strip those names from the BNF record's title/creator/description fields
+        4. Rebuild the candidate index for stage 2 with the modified records
+
+        This prevents matched author names from appearing in title candidates for
+        stage 2, avoiding double-counting of matching signals.
+        Uses normalization to match author names despite diacritical differences.
+        """
+        from matching.normalize import normalize_for_matching
+        import re
+
+        stripped_count = 0
+        records_with_authors = 0
+
+        for bnf_id, bnf_record in self.bnf_records.items():
+            stage1_authors = self.get_stage1_result(bnf_id)
+            if not stage1_authors:
+                continue
+
+            records_with_authors += 1
+            # Collect author name variants to strip
+            author_names_to_strip = []
+
+            for author_uri in stage1_authors:
+                author_data = self.openiti_index.get_author(author_uri)
+                if not author_data:
+                    continue
+
+                # Extract author names (handle dict and dataclass)
+                if isinstance(author_data, dict):
+                    if author_data.get("lat_name"):
+                        author_names_to_strip.append(author_data["lat_name"])
+                    if author_data.get("ar_name"):
+                        author_names_to_strip.append(author_data["ar_name"])
+                else:
+                    if hasattr(author_data, "lat_name") and author_data.lat_name:
+                        author_names_to_strip.append(author_data.lat_name)
+                    if hasattr(author_data, "ar_name") and author_data.ar_name:
+                        author_names_to_strip.append(author_data.ar_name)
+
+            if not author_names_to_strip:
+                continue
+
+            # Strip from title/creator/description fields
+            # These are the fields BNF title candidates are extracted from
+            for field in ["title_lat", "title_ara", "creator_lat", "creator_ara",
+                         "description_candidates_lat", "description_candidates_ara"]:
+                if field not in bnf_record or not isinstance(bnf_record[field], list):
+                    continue
+
+                for i, value in enumerate(bnf_record[field]):
+                    if not isinstance(value, str):
+                        continue
+
+                    # Normalize both the field value and author names for comparison
+                    norm_value = normalize_for_matching(value, split_camelcase=False, is_openiti=False)
+
+                    # Try to remove each author name
+                    for author_name in author_names_to_strip:
+                        norm_author = normalize_for_matching(author_name, split_camelcase=True, is_openiti=True)
+
+                        # If normalized author name matches part of normalized value, try to remove
+                        if norm_author and norm_author.lower() in norm_value.lower():
+                            # Use regex for case-insensitive removal
+                            pattern = re.compile(re.escape(author_name), re.IGNORECASE)
+                            new_value = pattern.sub("", value).strip()
+                            if new_value != value:
+                                bnf_record[field][i] = new_value
+                                stripped_count += 1
+
+        if self.verbose:
+            print(f"  Author string stripping: {records_with_authors} BNF records matched authors")
+            print(f"  Stripped {stripped_count} author name occurrences from title/creator fields")
+
+        # Always rebuild candidate index after stage 1 to reflect any stripping
+        if stripped_count > 0 or records_with_authors > 0:
+            if self.verbose:
+                print(f"  Rebuilding candidate index for stage 2...")
+
+            # Clear and rebuild the index
+            self.bnf_index = BNFCandidateIndex(self.bnf_records, norm_strategy=self.norm_strategy)
+
+            if self.verbose:
+                print(f"  Title candidates after stripping: {self.bnf_index.title_candidate_count()}")
 
     # =========================================================================
     # Output writing

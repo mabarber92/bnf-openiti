@@ -116,3 +116,25 @@ class BNFCandidateIndex:
     def title_candidates_iter(self):
         """Iterate over (candidate, bnf_ids) for title matching."""
         return self.title_index.items()
+
+    def remove_author_candidates(self, candidates: list[str]) -> None:
+        """
+        Remove author candidates from the index.
+
+        After stage 1 matches author candidates, remove them from the index
+        so they don't get matched again as title candidates in stage 2.
+
+        Parameters
+        ----------
+        candidates : list[str]
+            Normalized author candidate strings to remove
+        """
+        for candidate in candidates:
+            if candidate in self.author_index:
+                del self.author_index[candidate]
+
+    def remove_title_candidates(self, candidates: list[str]) -> None:
+        """Remove title candidates from the index."""
+        for candidate in candidates:
+            if candidate in self.title_index:
+                del self.title_index[candidate]

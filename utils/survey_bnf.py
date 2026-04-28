@@ -451,7 +451,7 @@ def _extract_special_chars_from_xml(data_dir: str, sample: int | None = None, se
     """
     special_chars = {}
 
-    xml_files = sorted(Path(data_dir).glob("OAI_*.xml"))
+    xml_files = sorted(Path(data_dir).rglob("OAI_*.xml"))
     if sample:
         import random
         random.seed(seed)
