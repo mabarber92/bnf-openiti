@@ -1,0 +1,14 @@
+Loading BNF records...
+
+========================================================================================================================
+NORMALIZER COMPARISON: ON vs OFF (Conversion Table)
+========================================================================================================================
+
+1. OAI_06000547
+Traceback (most recent call last):
+  File "C:\Users\Mathew.Barber\Documents\github-repos\bnf-openiti\debug_normalizer.py", line 52, in <module>
+    print(f"   Creator: {safe_display(creator)}")
+  File "C:\Users\Mathew.Barber\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u012b' in position 15: character maps to <undefined>

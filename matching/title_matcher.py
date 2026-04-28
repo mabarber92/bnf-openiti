@@ -26,8 +26,12 @@ def _build_token_idf_weights(books_candidates):
     Rarer tokens (appearing in few titles) get higher weights.
     Common tokens (appearing in many titles) get lower weights.
 
+    CRITICAL: Normalizes title strings before tokenizing (matching pipeline behavior).
+
     Returns dict: {token: idf_weight, ...}
     """
+    from matching.normalize import normalize_for_matching
+
     token_doc_freq = defaultdict(set)
     total_docs = 0
 
@@ -38,8 +42,14 @@ def _build_token_idf_weights(books_candidates):
         for script in ["lat", "ara"]:
             for title_str in book_candidates_by_script.get(script, []):
                 if title_str:
-                    for token in title_str.lower().split():
-                        tokens_seen.add(token)
+                    # Normalize first (remove diacritics, apply conversions)
+                    # This matches what the matching pipeline does
+                    # Use split_camelcase=True because these are OpenITI book titles
+                    norm_str = normalize_for_matching(title_str, split_camelcase=True)
+                    if norm_str:
+                        # Then split on whitespace to get tokens
+                        for token in norm_str.lower().split():
+                            tokens_seen.add(token)
 
         for token in tokens_seen:
             token_doc_freq[token].add(book_uri)
@@ -54,10 +64,13 @@ def _build_token_idf_weights(books_candidates):
 
 def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuzzy_score):
     """
-    Weight a fuzzy score by the rarity of tokens that contributed to the match.
+    Weight a fuzzy score based on presence of rare tokens in the match.
 
-    Aggressively penalizes matches with only common tokens.
-    Does not boost—relies on fuzzy matching for good candidates.
+    If any matched token has IDF >= rarity_threshold: boost the score.
+    If no rare tokens: keep score as-is (no penalty, no boost).
+
+    This allows common-only matches (e.g., "Mukhtasar" alone) to pass through,
+    but prioritizes matches with rare (specific) tokens.
 
     Parameters
     ----------
@@ -73,7 +86,7 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     Returns
     -------
     float
-        Weighted fuzzy score (0-100 range, aggressively penalized for common-token matches)
+        Weighted fuzzy score (0-100 range)
     """
     candidate_tokens = set(norm_candidate.lower().split())
     title_tokens = set(norm_title_str.lower().split())
@@ -86,30 +99,32 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     if not matched_tokens:
         return 0
 
-    matched_idf_values = [idf_weights.get(t, 0.1) for t in matched_tokens]
-    avg_matched_idf = sum(matched_idf_values) / len(matched_tokens)
+    # Check if any matched token is rare (IDF >= rarity_threshold)
+    from matching.config import TOKEN_RARITY_THRESHOLD, RARE_TOKEN_BOOST_FACTOR
 
-    rarity_threshold = 1.1
+    has_rare_token = any(idf_weights.get(t, 0.1) >= TOKEN_RARITY_THRESHOLD for t in matched_tokens)
 
-    if avg_matched_idf < rarity_threshold:
-        # Common-word-only matches - apply aggressive penalty
-        from matching.config import TOKEN_IDF_PENALTY_EXPONENT
-        # Penalty exponent: higher = more aggressive (e.g., 3 for cubic, 4 for quartic)
-        penalty_factor = (avg_matched_idf / rarity_threshold) ** TOKEN_IDF_PENALTY_EXPONENT
-        weighted_score = fuzzy_score * penalty_factor
+    if has_rare_token:
+        # Rare tokens present - boost the score to reward specificity
+        weighted_score = fuzzy_score * RARE_TOKEN_BOOST_FACTOR
     else:
-        # Rare tokens present - accept fuzzy score
+        # Only common tokens matched - accept score as-is, no penalty
         weighted_score = fuzzy_score
 
-    return min(max(weighted_score, 0), 100)
+    return max(weighted_score, 0)  # Allow scores > 100 for rare token matches
 
 
 def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy="fuzzy", idf_weights=None):
     """
     Standalone function for parallel processing of a single BNF title candidate.
 
-    Scores against all title candidates for each OpenITI book with optional token-level
-    IDF weighting to suppress false positives on common title words.
+    Combines fuzzy scores across multiple title variants per book using geometric mean.
+    This rewards matches where multiple title candidates align, not just single common words.
+
+    Pipeline:
+    1. Collect fuzzy scores for all title candidates per book
+    2. Combine with geometric mean: (score1 × score2 × ... × scoreN)^(1/N)
+    3. Apply token-level IDF weighting for rare token boost
 
     Parameters
     ----------
@@ -134,8 +149,8 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
 
     matches = {}  # {book_uri: score}
 
-    # Normalize the BNF candidate using parametrized diacritic conversion or legacy normalization
-    norm_candidate = normalize_for_matching(candidate)
+    # Normalize the BNF candidate (without camelcase splitting - it's a regular title, not an OpenITI slug)
+    norm_candidate = normalize_for_matching(candidate, split_camelcase=False)
 
     if not norm_candidate:
         return (candidate, matches)
@@ -144,32 +159,40 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
     for book_uri, book_title_by_script in books_candidates.items():
         best_score = 0
 
-        # Try both scripts (matching author matcher logic)
+        # Try both scripts: concatenate all title variants within each script
         for script in ["lat", "ara"]:
-            if not book_title_by_script.get(script):
+            candidates = book_title_by_script.get(script)
+            if not candidates:
                 continue
 
-            for book_title in book_title_by_script[script]:
+            # Filter and normalize all candidates for this script
+            normalized_candidates = []
+            for book_title in candidates:
                 if not book_title:
                     continue
+                # Normalize the OpenITI book title (with camelcase splitting - it may be a slug)
+                norm_title = normalize_for_matching(book_title, split_camelcase=True)
+                if norm_title:
+                    normalized_candidates.append(norm_title)
 
-                # Normalize the OpenITI book title using parametrized diacritic conversion or legacy normalization
-                norm_book_title = normalize_for_matching(book_title)
+            if not normalized_candidates:
+                continue
 
-                if not norm_book_title:
-                    continue
+            # Concatenate all title variants for this script into a single string
+            # This allows matching against the full book title profile, not individual variants
+            combined_book_title = " ".join(normalized_candidates)
 
-                # Get raw fuzzy score
-                raw_score = fuzz.token_set_ratio(norm_candidate, norm_book_title)
+            # Get raw fuzzy score
+            raw_score = fuzz.token_set_ratio(norm_candidate, combined_book_title)
 
-                # Apply token-level IDF weighting if available
-                if idf_weights:
-                    score = _score_with_token_weighting(norm_candidate, norm_book_title, idf_weights, raw_score)
-                else:
-                    score = raw_score
+            # Apply token-level IDF weighting if available
+            if idf_weights:
+                score = _score_with_token_weighting(norm_candidate, combined_book_title, idf_weights, raw_score)
+            else:
+                score = raw_score
 
-                if score > best_score:
-                    best_score = score
+            if score > best_score:
+                best_score = score
 
         # Store match with its score (0-100 range, convert to 0-1)
         if best_score >= threshold * 100:
@@ -229,41 +252,18 @@ class TitleMatcher:
                 books_candidates[book_uri] = candidates
 
         # Build token-level IDF weights if enabled
-        from matching.config import USE_TOKEN_IDF_WEIGHTING
+        from matching.config import USE_TITLE_IDF_WEIGHTING
 
-        if USE_TOKEN_IDF_WEIGHTING:
+        if USE_TITLE_IDF_WEIGHTING:
             if self.verbose:
-                print("  Building IDF weights from full BNF + OpenITI datasets...")
+                print("  Building IDF weights from OpenITI book data only...")
 
-            # Load full BNF dataset for IDF computation
-            from matching.config import BNF_FULL_PATH
-            from parsers.bnf import load_bnf_records
-            full_bnf_records = load_bnf_records(BNF_FULL_PATH)
-
-            # Build BNF title candidates from all records
-            bnf_candidates_for_idf = {}
-            for bnf_id, bnf_record in full_bnf_records.items():
-                # Extract titles from BNF record (dataclass attributes)
-                titles_lat = getattr(bnf_record, "title_lat", []) or []
-                titles_ara = getattr(bnf_record, "title_ara", []) or []
-
-                # Create entries for IDF computation
-                for title in titles_lat:
-                    if title:
-                        key = f"bnf_{bnf_id}_lat_{len(bnf_candidates_for_idf)}"
-                        bnf_candidates_for_idf[key] = {"lat": [title], "ara": []}
-
-                for title in titles_ara:
-                    if title:
-                        key = f"bnf_{bnf_id}_ara_{len(bnf_candidates_for_idf)}"
-                        bnf_candidates_for_idf[key] = {"lat": [], "ara": [title]}
-
-            # Combine BNF and OpenITI candidates for IDF computation
-            combined_candidates = {**books_candidates, **bnf_candidates_for_idf}
-            idf_weights = _build_token_idf_weights(combined_candidates)
+            # Use only OpenITI books for IDF to measure rarity in our target domain
+            # This prevents false boosting on tokens that are common in book titles
+            idf_weights = _build_token_idf_weights(books_candidates)
 
             if self.verbose:
-                print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(combined_candidates)} total candidate sources")
+                print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(books_candidates)} OpenITI book records")
         else:
             idf_weights = None
 

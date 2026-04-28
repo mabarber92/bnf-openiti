@@ -1,0 +1,168 @@
+================================================================================
+PARAMETER SWEEP: Author/Title Thresholds × IDF Variants
+================================================================================
+
+Testing 75 configurations...
+  Author thresholds: [0.75, 0.8, 0.85, 0.9, 0.95]
+  Title thresholds: [0.75, 0.8, 0.85, 0.9, 0.95]
+  IDF variants: No IDF, IDF^3, IDF^4
+
+Running configs:   0%|          | 0/75 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3133.82it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2297.24it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3964.37it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2128.87it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2128.87it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1313.59it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1355.76it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Building BNF candidate indices (10 records)...
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2041.42it/s]
+Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1554.37it/s]
+Running configs:   1%|1         | 1/75 [02:06<2:36:12, 126.65s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.04it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1734.90it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.20it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2492.16it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1810.54it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.31it/s]
+Running configs:   3%|2         | 2/75 [02:20<1:13:41, 60.57s/it] Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2492.31it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1656.71it/s]
+Running configs:  15%|#4        | 11/75 [04:33<21:23, 20.05s/it] Running configs:  19%|#8        | 14/75 [04:33<14:21, 14.13s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 821.14it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1660.12it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2663.39it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2490.83it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1477.34it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  23%|##2       | 17/75 [04:47<10:56, 11.31s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2128.01it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3317.49it/s]
+Running configs:  27%|##6       | 20/75 [04:47<07:19,  7.99s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.64it/s]
+Running configs:  27%|##6       | 20/75 [05:00<07:19,  7.99s/it]Running configs:  28%|##8       | 21/75 [06:48<19:49, 22.03s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2489.94it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.20it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  31%|###       | 23/75 [07:01<15:35, 17.99s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 788.71it/s]
+Running configs:  35%|###4      | 26/75 [07:04<09:39, 11.82s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2000.14it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 650.17it/s]
+Running configs:  36%|###6      | 27/75 [07:15<09:18, 11.64s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2243.18it/s]
+Running configs:  39%|###8      | 29/75 [07:16<06:28,  8.44s/it]Running configs:  40%|####      | 30/75 [07:16<05:14,  7.00s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1966.48it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 755.80it/s]
+Running configs:  41%|####1     | 31/75 [09:02<19:35, 26.71s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.34it/s]
+Running configs:  43%|####2     | 32/75 [09:14<16:42, 23.32s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1328.07it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.31it/s]
+Running configs:  44%|####4     | 33/75 [09:18<13:03, 18.66s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  47%|####6     | 35/75 [09:28<08:46, 13.15s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 9922.65it/s]
+Running configs:  48%|####8     | 36/75 [09:30<06:57, 10.71s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1605.66it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  51%|#####     | 38/75 [09:41<05:21,  8.69s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.37it/s]
+Running configs:  52%|#####2    | 39/75 [09:42<04:11,  6.99s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 637.03it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  55%|#####4    | 41/75 [11:29<14:03, 24.80s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2663.05it/s]
+Running configs:  56%|#####6    | 42/75 [11:40<12:03, 21.92s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2489.94it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2492.90it/s]
+Running configs:  59%|#####8    | 44/75 [11:43<07:17, 14.12s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2486.54it/s]
+Running configs:  60%|######    | 45/75 [11:44<05:40, 11.34s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.94it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1636.55it/s]
+Running configs:  63%|######2   | 47/75 [11:57<04:23,  9.40s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Running configs:  64%|######4   | 48/75 [11:57<03:22,  7.50s/it]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.70it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  67%|######6   | 50/75 [12:09<02:50,  6.84s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.77it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1734.98it/s]
+Running configs:  68%|######8   | 51/75 [13:53<10:59, 27.48s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3320.91it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1988.86it/s]
+Running configs:  71%|#######   | 53/75 [14:05<07:07, 19.41s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2729.42it/s]
+Running configs:  72%|#######2  | 54/75 [14:07<05:29, 15.70s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.64it/s]
+Running configs:  75%|#######4  | 56/75 [14:09<03:12, 10.15s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2492.31it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  76%|#######6  | 57/75 [14:19<03:01, 10.08s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 3323.27it/s]
+Running configs:  79%|#######8  | 59/75 [14:22<01:49,  6.87s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 4986.10it/s]
+Running configs:  80%|########  | 60/75 [14:34<01:58,  7.90s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 2493.20it/s]
+Running configs:  81%|########1 | 61/75 [15:56<05:53, 25.25s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1661.77it/s]
+Running configs:  83%|########2 | 62/75 [16:19<05:21, 24.76s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1056.31it/s]
+Running configs:  84%|########4 | 63/75 [16:23<03:51, 19.26s/it]Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<00:00, 1621.24it/s]
+Building BNF candidate indices (10 records)...
+Indexing BNF:   0%|          | 0/10 [00:00<?, ?it/s]Indexing BNF: 100%|##########| 10/10 [00:00<?, ?it/s]
+Running configs:  87%|########6 | 65/75 [16:34<02:13, 13.31s/it]Running configs:  88%|########8 | 66/75 [16:36<01:35, 10.65s/it]Running configs:  91%|######### | 68/75 [16:44<00:56,  8.11s/it]Running configs:  92%|#########2| 69/75 [16:47<00:40,  6.77s/it]Running configs:  93%|#########3| 70/75 [16:47<00:26,  5.21s/it]Running configs:  95%|#########4| 71/75 [17:53<01:23, 20.87s/it]Running configs:  96%|#########6| 72/75 [18:06<00:56, 18.80s/it]Running configs:  99%|#########8| 74/75 [18:10<00:11, 11.37s/it]Running configs: 100%|##########| 75/75 [18:10<00:00, 14.54s/it]
+
+[OK] Results saved to: C:\Users\Mathew.Barber\Documents\github-repos\bnf-openiti\parameter_optimization\results\sweep_results.csv
+
+Summary statistics:
+  Total configs tested: 75
+  Precision range: 0.250 - 0.833
+  Recall range: 0.200 - 0.600
+  F1 range: 0.258 - 0.698

@@ -13,11 +13,17 @@ from utils.config import load_config
 _PIPELINE_CONFIG = load_config()
 
 # ============================================================================
-# THRESHOLDS (from optimal parameter analysis: 0.85/0.80)
+# THRESHOLDS
 # ============================================================================
 
+# Stage 1 & 2 thresholds: filter out weak candidates early
+# Real filtering happens at Stage 3 (combined threshold)
 AUTHOR_THRESHOLD = 0.80  # Stage 1: BNF author → OpenITI author URIs
 TITLE_THRESHOLD = 0.85   # Stage 2: BNF titles → OpenITI book URIs
+
+# Stage 3 combined scoring: final filtering on author+title pairs
+COMBINED_THRESHOLD = 0.92  # Combined (author_score + title_score) / 2 must meet this
+COMBINED_FLOOR = 0.80      # Both author AND title scores must be >= this
 
 # ============================================================================
 # DATA PATHS (derived from config.yml)
@@ -69,19 +75,28 @@ def get_output_files(run_dir: Path) -> dict:
 # Use parametrized diacritic conversion table (bnf_diacritic_conversions.csv)
 # If True: applies conversions (ayn handling, diacritic mappings, etc.)
 # If False: simple character removal (legacy behavior)
-USE_DIACRITIC_CONVERSION_TABLE = False  # Disabled: new normalizer breaks matching (hyphen handling, uppercase diacritics, ayn representation)
+USE_DIACRITIC_CONVERSION_TABLE = True  # Disabled: new normalizer breaks matching (hyphen handling, uppercase diacritics, ayn representation)
 
 # ============================================================================
 # MATCHING BEHAVIOR
 # ============================================================================
 
-# Token-level IDF weighting: suppress false positives on common name/title fragments
-# WARNING: Requires parameter tuning; score distribution changes with IDF enabled
-USE_TOKEN_IDF_WEIGHTING = False
+# Token-level IDF weighting: reward matches with rare tokens, allow common-only matches through
+# If any matched token has IDF >= TOKEN_RARITY_THRESHOLD, boost the fuzzy score
+# If no rare tokens matched, keep fuzzy score as-is (no penalty)
+USE_AUTHOR_IDF_WEIGHTING = True
+USE_TITLE_IDF_WEIGHTING = True
 
-# Penalty exponent for token weighting: higher = more aggressive penalization of common tokens
-# Test values: 3 (cubic), 4 (quartic) to find optimal balance
-TOKEN_IDF_PENALTY_EXPONENT = 3
+# IDF rarity threshold: tokens with IDF >= this are considered "rare" and trigger boost
+# Measured against OpenITI domain (authors/books only, not BNF)
+# 1.5 = tokens appearing in ~20% of documents (too common, e.g., "ahmad")
+# 2.5 = tokens appearing in ~8% of documents (reasonably rare, e.g., unique author surnames)
+# 3.0 = tokens appearing in ~5% of documents (quite rare)
+TOKEN_RARITY_THRESHOLD = 2.5
+
+# Boost factor for matches with rare tokens (e.g., 1.15 = 15% boost)
+# Example: fuzzy_score=85 with rare token → 85 * 1.15 = 97.75 (clamped to 100)
+RARE_TOKEN_BOOST_FACTOR = 1.15
 
 # Fuzzy matching backend: "fuzzywuzzy" or "polyfuzz"
 # Note: PolyFuzz requires batch architecture; current parallel loop uses fuzzywuzzy
@@ -91,10 +106,10 @@ FUZZY_MATCHER = "fuzzywuzzy"
 # (Composite manuscripts can legitimately have many authors)
 MAX_AUTHOR_CANDIDATES = 50
 
-# Confidence-dependent filtering in Stage 3 (Combined Matching)
-# If True, marginal author matches require higher title scores to be combined
-# Helps reduce false positives from generic name fragments matching multiple authors
-USE_CONFIDENCE_FILTERING = False  # Set to True to enable
+# # Confidence-dependent filtering in Stage 3 (Combined Matching)
+# # If True, marginal author matches require higher title scores to be combined
+# # Helps reduce false positives from generic name fragments matching multiple authors
+# USE_CONFIDENCE_FILTERING = False  # Set to True to enable
 
 # ============================================================================
 # PARALLELIZATION

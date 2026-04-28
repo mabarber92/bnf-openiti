@@ -3,7 +3,7 @@ Analyze parameter sweep results and identify optimal configurations.
 
 Highlights:
 - Pareto frontier (configs where precision/recall can't be improved without tradeoff)
-- Configurations maintaining ≥90% recall
+- Configurations maintaining >=90% recall
 - Best precision achievers within recall constraint
 """
 
@@ -64,7 +64,7 @@ def main():
     recall_constraint = 0.90
     df_qualified = df[df['recall'] >= recall_constraint].copy()
 
-    print(f"\n--- RECALL CONSTRAINT: ≥{recall_constraint:.0%} ---")
+    print(f"\n--- RECALL CONSTRAINT: >={recall_constraint:.0%} ---")
     print(f"Qualifying configurations: {len(df_qualified)} / {len(df)}")
 
     if len(df_qualified) == 0:
@@ -82,7 +82,7 @@ def main():
 
     print(f"Pareto frontier: {len(df_frontier)} configurations")
     print("\n" + "-" * 100)
-    print("PARETO FRONTIER (recall ≥90%, non-dominated configs)")
+    print("PARETO FRONTIER (recall >=90%, non-dominated configs)")
     print("-" * 100)
 
     # Sort by precision (descending)
@@ -99,9 +99,9 @@ def main():
     for _, row in df_frontier_sorted.iterrows():
         better = ""
         if row['precision'] > baseline_precision and row['recall'] >= baseline_recall:
-            better = "✓ BEATS"
+            better = "[BEATS]"
         elif row['precision'] >= baseline_precision and row['recall'] >= baseline_recall:
-            better = "✓ MATCHES"
+            better = "[MATCH]"
 
         print("{:<8.2f} {:<8.2f} {:<12} {:<12.1%} {:<12.1%} {:<12.3f} {:<8}".format(
             row['author_threshold'],
@@ -118,7 +118,7 @@ def main():
     best_precision_row = df_qualified.loc[best_precision_idx]
 
     print("\n" + "-" * 100)
-    print("BEST PRECISION (maintaining ≥90% recall)")
+    print("BEST PRECISION (maintaining >=90% recall)")
     print("-" * 100)
     print(f"Config: Author={best_precision_row['author_threshold']:.2f}, "
           f"Title={best_precision_row['title_threshold']:.2f}, "
@@ -128,9 +128,9 @@ def main():
           f"F1={best_precision_row['f1']:.3f}")
     print(f"Baseline: Precision=90%, Recall=90%")
     if best_precision_row['precision'] > baseline_precision:
-        print(f"✓ IMPROVEMENT: +{(best_precision_row['precision'] - baseline_precision):.1%} precision")
+        print(f"[+] IMPROVEMENT: +{(best_precision_row['precision'] - baseline_precision):.1%} precision")
     else:
-        print(f"⚠ Trade-off: {(baseline_precision - best_precision_row['precision']):.1%} lower precision")
+        print(f"[!] Trade-off: {(baseline_precision - best_precision_row['precision']):.1%} lower precision")
 
     # Comparison: IDF vs No IDF
     print("\n" + "-" * 100)
@@ -153,7 +153,7 @@ def main():
 
     # Full qualified results
     print("\n" + "-" * 100)
-    print("ALL QUALIFIED CONFIGURATIONS (recall ≥90%, sorted by precision)")
+    print("ALL QUALIFIED CONFIGURATIONS (recall >=90%, sorted by precision)")
     print("-" * 100)
     df_qualified_sorted = df_qualified.sort_values('precision', ascending=False)
     print("\n{:<8} {:<8} {:<12} {:<12} {:<12} {:<8} {:<8}".format(

@@ -97,20 +97,34 @@ def _apply_openiti_conversions(text: str) -> str:
     return text
 
 
-def normalize_for_matching(text: str) -> str:
+def normalize_for_matching(text: str, split_camelcase: bool = False) -> str:
     """
     Main entry point for normalization.
 
     Pipeline:
+    0. Split camelCase (only for OpenITI URIs like IbnKhayyat; skip for normal text)
     1. Apply hardcoded OpenITI transliteration conversions (C→ʿ, ī→i, etc.)
     2. Apply parametrized diacritic table if enabled (for library-specific chars)
     3. Pass through legacy normalizer (handles hyphens, diacritics, spacing)
+
+    Parameters
+    ----------
+    text : str
+        Text to normalize
+    split_camelcase : bool, default False
+        If True, split camelCase (e.g., "IbnKhayyat" → "Ibn Khayyat").
+        Only use for OpenITI slugs; keep False for regular names/titles to avoid
+        mangling all-caps BNF fields into individual characters.
 
     This function is used throughout the matching pipeline (AuthorMatcher,
     TitleMatcher, etc.) on both BNF and OpenITI data.
     """
     # Import here to avoid circular dependency
     from matching.config import USE_DIACRITIC_CONVERSION_TABLE
+
+    # Step 0: Split camelCase only if requested (e.g., "IbnKhayyat" → "Ibn Khayyat")
+    if split_camelcase:
+        text = re.sub(r"([a-z])([A-Z])", r"\1 \2", text)
 
     # Step 1: Apply hardcoded OpenITI conversions (both BNF and OpenITI)
     text = _apply_openiti_conversions(text)
