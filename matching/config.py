@@ -22,7 +22,8 @@ AUTHOR_THRESHOLD = 0.80  # Stage 1: BNF author → OpenITI author URIs
 TITLE_THRESHOLD = 0.85   # Stage 2: BNF titles → OpenITI book URIs
 
 # Stage 3 combined scoring: final filtering on author+title pairs
-COMBINED_THRESHOLD = 0.92  # Combined (author_score + title_score) / 2 must meet this
+# Optimized via parameter sweep on 11-record validation set
+COMBINED_THRESHOLD = 0.94  # Combined (author_score + title_score) / 2 must meet this (up from 0.92)
 COMBINED_FLOOR = 0.80      # Both author AND title scores must be >= this
 
 # ============================================================================
@@ -101,10 +102,11 @@ USE_TITLE_IDF_WEIGHTING = True
 TOKEN_RARITY_THRESHOLD = 5.0
 
 # Separate boost factors for author and title matching
-# Authors: smaller boost (many cluster at 100% on common names like Ahmad/Muhammad)
-# Titles: larger boost (more discriminative, rare tokens matter more)
-AUTHOR_RARE_TOKEN_BOOST_FACTOR = 1.10
-TITLE_RARE_TOKEN_BOOST_FACTOR = 1.15
+# Optimized via parameter sweep (validation: 56.2% precision, 81.8% recall, 66.7% F1)
+# Authors: conservative boost (many cluster at 100% on common names)
+# Titles: stronger boost (discriminative, rare tokens matter more)
+AUTHOR_RARE_TOKEN_BOOST_FACTOR = 1.10  # (unchanged from previous)
+TITLE_RARE_TOKEN_BOOST_FACTOR = 1.20   # (up from 1.15)
 
 # Legacy parameter (deprecated, kept for compatibility)
 RARE_TOKEN_BOOST_FACTOR = 1.15
