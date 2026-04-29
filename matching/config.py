@@ -22,9 +22,10 @@ AUTHOR_THRESHOLD = 0.80  # Stage 1: BNF author → OpenITI author URIs
 TITLE_THRESHOLD = 0.85   # Stage 2: BNF titles → OpenITI book URIs
 
 # Stage 3 combined scoring: final filtering on author+title pairs
-# Optimized via parameter sweep on 11-record validation set
-COMBINED_THRESHOLD = 0.94  # Combined (author_score + title_score) / 2 must meet this (up from 0.92)
+# Optimized via threshold validation on 11-record validation set
+COMBINED_THRESHOLD = 0.93  # Combined (author_score + title_score) / 2 must meet this (balances recall vs FP suppression)
 COMBINED_FLOOR = 0.80      # Both author AND title scores must be >= this
+TITLE_FLOOR = 0.90         # Title score must be >= this to ensure rare-token boosted matches dominate weak-author cases
 
 # ============================================================================
 # DATA PATHS (derived from config.yml)
@@ -98,8 +99,8 @@ USE_TITLE_IDF_WEIGHTING = True
 # Measured against OpenITI domain (authors/books only, not BNF)
 # Common tokens (Ahmad, Muhammad, ibn, al): IDF 0.99 (appearing in nearly all authors)
 # Rare tokens (unique surnames, book titles): IDF 7.3–8.0 (appearing in <1% of corpus)
-# 5.0 = threshold to catch only truly discriminative tokens
-TOKEN_RARITY_THRESHOLD = 5.0
+# 2.5 = catch semi-uncommon tokens that help disambiguate (surnames, descriptive titles like "Khatib")
+TOKEN_RARITY_THRESHOLD = 3.5
 
 # Separate boost factors for author and title matching
 # Optimized via parameter sweep (validation: 56.2% precision, 81.8% recall, 66.7% F1)

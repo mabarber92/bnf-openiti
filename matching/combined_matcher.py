@@ -35,20 +35,21 @@ class CombinedMatcher:
         1. Get Stage 1 results (matched author URIs) with scores
         2. Get Stage 2 results (matched book URIs) with scores
         3. For each valid author+book pair (author_uri matches book's author):
-           - Check if both scores >= COMBINED_FLOOR
+           - Check if both scores >= COMBINED_FLOOR (0.80)
+           - Check if title_score >= TITLE_FLOOR (ensures rare-token boosted titles dominate weak-author cases)
            - Check if combined score (author+book)/2 >= COMBINED_THRESHOLD
-           - If both pass, keep the pair
+           - If all pass, keep the pair
         4. Store filtered results as Stage 3 result
 
         Scoring logic:
         - Common-only matches (no rare tokens): fuzzy_score kept as-is
         - Matches with rare tokens: fuzzy_score * RARE_TOKEN_BOOST_FACTOR
         - Combined threshold ensures we don't accept pairs where both stages are weak
-        - Floor ensures no single weak stage dominates
+        - Floors ensure no single weak stage dominates and rare-token boosts matter
 
         Example:
-        - Author 85% (common name) + Title 95% (rare title) → both >= 80%, combined=90% ✓ PASS
-        - Author 85% (common name) + Title 85% (common title) → both >= 80%, combined=85% < 90% ✗ FAIL
+        - Author 85% (common name) + Title 95% (rare title) → both >= 80%, title >= 90%, combined=90% ✓ PASS
+        - Author 85% (common name) + Title 85% (common title) → title < 90% ✗ FAIL (title not strong enough)
         - Author 50% (weak) + Title 95% (strong) → author < 80% ✗ FAIL (can't rely on weak author)
 
         Parameters
@@ -56,11 +57,12 @@ class CombinedMatcher:
         pipeline : MatchingPipeline
             Pipeline orchestrator with loaded indices
         """
-        from matching.config import COMBINED_THRESHOLD, COMBINED_FLOOR
+        from matching.config import COMBINED_THRESHOLD, COMBINED_FLOOR, TITLE_FLOOR
 
         if self.verbose:
             print("\n--- Stage 3: Combined Scoring ---")
-            print(f"  Floor: {COMBINED_FLOOR:.2%} (both stages must meet this)")
+            print(f"  Floor: {COMBINED_FLOOR:.2%} (both author and title must meet this)")
+            print(f"  Title floor: {TITLE_FLOOR:.2%} (title must meet this; incentivizes rare-token boosts)")
             print(f"  Threshold: {COMBINED_THRESHOLD:.2%} (combined score must meet this)")
 
         # Iterate through all BNF records
@@ -84,8 +86,8 @@ class CombinedMatcher:
             stage1_scores = pipeline.get_stage1_scores(bnf_id) or {}
             stage2_scores = pipeline.get_stage2_scores(bnf_id) or {}
 
-            # Filter pairs based on combined scoring
-            combined_matches = []  # List of (book_uri, combined_score) tuples
+            # Collect all candidate pairs that pass floor checks
+            candidate_pairs = []  # List of (book_uri, author_score, title_score) tuples
             for book_uri in stage2_books:
                 book = pipeline.openiti_index.get_book(book_uri)
                 if book is None:
@@ -109,20 +111,40 @@ class CombinedMatcher:
                 if author_score < COMBINED_FLOOR or title_score < COMBINED_FLOOR:
                     continue
 
-                # Gate 4: Combined score must be >= COMBINED_THRESHOLD
-                combined_score = (author_score + title_score) / 2.0
-                if combined_score >= COMBINED_THRESHOLD:
-                    combined_matches.append((book_uri, combined_score))
+                # Gate 4: Title must be >= TITLE_FLOOR to ensure rare-token boosted matches dominate weak-author cases
+                # This filters pairs where both scores are in the mediocre range (0.80-0.90)
+                # and incentivizes high-quality title matches (with rare tokens) over weak author matches
+                if title_score < TITLE_FLOOR:
+                    continue
 
-            # Normalize scores: divide all by max so best score = 1.0
+                candidate_pairs.append((book_uri, author_score, title_score))
+
+            # Normalize combined scores and apply threshold
+            combined_matches = []
+            if candidate_pairs:
+                # Calculate combined scores and find max
+                combined_scores = [(author_score + title_score) / 2.0 for _, author_score, title_score in candidate_pairs]
+                max_combined = max(combined_scores)
+
+                # Filter by threshold; only normalize if max > 1.0 to avoid upweighting poor candidates
+                for (book_uri, _, _), combined_score in zip(candidate_pairs, combined_scores):
+                    if max_combined > 1.0:
+                        # Normalize only if top score exceeds 1.0 (rare token boost caused high score)
+                        normalized_score = combined_score / max_combined
+                    else:
+                        # Keep raw score (already in [0,1] range)
+                        normalized_score = combined_score
+
+                    if normalized_score >= COMBINED_THRESHOLD:
+                        combined_matches.append((book_uri, normalized_score))
+
+            # Sort by normalized score descending (best first)
             if combined_matches:
-                max_score = max(score for _, score in combined_matches)
-                normalized_matches = [(uri, score / max_score) for uri, score in combined_matches]
-                # Sort by normalized score descending (best first)
-                normalized_matches.sort(key=lambda x: x[1], reverse=True)
-                # Store URIs in ranked order
-                ranked_uris = [uri for uri, _ in normalized_matches]
+                combined_matches.sort(key=lambda x: x[1], reverse=True)
+                ranked_uris = [uri for uri, _ in combined_matches]
                 pipeline.set_stage3_result(bnf_id, ranked_uris)
+                # Store normalized combined scores for debugging
+                pipeline.set_stage3_scores(bnf_id, {uri: score for uri, score in combined_matches})
             else:
                 pipeline.set_stage3_result(bnf_id, [])
 

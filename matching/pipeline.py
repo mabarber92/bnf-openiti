@@ -66,6 +66,7 @@ class MatchingPipeline:
         self._stage2_results = {}  # {BNF_ID: [book_URIs]}
         self._stage2_scores = {}   # {BNF_ID: {book_URI: score}}
         self._stage3_results = {}  # {BNF_ID: [book_URIs where author matches]}
+        self._stage3_scores = {}   # {BNF_ID: {book_URI: normalized_combined_score}}
         self._classified = {}      # {BNF_ID: tier}
 
         # Pipeline stages (pluggable)
@@ -143,6 +144,14 @@ class MatchingPipeline:
     def get_stage3_result(self, bnf_id: str) -> list[str]:
         """Retrieve Stage 3 results for a BNF record."""
         return self._stage3_results.get(bnf_id, [])
+
+    def set_stage3_scores(self, bnf_id: str, scores: dict) -> None:
+        """Stage 3 writes normalized combined scores."""
+        self._stage3_scores[bnf_id] = scores
+
+    def get_stage3_scores(self, bnf_id: str) -> dict:
+        """Retrieve Stage 3 normalized combined scores for a BNF record."""
+        return self._stage3_scores.get(bnf_id, {})
 
     def set_classification(self, bnf_id: str, tier: str) -> None:
         """Classifier writes confidence tier."""
