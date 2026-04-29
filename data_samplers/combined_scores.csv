@@ -1,0 +1,12 @@
+bnf_id,expected_uri,matched_uri,is_correct,rank,author_score,title_score,combined_score
+OAI_10030933,0843IbnKhatibNasiriyya.DurrMuntakhab,0660IbnCadim.BughyatTalab,False,1,0.9350000000000002,1.092,1.0
+OAI_10030933,0843IbnKhatibNasiriyya.DurrMuntakhab,0843IbnKhatibNasiriyya.DurrMuntakhab,True,2,0.8580000000000001,1.032,0.9324124321657622
+OAI_10882524,0845Maqrizi.Mawaciz,0845Maqrizi.Mawaciz,True,1,1.1,1.008,1.0
+OAI_10884186,0845Maqrizi,0732AbuFida.MukhtasarFiAkhbar,False,1,1.012,1.2,1.0
+OAI_10884191,0845Maqrizi.Mawaciz,0845Maqrizi.Mawaciz,True,1,1.1,1.008,1.0
+OAI_11000434,0685NasirDinBaydawi.AnwarTanzil,0685NasirDinBaydawi.AnwarTanzil,True,1,1.1,1.2,1.0
+OAI_11000520,0428AbuHusaynQuduri.Mukhtasar,0428AbuHusaynQuduri.Mukhtasar,True,1,1.1,1.2,1.0
+OAI_11000947,0874IbnTaghribirdi.NujumZahira,0874IbnTaghribirdi.NujumZahira,True,1,1.0230000000000001,1.0439999999999998,1.0
+OAI_11000949,0911Suyuti.HusnMuhadara,0911Suyuti.HusnMuhadara,True,1,0.9460000000000001,1.152,1.0
+OAI_11000954,0845Maqrizi.Mawaciz,0845Maqrizi.Mawaciz,True,1,1.1,1.008,1.0
+OAI_11001068,0697IbnWasil.MufarrijKurub,0697IbnWasil.MufarrijKurub,True,1,1.1,1.2,1.0

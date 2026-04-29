@@ -153,4 +153,19 @@ if __name__ == '__main__':
     print(f"  TITLE_RARE_TOKEN_BOOST_FACTOR = {best_f1['title_boost']}")
     print(f"  => F1: {best_f1['f1']:.1%}, Precision: {best_f1['precision']:.1%}, Recall: {best_f1['recall']:.1%}")
 
+    # Export full results to CSV
+    import csv
+    csv_path = 'parameter_sweep_results.csv'
+    with open(csv_path, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['combined_thresh', 'author_boost', 'title_boost', 'correct', 'candidates', 'precision', 'recall', 'f1'])
+        writer.writeheader()
+        writer.writerows(sorted(results, key=lambda x: x['precision'], reverse=True))
+    print(f"\nFull results saved to: {csv_path}")
+
+    # Analyze recall variance
+    recalls = set(r['recall'] for r in results)
+    precisions = set(r['precision'] for r in results)
+    print(f"\nRecall values observed: {sorted(recalls)}")
+    print(f"Precision range: {min(precisions):.1%} to {max(precisions):.1%}")
+
     print(f"\n{'='*100}")

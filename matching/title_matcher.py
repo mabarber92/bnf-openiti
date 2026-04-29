@@ -164,7 +164,6 @@ def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy
             candidates = book_title_by_script.get(script)
             if not candidates:
                 continue
-
             # Filter and normalize all candidates for this script
             normalized_candidates = []
             for book_title in candidates:
