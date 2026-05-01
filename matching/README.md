@@ -1,211 +1,169 @@
-# BNF–OpenITI Manuscript Matching Pipeline
+# BNF–OpenITI Manuscript Matching: Stage 6
 
-This document describes the architectural decisions and parameter choices for fuzzy-matching BNF manuscript records to OpenITI books.
+This document describes the design decisions and parameter choices for the fuzzy-matching pipeline (Stage 6) that matches BNF manuscript records to OpenITI books.
 
-## Overview
+For end-to-end pipeline documentation including CLI commands, output format, and validation, see [PIPELINE.md](../PIPELINE.md#stage-6--matching-pipeline).
 
-The pipeline matches BNF bibliographic records to OpenITI manuscripts through a three-stage process:
-
-1. **Stage 1 (Author Matching)**: Fuzzy-match BNF creator names to OpenITI author URIs
-2. **Stage 2 (Title Matching)**: Fuzzy-match BNF titles to OpenITI book URIs
-3. **Stage 3 (Combined Scoring)**: Form valid author+book pairs and apply combined thresholds
-
-Each stage uses parametrized fuzzy matching (token set ratio from fuzzywuzzy) with optional IDF-weighted boosting for rare tokens.
+---
 
 ## Fuzzy Matching Strategy
 
 ### Token Set Ratio
 
-We use `fuzzywuzzy.fuzz.token_set_ratio()` for all matching because it:
-- Handles partial matches (e.g., "ibn Muhammad Ahmad al-Quduri" matches "Ahmad al-Quduri")
-- Ignores token order (e.g., "al-Quduri Ahmad" ≈ "Ahmad al-Quduri")
-- Provides consistent scores across different name/title orderings
+All fuzzy matching uses `fuzzywuzzy.fuzz.token_set_ratio()`, which:
+- Handles partial name matches (a short query fully contained in a longer string scores 100)
+- Is insensitive to token order
+- Works well against long concatenated candidate strings
 
-### Component Concatenation
+The tradeoff is that `token_set_ratio` scores any short query 100 against a longer string that contains it — "Muhammad" scores 100 against any author name. IDF weighting (see below) is the primary mechanism for suppressing these common-token false positives.
 
-Rather than matching individual name components separately, we concatenate all variants within a script into a single string:
+### Variant Concatenation
 
-**Old (per-component) approach:**
+All OpenITI name/title variants within a script (Latin or Arabic) are concatenated into a single string before scoring. This means the full author/title profile is matched at once, not individual fragments:
+
 ```
-BNF author: "Ahmad ibn Muhammad al-Quduri"
-OpenITI authors: ["Ahmad", "Muhammad", "al-Quduri", "al-Qudu_ri"]
-→ Best match: "Muhammad" @ 100% (too permissive—common name)
-```
-
-**New (concatenated) approach:**
-```
-BNF author: "Ahmad ibn Muhammad al-Quduri" 
-OpenITI author variants: ["Ahmad", "Muhammad", "al-Quduri", "al-Qudu_ri"]
-→ Concatenated: "ahmad muhammad al quduri al qudu ri"
-→ Best match: Full concatenation @ 100% (captures full profile)
+BNF author:  "Ahmad ibn Muhammad al-Quduri"
+OpenITI variants (Latin): ["Ahmad", "Muhammad", "Quduri", "Qudu_ri"]
+→ Concatenated: "ahmad muhammad quduri qudu ri"
+→ Fuzzy score against full profile; IDF boost applied based on matched rare tokens
 ```
 
-The concatenation approach:
-1. Collects all name/title variants (Latin and Arabic separately)
-2. Normalizes each variant (diacritics, CamelCase splitting, lowercasing)
-3. Joins them with spaces into a single string
-4. Performs one fuzzy match against the normalized BNF record
-5. Applies IDF boost to the final score
+---
 
-**Why this matters**: Matching against full concatenated profiles prevents common name fragments (e.g., "Muhammad") from generating false positives. The full profile name is rarer and more distinctive, enabling true discrimination.
+## Two-Tier IDF Design
 
-## Normalization
+The core precision mechanism. IDF (Inverse Document Frequency) measures token rarity: tokens appearing in few author names / book titles have high IDF and are strongly discriminative.
 
-Normalization is applied consistently at both BNF and OpenITI sides before fuzzy matching:
+### The Problem Being Solved
 
-1. **CamelCase splitting** (OpenITI only): "PolyMorphism" → "poly morphism"
-   - Applied only to OpenITI author/book slugs
-   - **Never** applied to BNF fields (prevents mangling all-caps author names into individual characters)
-   
-2. **OpenITI-specific conversions**: "Ayn" → "ayn", "Alif-Lam" → "al"
+`token_set_ratio("muhammad", "ahmad muhammad al-quduri") = 100` — common tokens cause false positives. A raw threshold cannot distinguish a genuine match on a distinctive name from one that only shares "Muhammad".
 
-3. **Diacritic removal**: "Qudūrī" → "qudu ri"
+### The Solution: Two Tiers
 
-4. **Lowercasing**: Normalize to single case
+**Tier 1 — Recall (entry threshold):**
+Uses `combined_idf` = sum of IDF weights for **all** matched tokens. An author passes Stage 1 if `raw_score × combined_idf_boost ≥ AUTHOR_THRESHOLD`. This keeps common-name authors (e.g. "Muhammad ibn Ahmad") in the pool so they can be disambiguated by title at Stage 2.
 
-**Critical fix**: The IDF weighting script must apply the same normalization as the matching pipeline before tokenizing. Without this, rare-token detection fails (e.g., "quduri" not found if only "Qudūrī" was tokenized).
+**Tier 2 — Precision (stored score):**
+The score forwarded to Stage 3 uses `rare_idf` = sum of IDF for tokens with `IDF ≥ TOKEN_RARITY_THRESHOLD` only. Authors who matched only on common tokens store `rare_idf = 0 → boost = 1.0`. Their score remains at the raw fuzzy level and fails `COMBINED_FLOOR` at Stage 3.
 
-## Token-Level IDF Weighting
+**Boost formula** (same structure for both tiers):
 
-### Philosophy
-
-IDF (Inverse Document Frequency) weighting boosts matches containing rare tokens while penalizing nothing:
-- **If rare tokens matched**: Multiply score by boost factor (e.g., 85 * 1.15 = 97.75)
-- **If only common tokens matched**: Keep score unchanged (no penalty)
-
-This asymmetric approach encourages distinctive matches while allowing legitimate common-name-only matches through.
-
-### Configuration
-
-From `config.py`:
-```python
-USE_AUTHOR_IDF_WEIGHTING = True
-USE_TITLE_IDF_WEIGHTING = True
-TOKEN_RARITY_THRESHOLD = 2.5  # IDF ≥ 2.5 triggers boost (≈8% document frequency)
-RARE_TOKEN_BOOST_FACTOR = 1.15  # 15% boost
+```
+boost = 1 + min(idf_sum / SCALE, MAX_BOOST - 1)
 ```
 
-### Implementation Details
+| Parameter | Author | Title |
+|-----------|--------|-------|
+| `IDF_BOOST_SCALE` | 15.0 | 20.0 |
+| `MAX_BOOST` | 1.3 | 1.4 |
 
-- **IDF Scope**: Computed from full OpenITI corpus (all 8,000+ authors and 200,000+ books), not test subset
-- **Token Definition**: Whitespace-separated terms after normalization
-- **Rarity Check**: After fuzzy matching, tokenize both BNF record and matched OpenITI record, check if any matched token has IDF ≥ threshold
-- **Score Clamping**: **Removed**. Scores can exceed 100 when rare tokens apply boost (e.g., 87 * 1.15 = 100.05). This is intentional—it creates discrimination between marginally-boosted and significantly-boosted matches.
+Title scale is wider (20 vs 15) because title-domain IDF values are higher, preventing a single token from immediately hitting the ceiling.
 
-### Why It Works
+### IDF Reference Values
 
-On the 11-record test set:
-- Without IDF boost (boost=1.05): 8 correct, 2 FP (80% precision)
-- With IDF boost (boost=1.15): 9 correct, 1 FP (90% precision)
+**Author name domain** (IDF computed from OpenITI author names):
 
-The single FP (Nasai book) is suppressed by rare-token weighting on the correct author (Maqrizi). By boosting the already-strong Maqrizi match, it edges past the Nasai alternative in combined scoring.
+| Token | IDF | Status |
+|-------|-----|--------|
+| ibn | ≈1.06 | common — no boost |
+| al | ≈1.25 | common — no boost |
+| muhammad | ≈1.69 | common — no boost |
+| abd | ≈3.92 | borderline — excluded at threshold 3.5 |
+| ali | ≈4.01 | borderline — excluded at threshold 3.5 |
+| khatib | ≈5.56 | rare — boost applies |
+| hajar | ≈6.59 | rare — boost applies |
+| waqidi | ≈7.51 | rare — boost applies |
 
-## Threshold Configuration
+**Title domain** (IDF computed from OpenITI book titles):
 
-### Stage 1 & 2 (Author & Title)
+| Token | IDF | Status |
+|-------|-----|--------|
+| kitab | ≈3.70 | below threshold — no boost |
+| sharh | ≈3.68 | below threshold — no boost |
+| muhammad | ≈6.12 | rare in titles — boost applies |
+| futuh | ≈7.37 | rare — boost applies |
+| sham | ≈6.86 | rare — boost applies |
 
-```python
-AUTHOR_THRESHOLD = 0.80  # Minimum fuzzy match score for author candidates
-TITLE_THRESHOLD = 0.85   # Minimum fuzzy match score for title candidates
+Note: "waqidi" does not appear in OpenITI book titles (IDF_title = 0), so author-domain rarity does not carry over to title matching.
+
+---
+
+## Creator Field Reweighting (Stage 1, Phase 2)
+
+After initial author scoring, a second pass re-blends scores using the BNF `creator_lat`/`creator_ara` fields as an additional signal.
+
+**Trigger:** At least one matched author must share >1 rare token with the BNF creator field. Single-token triggers are too noisy; genuine attribution matches typically share a distinctive name fragment *and* a toponym or epithet.
+
+**Per-variant scoring:** Each OpenITI name variant is scored independently:
+```
+variant_score = |openiti_rare_tokens ∩ bnf_creator_tokens| / |openiti_rare_tokens|
+```
+Best-variant wins. This prevents denominator inflation from accumulating tokens across unrelated nisba/laqab variants.
+
+**Blended score:**
+```
+score = raw_score × AUTHOR_FULL_STRING_WEIGHT (0.6)
+      + creator_overlap × AUTHOR_CREATOR_FIELD_WEIGHT (0.4)
+```
+Applied before the rare-IDF boost, so the rare-token signal still governs the final Stage 3 score.
+
+`AUTHOR_CREATOR_IDF_THRESHOLD = 4.5` (higher than `TOKEN_RARITY_THRESHOLD = 3.5`) excludes tokens like "abd" and "ali" which add noise to creator matching despite being above the general rarity threshold.
+
+---
+
+## Combined Scoring (Stage 3)
+
+Forms (author, book) pairs and applies four sequential gates:
+
+1. Book's `author_uri` must appear in Stage 1 results
+2. Both `author_score` and `title_score` must be `≥ COMBINED_FLOOR (0.80)` (raw, pre-normalisation)
+3. `title_score ≥ TITLE_FLOOR (0.90)`
+4. Normalised weighted score `≥ COMBINED_THRESHOLD (0.94)`
+
+**Normalised weighted score:**
+
+Both scores are normalised by their per-record maximum first, then combined:
+```
+combined = 0.3 × (author_score / max_author) + 0.7 × (title_score / max_title)
 ```
 
-These are soft gates that filter obvious non-matches but allow marginal candidates forward. Real filtering happens at Stage 3.
+Title is weighted 0.7 because it is the stronger discriminator once the author stage has already narrowed the candidate pool. Normalisation ensures IDF boost magnitudes on different records do not distort the comparison.
 
-**Rationale**: 
-- 0.80 for authors allows for typos, transliteration variants, and abbreviated names
-- 0.85 for titles is stricter (titles are more distinctive) but still permits variant spellings
+---
 
-### Stage 3 (Combined Scoring)
+## Validation
 
-```python
-COMBINED_THRESHOLD = 0.92  # Average of author+title scores must meet this
-COMBINED_FLOOR = 0.80      # Both author AND title must be ≥ this individually
+```bash
+python matching/scripts/validate_correspondences_only.py
 ```
 
-Combined scoring prevents weak-author/strong-title or weak-title/strong-author pairs from matching. Both dimensions must have reasonable confidence.
+Evaluates against `data_samplers/correspondence.json` (16 known BNF–OpenITI pairs including composite manuscripts). Outputs per-record status and aggregate P/R/F1. Correctly handles records with multiple expected matches (majāmiʿ).
 
-## Parameter Optimization Results
+**Current results:** 100% precision; recall limited to records with usable title evidence.
 
-### Test Set (11 records from correspondence.json)
+---
 
-Tested 25 combinations of:
-- AUTHOR_THRESHOLD: [0.75, 0.80, 0.85, 0.90, 0.95]
-- RARE_TOKEN_BOOST_FACTOR: [1.05, 1.10, 1.15, 1.20, 1.30]
+## File Structure
 
-**Key finding**: Boost factor is the only meaningful variable. Author threshold has zero effect.
-
-**Results by boost factor:**
-| Boost | Correct | FP | Precision | Recall |  F1  |
-|-------|---------|----|-----------|---------| -----|
-| 1.05  |    8    | 2  |   80.0%   |  72.7%  | 76.2%|
-| 1.10  |    8    | 2  |   80.0%   |  72.7%  | 76.2%|
-| **1.15** | **9**    | **1**  |   **90.0%**   |  **81.8%**  | **85.7%**|
-| 1.20  |    9    | 1  |   90.0%   |  81.8%  | 85.7%|
-| 1.30  |    9    | 1  |   90.0%   |  81.8%  | 85.7%|
-
-**Selected**: AUTHOR_THRESHOLD=0.80, RARE_TOKEN_BOOST_FACTOR=1.15
-
-- Achieves 90% precision with 81.8% recall
-- Suppresses 1 false positive (Nasai) without losing any correct matches
-- No benefit from pushing boost beyond 1.15 on this test set
-- No benefit from adjusting author threshold (problem is title discrimination, not author matching)
-
-### Why Optimization Plateaued
-
-Both failing records have root causes at the title-matching stage, not author:
-- **OAI_10884186 (FP Nasai)**: Correct author (Maqrizi) identified, but no matching Maqrizi titles in BNF. Nasai book matches on title, forming a false positive pair.
-- **OAI_11000928 (Missing)**: Correct author identified, but no stage-3 pairs formed because no titles matched.
-
-Increasing author thresholds would not help—the weak authors pass through at even 0.95 because they're strong enough. The only way to fix these is to improve title matching or add title-side confidence checks.
-
-## Implementation Notes
-
-### File Structure
-
-- **`config.py`**: Centralized configuration for all thresholds and parameters
-- **`author_matcher.py`**: Stage 1 matching with concatenated components and IDF weighting
-- **`title_matcher.py`**: Stage 2 matching (same architecture as author_matcher)
-- **`combined_matcher.py`**: Stage 3 pair formation and combined scoring
-- **`classifier.py`**: Final classification (matched / unmatched / low confidence)
-- **`normalize.py`**: Normalization pipeline with optional CamelCase splitting
-
-### Key Classes
-
-**AuthorMatcher**:
-- `_match_author_candidate()`: Concatenates all OpenITI author variants, performs single fuzzy match
-- `_build_token_idf_weights()`: Computes IDF for all author tokens in OpenITI corpus
-- `_apply_idf_boost()`: Checks for rare tokens and boosts score if found
-
-**TitleMatcher**: Identical to AuthorMatcher but operates on book titles and URIs
-
-### Parallelization
-
-All stages support parallel processing via `use_parallel=True`, but for validation and debugging, set `use_parallel=False` for reproducible sequential execution.
-
-## Future Work
-
-### Title-Stage Improvements
-
-Current approach matches titles character-by-character. Potential improvements:
-1. **Semantic similarity**: Embed BNF titles and OpenITI summaries, use cosine distance
-2. **Subject-field matching**: Compare Dublin Core subject fields (language, era, topic)
-3. **Minimum length filtering**: Reject matches on very short titles (e.g., "History" or "Commentary")
-
-### Remaining FP Cases
-
-The single remaining FP on the 11-record set is likely fixable by:
-- Adding a confidence floor on title matches (only combine strong author + strong title)
-- Implementing subject-field matching to reject cross-topical pairs
-
-### Broader Validation
-
-These parameters were optimized on 11 ground-truth records. Before deployment:
-1. Validate on the 500-record BNF sample for broader coverage
-2. Perform manual review of matched and false-positive pairs
-3. Adjust thresholds if systematic patterns emerge (e.g., all FPs are translation works)
-
-## References
-
-- **fuzzywuzzy documentation**: https://github.com/seatgeek/fuzzywuzzy
-- **Token Set Ratio**: Implemented as set comparison of tokens, ignoring duplicates and order
-- **IDF Formula**: `log(total_documents / documents_containing_token)`
+```
+matching/
+├── config.py                  All tunable parameters with inline documentation
+├── pipeline.py                Orchestrator: registers and runs stages
+├── author_matcher.py          Stage 1: two-tier IDF author matching
+├── title_matcher.py           Stage 2: continuous IDF title matching
+├── combined_matcher.py        Stage 3: normalised weighted combined scoring
+├── classifier.py              Stage 4: confidence tier assignment
+├── normalize.py               Normalization (diacritic stripping, CamelCase split)
+├── normalize_diacritics.py    Table-driven diacritic conversion (generated by Stage 3)
+├── candidate_builders.py      Extract author/book name candidates by script
+├── fuzzy_scorer.py            Caching wrapper for fuzzywuzzy
+├── bnf_index.py               Global BNF candidate deduplication index
+├── openiti_index.py           OpenITI book/author lookup index
+└── scripts/
+    ├── validate_correspondences_only.py   Primary validation script
+    ├── validate_author_matching.py        Stage 1 standalone validation
+    ├── export_author_scores.py            Book-centric CSV: per-stage scores + IDF flags
+    ├── export_combined_scores.py          Stage 3 scores to CSV
+    ├── debug_author_scores.py             Per-record Stage 1 inspection
+    └── debug_combined_scores.py           Per-record Stage 3 inspection
+```

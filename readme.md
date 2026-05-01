@@ -30,122 +30,83 @@ The pipeline also addresses a research question: how much of the OpenITI corpus 
 ### Key design principles
 - **Every field is Optional.** No record is dropped for missing data; it receives fewer signals and a lower confidence ceiling.
 - **URI decomposition is the primary structured signal.** Even for records with no additional metadata, the URI encodes death year, author slug, and title slug.
-- **Two-script fuzzy matching.** Latin-track (normalised ALA-LC vs camel-split URI) and Arabic-track (URI converted to consonantal Arabic vs normalised BNF Arabic fields) run independently; best score wins.
-- **Embeddings are for retrieval, not clustering.** The embedding stage generates candidates; fuzzy matching and human review resolve them.
-- **Output is many-to-many.** One BNF record may produce multiple output rows (composite manuscripts); one OpenITI URI may match multiple BNF records (multiple manuscript copies of the same work).
+- **Two-script fuzzy matching.** Latin-track (normalised ALA-LC vs camel-split URI) and Arabic-track run independently; best score wins.
+- **Output is many-to-many.** One BNF record can legitimately match multiple OpenITI books (composite manuscripts / majāmiʿ); one OpenITI URI can match multiple BNF records (multiple manuscript copies of the same work).
 
 ### Pipeline stages
 
-#### Stage 0 — Parse and structure
-Parse BNF XML and OpenITI YML files into structured objects with consistent `None` for missing fields. Separate Arabic-script content from Latin-script content by Unicode block. Flag probable composite manuscripts heuristically (multiple `dc:creator` entries, enumerated works in description). Collect WorldCat links from version YMLs and attach to the parent book record.
+#### Stages 1–2 — OpenITI preparation (one-off per corpus version)
+Parse OpenITI YML files into structured JSON (`data/openiti_<version>.json`), then enrich with Wikidata metadata for authors who died before 400 AH.
 
-#### Stage 1 — Wikidata bridge (pre-400 AH records only)
-Where OpenITI author records carry a Wikidata ID and the BNF linked data carries a matching Wikidata property, use this as a high-confidence author-level link. Within confirmed author clusters, match by title.
+#### Stages 3–5 — Manuscript library preparation
+Survey the BNF corpus to build a boilerplate map and diacritic conversion table (Stage 3), apply manual review of the boilerplate list (Stage 4), then parse all BNF XML into `outputs/bnf_parsed.json` (Stage 5).
 
-#### Stage 2 — Two-track fuzzy matching
-For every candidate pair, run both tracks and take the maximum score:
-- **Latin track:** camel-split URI components → compare against diacritic-stripped BNF transliteration using token sort ratio
-- **Arabic track:** URI components → best-effort consonantal Arabic (character map, digraphs first) → `normalize_ara_heavy` on both sides → token sort ratio
+#### Stage 6 — Fuzzy matching pipeline
+Three-stage filtered fuzzy matching with token-level IDF weighting:
 
-Output: scored candidate pairs with evidence flags indicating which fields contributed and which tracks fired.
+1. **Author matching** — BNF creator fields vs OpenITI author name variants. Two-tier IDF: permissive entry threshold (allows common-name authors through for title disambiguation), precision scoring (rare tokens only, so common-name-only matches fail Stage 3).
+2. **Title matching** — BNF title fields vs OpenITI book title variants. Continuous IDF boost on rare title tokens.
+3. **Combined scoring** — forms (author, book) pairs and applies floor checks + normalised weighted threshold (`0.3 × author_norm + 0.7 × title_norm ≥ 0.94`).
 
-#### Stage 3 — Embedding retrieval
-Build text representations for both sides and retrieve top-k BNF candidates per OpenITI book using cosine similarity. Four representations are compared experimentally:
-- (a) All fields concatenated
-- (b) Latin-script fields only
-- (c) Arabic-script fields only
-- (d) URI decomposition only (the minimal-metadata case)
+Validated at **100% precision** on the correspondence test set. See [PIPELINE.md Stage 6](PIPELINE.md#stage-6--matching-pipeline) and [matching/README.md](matching/README.md) for full design documentation.
 
-Primary model: **BGE-M3** (multilingual, strong Arabic support). Comparison model: `paraphrase-multilingual-mpnet-base-v2`. Embeddings are cached after first computation. At 9k × 32k scale, brute-force cosine is sufficient; FAISS Flat index used for learning the API.
-
-Evaluation metric: **Mean Reciprocal Rank (MRR@10)** against known pairs from `data_samplers/correspondence.json`.
-
-#### Stage 4 — Score fusion and output
-Merge candidates from Stages 1–3, deduplicate, and emit a row per (BNF record, OpenITI URI) pair:
-
-```
-bnf_id          str     — filename stem of the BNF XML
-openiti_uri     str     — book-level URI (e.g. 0685NasirDinBaydawi.AnwarTanzil)
-confidence      float   — fused score, 0–1
-match_source    list    — stages and tracks that contributed
-evidence        dict    — per-field signal flags
-signal_count    int     — number of fields that provided signal
-relation_type   str     — "direct" | "partial_commentary" | "parent_of_matched"
-requires_review bool    — flagged for human validation
-```
+#### Stage 7 — Clustering and resolution
+Not yet implemented. Will handle multi-match resolution and manual review assignment.
 
 ---
 
 ## Module architecture
 
-The pipeline is built from independent, reusable modules. Parsers in particular are designed to be bolted into other pipelines without modification.
-
 ```
 bnf_openiti/
 ├── parsers/
-│   ├── openiti.py      OpenITIYml, OpenITIMetaYmls + data classes
-│   └── bnf.py          BNFXml, BNFMetadata + BNFRecord dataclass
-├── normalize/
-│   ├── latin.py        normalize_latin(), camel_split()
-│   └── arabic.py       normalize_arabic(), uri_to_arabic()
-├── match/
-│   └── fuzzy.py        FuzzyMatcher
-├── embed/
-│   └── embedder.py     Embedder, EmbeddingIndex
-└── pipeline.py         Orchestration
+│   ├── openiti.py          OpenITI YML → typed dataclasses (author/book/version)
+│   └── bnf.py              BNF OAI-PMH XML → BNFRecord dataclass
+├── matching/
+│   ├── config.py           All tunable thresholds and parameters
+│   ├── pipeline.py         Stage orchestration
+│   ├── author_matcher.py   Stage 1: two-tier IDF author matching
+│   ├── title_matcher.py    Stage 2: continuous IDF title matching
+│   ├── combined_matcher.py Stage 3: normalised weighted combined scoring
+│   ├── classifier.py       Stage 4: confidence tier assignment
+│   ├── normalize.py        Shared normalisation (diacritics, CamelCase, conversions)
+│   └── scripts/            Validation and debugging scripts
+├── utils/
+│   ├── parse_openiti.py    Stage 1 runner
+│   ├── enrich_wikidata.py  Stage 2 runner
+│   ├── survey_bnf.py       Stage 3 runner
+│   └── parse_bnf.py        Stage 5 runner
+└── run_matching_pipeline.py  Stage 6 CLI entry point
 ```
 
 ### Parser classes
 
-**`OpenITIYml(path)`** — parses a single OpenITI YML file. Detects its type (author / book / version) from the number of dot-separated components in the filename stem, then returns the appropriate typed dataclass (`OpenITIAuthorData`, `OpenITIBookData`, `OpenITIVersionData`). All fields are `Optional`; placeholder template text is treated as absent.
+**`parsers/openiti.py`** — parses a single OpenITI YML file, detects type (author / book / version), and returns the appropriate typed dataclass. All fields are `Optional`; placeholder template text is treated as absent.
 
-**`BNFXml(path)`** — parses a single BNF OAI-PMH XML file and returns a `BNFRecord` dataclass. Arabic-script and Latin-script content are separated by Unicode block regex and stored in distinct fields. Some data will be stored in multiple fields (e.g. a title appearing in both `dc:title` and `dc:description`) — this is intentional; downstream stages decide what to use.
+**`parsers/bnf.py`** — parses a BNF OAI-PMH XML file and returns a `BNFRecord` dataclass. Arabic-script and Latin-script content are separated by Unicode block into distinct fields. A record may carry the same data in multiple fields (e.g. title in both `dc:title` and `dc:description`) — downstream stages decide what to use.
 
-**`OpenITIMetaYmls(directory)`** — walks a directory, instantiates `OpenITIYml` for each file, and indexes results into three dicts keyed by URI: `.authors`, `.books`, `.versions`. Exposes helper methods: `get_book(uri)`, `get_author_for_book(book_uri)`, `get_worldcat_links(book_uri)`.
+### Normaliser (`matching/normalize.py`)
 
-**`BNFMetadata(directory)`** — walks a directory tree of XML files, instantiates `BNFXml` for each, and indexes as `.records` keyed by BNF ID. Exposes `get(bnf_id)` and iteration.
-
-### Normaliser functions (stateless, importable independently)
-
-- `normalize_latin(text)` — strips ALA-LC diacritics (NFD decomposition → remove combining characters), lowercases, collapses whitespace
-- `camel_split(slug)` — splits a URI camel-case component into word tokens (`NasirDinBaydawi` → `["Nasir", "Din", "Baydawi"]`)
-- `normalize_arabic(text)` — wraps `openiti.helper.ara.normalize_ara_heavy`: strips harakat, normalises alef variants, normalises hamza, normalises tāʾ marbūṭa
-- `uri_to_arabic(tokens)` — maps camel-split URI tokens to consonantal Arabic using a character-level table (digraphs: Sh→ش, Th→ث, Kh→خ, Dh→ذ; singles: B→ب, D→د, etc.). Emphatic ambiguity (ص/س, ض/د) is absorbed by fuzzy matching downstream.
-
-### Match and embed classes
-Defined in their respective modules; take parsed collection objects as inputs. See module docstrings for interface.
+`normalize_for_matching(text, split_camelcase, is_openiti)` — the single entry point used by all matching stages:
+1. Apply table-driven diacritic conversions (if `USE_DIACRITIC_CONVERSION_TABLE = True`)
+2. Split CamelCase if `split_camelcase=True` (used for OpenITI URI slugs, not BNF fields)
+3. NFD Unicode decomposition + remove combining characters
+4. Lowercase and collapse whitespace
 
 ---
 
-## TODO
+## Status
 
-### Phase 1 — Parsers and normalisers
-- [ ] Implement `OpenITIYml`: type detection, raw YML parser (check `openiti.helper.yml` first), typed dataclass output, placeholder-value filtering
-- [ ] Implement `BNFXml`: XML parsing, field extraction with `None` fallback, Arabic/Latin Unicode split, composite manuscript heuristic, `signal_count` computation
-- [ ] Implement `OpenITIMetaYmls`: directory walk, indexing, helper methods, WorldCat link attachment from version YMLs
-- [ ] Implement `BNFMetadata`: directory walk, XML discovery, indexing
-- [ ] Implement `normalize_latin()` and `camel_split()` in `normalize/latin.py`
-- [ ] Implement `normalize_arabic()` wrapper and `uri_to_arabic()` character map in `normalize/arabic.py`
-- [ ] Validate all parsers and normalisers against the known pair in `data_samplers/`
+Stages 1–6 are complete. The matching pipeline (Stage 6) has been validated on a curated test set of 16 BNF–OpenITI pairs (including composite manuscripts) achieving 100% precision, and runs on the full BNF corpus (~7,800 records) in ~20s with parallelization.
 
-### Phase 2 — Fuzzy matching
-- [ ] Implement `FuzzyMatcher`: two-track scoring (Latin + Arabic), evidence dict, max-score fusion
-- [ ] Tune score thresholds against known pair; extend ground-truth set if possible
-- [ ] Implement Wikidata bridge for pre-400 AH records
+Stage 7 (clustering and resolution of multi-match and ambiguous cases) is not yet implemented.
 
-### Phase 3 — Embeddings
-- [ ] Set up BGE-M3 embedding pipeline with output caching (avoid recomputation)
-- [ ] Define and build the four text representations per side (all-fields, Latin-only, Arabic-only, URI-only)
-- [ ] Implement cosine similarity retrieval (brute-force numpy + FAISS Flat for comparison)
-- [ ] Implement MRR@10 evaluation against known pairs
-- [ ] Run paraphrase-multilingual-mpnet as comparison model; record results
+## Next steps
 
-### Phase 4 — Pipeline and output
-- [ ] Implement score fusion across stages with provenance tracking
-- [ ] Handle composite manuscript expansion (one BNF ID → multiple output rows)
-- [ ] Implement output serialisation to correspondence format
-- [ ] End-to-end pipeline run on full dataset
-- [ ] Manual review of sample output; threshold adjustment
+- [ ] Run Stage 6 on the full BNF corpus and review output distribution
+- [ ] Manual spot-check of `matches_high_confidence.json` for systematic error patterns
+- [ ] Implement Stage 7: cluster multi-match records, route ambiguous cases to review
+- [ ] Investigate embedding-based retrieval as a recall-improvement layer for author-only records
 
 ---
 
