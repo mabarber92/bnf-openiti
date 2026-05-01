@@ -4,6 +4,9 @@ config.yml
 # Pipeline outputs — large data files, intermediate stores, run artifacts
 outputs/
 
+# Validation/debug CSV outputs — regenerable from matching/scripts/
+data_samplers/*.csv
+
 # Ad-hoc survey JSON files generated at project root during development
 full_survey*.json
 
