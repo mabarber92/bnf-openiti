@@ -64,30 +64,23 @@ def _build_token_idf_weights(books_candidates):
 
 def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuzzy_score):
     """
-    Weight a fuzzy score based on presence of rare tokens in the match.
+    Apply continuous rare-token IDF boost to a fuzzy title score.
 
-    If any matched token has IDF >= rarity_threshold: boost the score.
-    If no rare tokens: keep score as-is (no penalty, no boost).
+    Mirrors the author matching design: only tokens above TOKEN_RARITY_THRESHOLD
+    contribute to the boost, so common title words ("kitab", "sharh") provide no
+    lift while specific tokens ("futuh", "sham") do.
 
-    This allows common-only matches (e.g., "Mukhtasar" alone) to pass through,
-    but prioritizes matches with rare (specific) tokens.
+    boost = 1 + min(rare_idf_sum / TITLE_IDF_BOOST_SCALE, TITLE_MAX_BOOST - 1)
 
-    Parameters
-    ----------
-    norm_candidate : str
-        Normalized BNF title candidate
-    norm_title_str : str
-        Normalized OpenITI title string
-    idf_weights : dict
-        {token: idf_weight, ...}
-    fuzzy_score : float
-        Raw fuzzy match score (0-100)
+    A single rare token (e.g. "Muhammad" IDF=6.1) gets a modest boost (~1.31×).
+    Two rare tokens (e.g. "Futuh"=7.4 + "Sham"=6.9) approach TITLE_MAX_BOOST.
+    Zero rare tokens → boost=1.0 (no change; common-only matches pass through
+    but are not amplified, so they remain below TITLE_FLOOR at stage 3).
 
-    Returns
-    -------
-    float
-        Weighted fuzzy score (0-100 range)
+    Blocks matches with no token overlap entirely (returns 0).
     """
+    from matching.config import TOKEN_RARITY_THRESHOLD, TITLE_IDF_BOOST_SCALE, TITLE_MAX_BOOST
+
     candidate_tokens = set(norm_candidate.lower().split())
     title_tokens = set(norm_title_str.lower().split())
 
@@ -99,19 +92,11 @@ def _score_with_token_weighting(norm_candidate, norm_title_str, idf_weights, fuz
     if not matched_tokens:
         return 0
 
-    # Check if any matched token is rare (IDF >= rarity_threshold)
-    from matching.config import TOKEN_RARITY_THRESHOLD, TITLE_RARE_TOKEN_BOOST_FACTOR
+    rare_idf = sum(idf_weights.get(t, 0.0) for t in matched_tokens
+                   if idf_weights.get(t, 0.0) >= TOKEN_RARITY_THRESHOLD)
+    boost = 1 + min(rare_idf / TITLE_IDF_BOOST_SCALE, TITLE_MAX_BOOST - 1)
 
-    has_rare_token = any(idf_weights.get(t, 0.1) >= TOKEN_RARITY_THRESHOLD for t in matched_tokens)
-
-    if has_rare_token:
-        # Rare tokens present - boost the score to reward specificity
-        weighted_score = fuzzy_score * TITLE_RARE_TOKEN_BOOST_FACTOR
-    else:
-        # Only common tokens matched - accept score as-is, no penalty
-        weighted_score = fuzzy_score
-
-    return max(weighted_score, 0)  # Allow scores > 100 for rare token matches
+    return max(fuzzy_score * boost, 0)
 
 
 def _match_title_candidate(candidate, books_candidates, threshold, norm_strategy="fuzzy", idf_weights=None):

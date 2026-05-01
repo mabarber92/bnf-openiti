@@ -159,11 +159,6 @@ Examples:
         default=True,
         help="Print detailed progress (default: True)",
     )
-    parser.add_argument(
-        "--confidence-filtering",
-        action="store_true",
-        help="Enable confidence-dependent filtering in Stage 3",
-    )
 
     args = parser.parse_args()
 
@@ -186,7 +181,6 @@ Examples:
     print(f"BNF data: {bnf_path}")
     print(f"OpenITI corpus: {OPENITI_CORPUS_PATH}")
     print(f"Parallel processing: {args.parallel}")
-    print(f"Confidence filtering: {args.confidence_filtering}")
 
     # Load data
     print(f"\nLoading data...")
@@ -212,12 +206,7 @@ Examples:
     # Register stages
     pipeline.register_stage(AuthorMatcher(verbose=args.verbose, use_parallel=args.parallel))
     pipeline.register_stage(TitleMatcher(verbose=args.verbose, use_parallel=args.parallel))
-    pipeline.register_stage(
-        CombinedMatcher(
-            verbose=args.verbose,
-            use_confidence_filtering=args.confidence_filtering,
-        )
-    )
+    pipeline.register_stage(CombinedMatcher(verbose=args.verbose))
     pipeline.register_stage(Classifier(verbose=args.verbose))
 
     # Run pipeline

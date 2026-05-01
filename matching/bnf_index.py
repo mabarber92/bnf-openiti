@@ -42,22 +42,17 @@ class BNFCandidateIndex:
         print(f"Building BNF candidate indices ({len(self.bnf_records)} records)...")
 
         for bnf_id, record in tqdm(self.bnf_records.items(), desc="Indexing BNF"):
-            # Get raw candidates split by script (may contain mixed-script contamination)
             try:
                 author_cands = record.matching_candidates(norm_strategy="raw")
             except Exception:
-                # If even raw extraction fails, skip this record
                 continue
 
-            # Process Arabic candidates (using parametrized diacritic conversion or legacy normalization)
             for raw_candidate in author_cands.get("ara", []):
                 self._process_candidate(raw_candidate, bnf_id, "author", normalize_for_matching)
 
-            # Process Latin candidates (using parametrized diacritic conversion or legacy normalization)
             for raw_candidate in author_cands.get("lat", []):
                 self._process_candidate(raw_candidate, bnf_id, "author", normalize_for_matching)
 
-            # Title candidates (same logic)
             try:
                 title_cands = record.matching_candidates(norm_strategy="raw")
             except Exception:
@@ -68,6 +63,7 @@ class BNFCandidateIndex:
 
             for raw_candidate in title_cands.get("lat", []):
                 self._process_candidate(raw_candidate, bnf_id, "title", normalize_for_matching)
+
 
     def _process_candidate(self, raw: str, bnf_id: str, cand_type: str, normalize_fn) -> None:
         """Process a single candidate using parametrized normalization (diacritics or legacy)."""

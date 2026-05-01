@@ -37,8 +37,8 @@ test_bnf_records = {bnf_id: all_bnf[bnf_id] for bnf_id in expected_matches.keys(
 # Run pipeline
 print("Running pipeline with optimal parameters...")
 print(f"  COMBINED_THRESHOLD = {cfg.COMBINED_THRESHOLD}")
-print(f"  AUTHOR_RARE_TOKEN_BOOST_FACTOR = {cfg.AUTHOR_RARE_TOKEN_BOOST_FACTOR}")
-print(f"  TITLE_RARE_TOKEN_BOOST_FACTOR = {cfg.TITLE_RARE_TOKEN_BOOST_FACTOR}\n")
+print(f"  AUTHOR_IDF_BOOST_SCALE = {cfg.AUTHOR_IDF_BOOST_SCALE}, AUTHOR_MAX_BOOST = {cfg.AUTHOR_MAX_BOOST}")
+print(f"  TITLE_IDF_BOOST_SCALE = {cfg.TITLE_IDF_BOOST_SCALE}, TITLE_MAX_BOOST = {cfg.TITLE_MAX_BOOST}\n")
 
 pipeline = MatchingPipeline(test_bnf_records, openiti_data, verbose=False)
 pipeline.register_stage(AuthorMatcher(verbose=False, use_parallel=False))

@@ -2,30 +2,33 @@
 Matching pipeline configuration.
 
 Loads from config.yml (via utils/config.py) and provides matching-specific
-parameters. All tunable thresholds and parallelization settings centralized here
-for easy adjustment and reproducibility.
+parameters. All tunable thresholds and parallelization settings are centralised
+here for easy adjustment and reproducibility.
+
+Design philosophy
+-----------------
+The pipeline has three scored stages (author → title → combined). Each stage
+uses a fuzzy base score boosted by rare-token IDF weighting. The key design
+principle is a two-tier IDF approach:
+
+  Tier 1 (entry / recall): full combined_idf boost — ensures authors/titles
+    that share ANY token with the candidate are considered, even if the match
+    is weak. This keeps recall high at stage 1.
+
+  Tier 2 (scoring / precision): rare-token-only IDF boost — only tokens above
+    TOKEN_RARITY_THRESHOLD count toward the stored score. Matches that only
+    share common tokens (e.g. "Muhammad" alone) receive no boost, leaving their
+    score below COMBINED_FLOOR and failing at stage 3.
+
+This means parameter tuning should mainly be needed once per corpus type (OpenITI
+Arabic manuscript names). Switching to a different target corpus may require
+revisiting TOKEN_RARITY_THRESHOLD and the floor/threshold values.
 """
 
 from pathlib import Path
 from utils.config import load_config
 
-# Load pipeline config (required; will fail if config.yml missing)
 _PIPELINE_CONFIG = load_config()
-
-# ============================================================================
-# THRESHOLDS
-# ============================================================================
-
-# Stage 1 & 2 thresholds: filter out weak candidates early
-# Real filtering happens at Stage 3 (combined threshold)
-AUTHOR_THRESHOLD = 0.80  # Stage 1: BNF author → OpenITI author URIs
-TITLE_THRESHOLD = 0.85   # Stage 2: BNF titles → OpenITI book URIs
-
-# Stage 3 combined scoring: final filtering on author+title pairs
-# Optimized via threshold validation on 11-record validation set
-COMBINED_THRESHOLD = 0.93  # Combined (author_score + title_score) / 2 must meet this (balances recall vs FP suppression)
-COMBINED_FLOOR = 0.80      # Both author AND title scores must be >= this
-TITLE_FLOOR = 0.90         # Title score must be >= this to ensure rare-token boosted matches dominate weak-author cases
 
 # ============================================================================
 # DATA PATHS (derived from config.yml)
@@ -33,34 +36,32 @@ TITLE_FLOOR = 0.90         # Title score must be >= this to ensure rare-token bo
 
 DATA_DIR = Path("data")
 
-# OpenITI corpus path — infer from data/ directory
+
 def _get_openiti_corpus_path() -> Path:
-    """Find the OpenITI corpus JSON in data/ (e.g., openiti_corpus_2025_1_9.json)."""
     corpus_files = list(DATA_DIR.glob("openiti_corpus_*.json"))
     if corpus_files:
         return corpus_files[0]
     raise FileNotFoundError("No openiti_corpus_*.json found in data/")
 
-OPENITI_CORPUS_PATH = _get_openiti_corpus_path()
 
-# BNF paths
+OPENITI_CORPUS_PATH = _get_openiti_corpus_path()
 BNF_SAMPLE_PATH = Path("matching/sampling/bnf_sample_500.json")
 BNF_FULL_PATH = Path(_PIPELINE_CONFIG.pipeline_out_dir) / "bnf_parsed.json"
 
 # ============================================================================
-# OUTPUT CONFIGURATION (nested under pipeline_out_dir)
+# OUTPUT CONFIGURATION
 # ============================================================================
 
 MATCHES_DIR = Path(_PIPELINE_CONFIG.pipeline_out_dir) / "matches"
 
+
 def get_run_dir(run_id: str) -> Path:
-    """Return the output directory for a specific matching run."""
     run_dir = MATCHES_DIR / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     return run_dir
 
+
 def get_output_files(run_dir: Path) -> dict:
-    """Return the output file paths for a matching run."""
     return {
         'high_confidence': run_dir / "matches_high_confidence.json",
         'author_only': run_dir / "matches_author_only.json",
@@ -74,67 +75,173 @@ def get_output_files(run_dir: Path) -> dict:
 # NORMALIZATION
 # ============================================================================
 
-# Use parametrized diacritic conversion table (bnf_diacritic_conversions.csv)
-# If True: applies conversions (ayn handling, diacritic mappings, etc.)
-# If False: simple character removal (legacy behavior)
-USE_DIACRITIC_CONVERSION_TABLE = True  # Disabled: new normalizer breaks matching (hyphen handling, uppercase diacritics, ayn representation)
+# If True, applies the parametrised diacritic conversion table
+# (matching/normalize_diacritics.py → bnf_diacritic_conversions.csv).
+# Handles ayn representation, diacritic mappings, hyphen normalisation, etc.
+USE_DIACRITIC_CONVERSION_TABLE = True
 
 # ============================================================================
-# MATCHING BEHAVIOR
+# MATCHING BEHAVIOUR
 # ============================================================================
 
-# Remove author data from OpenITI book fields at index build time
-# Prevents author name tokens from boosting title matches
-# If True: cull author tokens from book title/description during indexing
-# If False: keep book data as-is (original behavior)
+# Strip author name tokens from OpenITI book fields at index build time.
+# Prevents author name fragments from inflating title match scores.
 CULL_AUTHOR_DATA_FROM_BOOKS = True
 
-# Token-level IDF weighting: reward matches with rare tokens, allow common-only matches through
-# If any matched token has IDF >= TOKEN_RARITY_THRESHOLD, boost the fuzzy score
-# If no rare tokens matched, keep fuzzy score as-is (no penalty)
-USE_AUTHOR_IDF_WEIGHTING = True
-USE_TITLE_IDF_WEIGHTING = True
+# ============================================================================
+# IDF RARITY THRESHOLD  (shared across all stages)
+# ============================================================================
 
-# IDF rarity threshold: tokens with IDF >= this are considered "rare" and trigger boost
-# Measured against OpenITI domain (authors/books only, not BNF)
-# Common tokens (Ahmad, Muhammad, ibn, al): IDF 0.99 (appearing in nearly all authors)
-# Rare tokens (unique surnames, book titles): IDF 7.3–8.0 (appearing in <1% of corpus)
-# 2.5 = catch semi-uncommon tokens that help disambiguate (surnames, descriptive titles like "Khatib")
+# Tokens with IDF >= this value are considered "rare" and eligible for the
+# precision-tier IDF boost. Reference values (author name domain):
+#   ibn  ≈ 1.06   al   ≈ 1.25   muhammad ≈ 1.69   (very common — no boost)
+#   abd  ≈ 3.92   ali  ≈ 4.01   (borderline — excluded at current threshold)
+#   khatib ≈ 5.56   hajar ≈ 6.59   waqidi ≈ 7.51   (rare — boost applies)
+# Raising this makes the pipeline more conservative (fewer boosts);
+# lowering it admits noisier tokens into the precision tier.
 TOKEN_RARITY_THRESHOLD = 3.5
 
-# Separate boost factors for author and title matching
-# Optimized via parameter sweep (validation: 56.2% precision, 81.8% recall, 66.7% F1)
-# Authors: conservative boost (many cluster at 100% on common names)
-# Titles: stronger boost (discriminative, rare tokens matter more)
-AUTHOR_RARE_TOKEN_BOOST_FACTOR = 1.10  # (unchanged from previous)
-TITLE_RARE_TOKEN_BOOST_FACTOR = 1.20   # (up from 1.15)
+# ============================================================================
+# STAGE 1: AUTHOR MATCHING
+# ============================================================================
 
-# Legacy parameter (deprecated, kept for compatibility)
-RARE_TOKEN_BOOST_FACTOR = 1.15
+# Entry threshold — an author enters stage 1 if:
+#   raw_score × full_combined_idf_boost  >=  AUTHOR_THRESHOLD
+# Intentionally permissive so common-name authors reach title disambiguation.
+# Precision is enforced downstream by COMBINED_FLOOR in stage 3.
+AUTHOR_THRESHOLD = 0.80
 
-# Fuzzy matching backend: "fuzzywuzzy" or "polyfuzz"
-# Note: PolyFuzz requires batch architecture; current parallel loop uses fuzzywuzzy
-FUZZY_MATCHER = "fuzzywuzzy"
+USE_AUTHOR_IDF_WEIGHTING = True
 
-# Maximum author candidates to pass forward from fuzzy matching
-# (Composite manuscripts can legitimately have many authors)
+# Two-tier IDF boost for author matching:
+#
+#   Recall tier (threshold check):
+#     Uses combined_idf = sum of ALL matched token IDFs.
+#     Allows authors matching on any token to pass the entry threshold.
+#
+#   Precision tier (stored score passed to stage 3):
+#     Uses rare_idf = sum of IDFs for tokens >= TOKEN_RARITY_THRESHOLD only.
+#     Authors matching only on common tokens (e.g. "Muhammad" IDF=1.7) store
+#     a rare_idf of 0 → boost=1.0 → their score stays below COMBINED_FLOOR.
+#
+# Boost formula: boost = 1 + min(idf_sum / SCALE, MAX_BOOST - 1)
+#
+# AUTHOR_IDF_BOOST_SCALE — normalises the IDF sum. Higher = gentler curve.
+#   At scale=15: a single rare token (IDF≈7.5) gives boost ≈ 1.3 (near cap).
+#   Two rare tokens (IDF≈15) hit the cap exactly.
+# AUTHOR_MAX_BOOST — hard ceiling on the score multiplier.
+AUTHOR_IDF_BOOST_SCALE = 15.0
+AUTHOR_MAX_BOOST = 1.3
+
+# Maximum author candidates forwarded from stage 1.
+# Composite manuscripts can legitimately have many authors.
 MAX_AUTHOR_CANDIDATES = 50
 
-# # Confidence-dependent filtering in Stage 3 (Combined Matching)
-# # If True, marginal author matches require higher title scores to be combined
-# # Helps reduce false positives from generic name fragments matching multiple authors
-# USE_CONFIDENCE_FILTERING = False  # Set to True to enable
+# Creator field reweighting — blends the full fuzzy score with a rare-token
+# overlap score against BNF creator_lat/creator_ara fields. Rewards candidates
+# whose rare name tokens match the BNF attribution (e.g. "khatib", "nasiriyya").
+#
+# Trigger: at least one matched author must have > 1 matching rare token.
+# Single-token triggers are too noisy; genuine matches typically share a
+# distinctive name fragment AND a toponym or epithet.
+#
+# Per-variant scoring (best variant wins — avoids denominator inflation
+# from accumulating unrelated nisba/laqab tokens across all variants):
+#   score = |openiti_rare_tokens ∩ bnf_creator_tokens| / |openiti_rare_tokens|
+#
+# Final score formula when triggered:
+#   base  = raw_score × AUTHOR_FULL_STRING_WEIGHT + creator_score × AUTHOR_CREATOR_FIELD_WEIGHT
+#   final = base × rare_idf_boost
+USE_AUTHOR_CREATOR_FIELD_MATCHING = True
+
+# IDF threshold for creator token filtering. Higher than TOKEN_RARITY_THRESHOLD
+# to exclude moderately common name parts that add noise.
+# Tokens excluded: abd=3.92, ali=4.01.
+# Tokens admitted: khatib=5.56, hajar=6.59, waqidi=7.51, asqalani=7.50.
+AUTHOR_CREATOR_IDF_THRESHOLD = 4.5
+
+# Weights must sum to 1.0 to keep scores in [0, 1] before boosting.
+AUTHOR_FULL_STRING_WEIGHT = 0.6    # Weight for full fuzzy string score
+AUTHOR_CREATOR_FIELD_WEIGHT = 0.4  # Weight for creator field rare-token overlap
+
+# ============================================================================
+# STAGE 2: TITLE MATCHING
+# ============================================================================
+
+# Entry threshold — a book enters stage 2 if its boosted title score meets this.
+TITLE_THRESHOLD = 0.85
+
+USE_TITLE_IDF_WEIGHTING = True
+
+# Continuous rare-token IDF boost for title matching. Same precision-tier design
+# as author matching: only tokens >= TOKEN_RARITY_THRESHOLD contribute to the boost.
+# (Title IDF is computed from the OpenITI book corpus, not the author corpus.)
+#
+# Boost formula: boost = 1 + min(rare_idf_sum / TITLE_IDF_BOOST_SCALE, TITLE_MAX_BOOST - 1)
+#
+# Example title-domain IDF values (for reference):
+#   kitab ≈ 3.70   sharh ≈ 3.68   (below threshold — no boost contribution)
+#   muhammad ≈ 6.12   sham ≈ 6.86   futuh ≈ 7.37   rida ≈ 7.78   (rare — boost applies)
+#
+# TITLE_IDF_BOOST_SCALE — wider than author (20 vs 15) because title tokens have
+#   higher base IDF values. This prevents a single rare title token from
+#   immediately hitting the ceiling:
+#     one token  (rare_idf ≈ 6–7):  boost ≈ 1.31–1.35×
+#     two tokens (rare_idf ≈ 14):   boost ≈ 1.4× (near cap)
+# TITLE_MAX_BOOST — slightly higher ceiling than author (1.4 vs 1.3) to reward
+#   multi-token title matches more strongly than single-token ones.
+TITLE_IDF_BOOST_SCALE = 20.0
+TITLE_MAX_BOOST = 1.4
+
+# ============================================================================
+# STAGE 3: COMBINED MATCHING
+# ============================================================================
+
+# All three conditions must pass for a match to be accepted:
+#
+# COMBINED_FLOOR — both author AND title scores must be >= this (raw, pre-normalisation).
+#   Authors that only matched on common tokens store a rare_idf-boosted score
+#   that remains below this floor, filtering them even if they passed the
+#   permissive AUTHOR_THRESHOLD at stage 1. At 0.80, a raw author score of
+#   0.76 with no rare tokens (boost=1.0) correctly fails.
+#
+# TITLE_FLOOR — title score must be >= this independently (raw, pre-normalisation).
+#   Ensures the title is a genuine specific match, not a weak coincidence
+#   amplified by a strong author score.
+#
+# COMBINED_AUTHOR_WEIGHT / COMBINED_TITLE_WEIGHT — weights for the normalised
+#   combined score. Title is weighted more heavily because it is the stronger
+#   discriminator once stage 1 has already filtered by author. Both raw scores are
+#   normalised by their per-record maximum before weighting, so the magnitudes of
+#   IDF boosts don't distort the balance. Weights must sum to 1.0.
+#
+# COMBINED_THRESHOLD — normalised weighted combined score must be >= this.
+#   Final gate: rejects pairs where the weighted combination falls below the bar.
+#   At 0.94, a title-heavy match needs near-best title AND reasonable author.
+COMBINED_FLOOR = 0.80
+TITLE_FLOOR = 0.90
+COMBINED_AUTHOR_WEIGHT = 0.3
+COMBINED_TITLE_WEIGHT = 0.7
+COMBINED_THRESHOLD = 0.94
 
 # ============================================================================
 # PARALLELIZATION
 # ============================================================================
 
-BATCH_SIZE = 100  # Process BNF records in batches of N
-NUM_WORKERS = 10   # Number of parallel processes
+BATCH_SIZE = 100
+NUM_WORKERS = 10
 
 # ============================================================================
 # LOGGING & PROGRESS
 # ============================================================================
 
-VERBOSE = True          # Print detailed progress
-USE_PROGRESS_BARS = True  # Use tqdm for long operations
+VERBOSE = True
+USE_PROGRESS_BARS = True
+
+# ============================================================================
+# FUZZY MATCHING BACKEND
+# ============================================================================
+
+# "fuzzywuzzy" only — PolyFuzz requires a batch architecture incompatible with
+# the current parallel loop design.
+FUZZY_MATCHER = "fuzzywuzzy"

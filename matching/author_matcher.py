@@ -68,153 +68,104 @@ def _build_token_idf_weights(authors_candidates):
     return idf_weights
 
 
-def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fuzzy_score, debug=False):
+def _score_with_token_weighting(norm_candidate, norm_author_str, idf_weights, fuzzy_score):
     """
-    Weight a fuzzy score based on presence of rare tokens in the match.
+    Return (fuzzy_score, combined_idf, rare_idf) for matched tokens.
 
-    If any matched token has IDF >= rarity_threshold: boost the score.
-    If no rare tokens: keep score as-is (no penalty, no boost).
+    combined_idf — sum of IDF weights across ALL matched tokens.
+                   Used for the stage 1 entry threshold (permissive recall).
+    rare_idf     — sum of IDF weights for matched tokens above TOKEN_RARITY_THRESHOLD only.
+                   Used for stored scores passed to stage 3 (precision).
 
-    This allows common-only matches to pass through, but prioritizes matches
-    with rare (specific) tokens.
+    Two-tier design: common-name authors (e.g. "Muhammad Rida") can still cross
+    the entry threshold via combined_idf boost, but their stored rare_idf=0 leaves
+    their final score below COMBINED_FLOOR, so they fail at stage 3.
 
-    Parameters
-    ----------
-    norm_candidate : str
-        Normalized BNF candidate
-    norm_author_str : str
-        Normalized OpenITI author string
-    idf_weights : dict
-        {token: idf_weight, ...}
-    fuzzy_score : float
-        Raw fuzzy match score (0-100)
-    debug : bool
-        If True, print debug info about rare token detection
-
-    Returns
-    -------
-    float
-        Weighted fuzzy score (0-100 range)
+    Blocks matches with no token overlap entirely (returns (0, 0.0, 0.0)).
     """
+    from matching.config import TOKEN_RARITY_THRESHOLD
+
     candidate_tokens = set(norm_candidate.lower().split())
     author_tokens = set(norm_author_str.lower().split())
 
     if not candidate_tokens:
-        return 0
+        return (0, 0.0, 0.0)
 
-    # Find which candidate tokens matched author tokens
     matched_tokens = candidate_tokens & author_tokens
 
     if not matched_tokens:
-        # No token overlap - block completely
-        return 0
+        return (0, 0.0, 0.0)
 
-    # Check if any matched token is rare (IDF >= rarity_threshold)
-    from matching.config import TOKEN_RARITY_THRESHOLD, AUTHOR_RARE_TOKEN_BOOST_FACTOR
+    combined_idf = sum(idf_weights.get(t, 0.0) for t in matched_tokens)
+    rare_idf = sum(idf_weights.get(t, 0.0) for t in matched_tokens
+                   if idf_weights.get(t, 0.0) >= TOKEN_RARITY_THRESHOLD)
 
-    rare_tokens_found = [t for t in matched_tokens if idf_weights.get(t, 0.1) >= TOKEN_RARITY_THRESHOLD]
-    has_rare_token = len(rare_tokens_found) > 0
-
-    if debug and has_rare_token:
-        print(f"  [RARE TOKEN BOOST] candidate='{norm_candidate[:40]}' author='{norm_author_str[:40]}' fuzzy={fuzzy_score:.0f}")
-        for t in rare_tokens_found:
-            idf = idf_weights.get(t, 0.1)
-            print(f"    rare_token='{t}' idf={idf:.3f} (threshold={TOKEN_RARITY_THRESHOLD})")
-
-    if has_rare_token:
-        # Rare tokens present - boost the score to reward specificity
-        weighted_score = fuzzy_score * AUTHOR_RARE_TOKEN_BOOST_FACTOR
-    else:
-        # Only common tokens matched - accept score as-is, no penalty
-        weighted_score = fuzzy_score
-
-    return max(weighted_score, 0)  # Allow scores > 100 for rare token matches
+    return (fuzzy_score, combined_idf, rare_idf)
 
 
-def _match_author_candidate(candidate, authors_candidates, threshold, norm_strategy="fuzzy", idf_weights=None):
+def _match_author_candidate(candidate, authors_candidates, threshold=0.80, norm_strategy="fuzzy", idf_weights=None):
     """
     Standalone function for parallel processing of a single BNF author candidate.
 
-    Combines fuzzy scores across multiple name components per author using geometric mean.
-    This rewards matches where multiple name components (ism, nasab, shuhra, etc.) align,
-    not just single common tokens like "Muhammad" or "Ahmad".
+    Scores BNF author candidate against all OpenITI author name variants using
+    token_sort_ratio (resistant to subset inflation). Each variant is scored
+    individually; best score per author wins.
 
-    Pipeline:
-    1. Collect fuzzy scores for all name component candidates per author
-    2. Combine with geometric mean: (score1 × score2 × ... × scoreN)^(1/N)
-    3. Apply token-level IDF weighting for rare token boost
-
-    Parameters
-    ----------
-    candidate : str
-        Raw author candidate from BNF
-    authors_candidates : dict
-        {author_uri: {"lat": [...], "ara": [...]}} - per-script candidates
-    threshold : float
-        Matching threshold (0-1 range)
-    norm_strategy : str
-        Normalization strategy used
-    idf_weights : dict, optional
-        {token: idf_weight, ...} for token weighting. If None, uses raw fuzzy scores.
+    Returns raw scores and combined IDF scores — boost is applied in Phase 2
+    after creator field reweighting:
+        base = raw_score * w1 + creator_score * w2
+        final = base * (1 + min(combined_idf / SCALE, MAX_BOOST - 1))
 
     Returns
     -------
     tuple
-        (candidate, {matching_author_uri: score}) - matches with confidence scores (0-1)
+        (candidate, {author_uri: (raw_score, combined_idf)})
+        raw_score is in 0-1 range; boost is not yet applied.
     """
     from fuzzywuzzy import fuzz
     from matching.normalize import normalize_for_matching
+    from matching.config import AUTHOR_IDF_BOOST_SCALE, AUTHOR_MAX_BOOST
 
-    matches = {}  # {author_uri: score}
+    matches = {}  # {author_uri: (raw_score, rare_idf)}
 
-    # Normalize BNF candidate (without camelcase splitting - it's a regular name, not an OpenITI slug)
     norm_candidate = normalize_for_matching(candidate, split_camelcase=False, is_openiti=False)
-
     if not norm_candidate:
         return (candidate, matches)
 
-    # Score against all author candidates for each author
     for author_uri, author_candidates_by_script in authors_candidates.items():
         best_score = 0
+        best_combined_idf = 0.0  # all matched tokens — used for threshold entry
+        best_rare_idf = 0.0      # rare matched tokens only — stored for stage 3 scoring
 
-        # Try both scripts: concatenate all name components within each script
         for script in ["lat", "ara"]:
-            candidates = author_candidates_by_script.get(script)
-            if not candidates:
+            variants = author_candidates_by_script.get(script)
+            if not variants:
                 continue
 
-            # Filter and normalize all candidates for this script
-            normalized_candidates = []
-            for author_str in candidates:
-                if not author_str:
-                    continue
-                # Normalize OpenITI author candidate (with camelcase splitting - it may be a slug like IbnKhayyat)
-                norm_str = normalize_for_matching(author_str, split_camelcase=True, is_openiti=True)
-                if norm_str:
-                    normalized_candidates.append(norm_str)
-
-            if not normalized_candidates:
+            # Concatenate all variants into one string so token_set_ratio sees the
+            # full author name space and IDF intersection is comprehensive.
+            norm_parts = [normalize_for_matching(s, split_camelcase=True, is_openiti=True) for s in variants if s]
+            norm_str = ' '.join(p for p in norm_parts if p)
+            if not norm_str:
                 continue
 
-            # Concatenate all components for this script into a single string
-            # This allows matching against the full author profile, not individual name parts
-            combined_author_str = " ".join(normalized_candidates)
+            raw_score = fuzz.token_set_ratio(norm_candidate, norm_str)
 
-            # Get raw fuzzy score
-            raw_score = fuzz.token_set_ratio(norm_candidate, combined_author_str)
-
-            # Apply token-level IDF weighting if available
             if idf_weights:
-                score = _score_with_token_weighting(norm_candidate, combined_author_str, idf_weights, raw_score, debug=False)
+                score, combined_idf, rare_idf = _score_with_token_weighting(norm_candidate, norm_str, idf_weights, raw_score)
             else:
-                score = raw_score
+                score, combined_idf, rare_idf = raw_score, 0.0, 0.0
 
             if score > best_score:
                 best_score = score
+                best_combined_idf = combined_idf
+                best_rare_idf = rare_idf
 
-        # Store match with its score (0-100 range, convert to 0-1)
-        if best_score >= threshold * 100:
-            matches[author_uri] = best_score / 100.0
+        # Threshold uses full combined_idf boost for recall (lets common-name authors through).
+        # Stored value uses rare_idf only — weak matches fail COMBINED_FLOOR at stage 3.
+        boost = 1 + min(best_combined_idf / AUTHOR_IDF_BOOST_SCALE, AUTHOR_MAX_BOOST - 1)
+        if best_score * boost >= threshold * 100:
+            matches[author_uri] = (best_score / 100.0, best_rare_idf)
 
     return (candidate, matches)
 
@@ -269,17 +220,13 @@ class AuthorMatcher:
             if candidates["lat"] or candidates["ara"]:
                 authors_candidates[author_uri] = candidates
 
-        # Build token-level IDF weights if enabled
-        from matching.config import USE_AUTHOR_IDF_WEIGHTING
+        # Build token-level IDF weights — needed for stage 1 boost and creator token filtering
+        from matching.config import USE_AUTHOR_IDF_WEIGHTING, USE_AUTHOR_CREATOR_FIELD_MATCHING
 
-        if USE_AUTHOR_IDF_WEIGHTING:
+        if USE_AUTHOR_IDF_WEIGHTING or USE_AUTHOR_CREATOR_FIELD_MATCHING:
             if self.verbose:
                 print("  Building IDF weights from OpenITI author data only...")
-
-            # Use only OpenITI authors for IDF to measure rarity in our target domain
-            # This prevents false boosting on tokens that are common in Islamic manuscripts
             idf_weights = _build_token_idf_weights(authors_candidates)
-
             if self.verbose:
                 print(f"  Built IDF weights for {len(idf_weights)} unique tokens from {len(authors_candidates)} OpenITI author records")
         else:
@@ -312,23 +259,149 @@ class AuthorMatcher:
                 result = match_fn(candidate)
                 results.append(result)
 
-        # Store results in pipeline
-        for candidate, matched_authors_dict in results:
-            bnf_ids = candidate_to_bnf_ids[candidate]
-            for bnf_id in bnf_ids:
-                # Update author URIs list
-                current = pipeline.get_stage1_result(bnf_id)
-                if current is None:
-                    current = []
-                current = list(set(current + list(matched_authors_dict.keys())))
-                pipeline.set_stage1_result(bnf_id, current)
+        from matching.config import (
+            USE_AUTHOR_CREATOR_FIELD_MATCHING,
+            AUTHOR_CREATOR_IDF_THRESHOLD,
+            AUTHOR_FULL_STRING_WEIGHT,
+            AUTHOR_CREATOR_FIELD_WEIGHT,
+            AUTHOR_IDF_BOOST_SCALE,
+            AUTHOR_MAX_BOOST,
+        )
+        from fuzzywuzzy import fuzz
+        from matching.normalize import normalize_for_matching
 
-                # Update scores (keep max score for each author)
-                current_scores = pipeline.get_stage1_scores(bnf_id)
-                for author_uri, score in matched_authors_dict.items():
-                    if author_uri not in current_scores or score > current_scores[author_uri]:
-                        current_scores[author_uri] = score
-                pipeline.set_stage1_scores(bnf_id, current_scores)
+        # ── Phase 1: collect raw scores across all candidates ──────────────────
+        # Each candidate may contribute different authors to the same bnf_id.
+        # We merge here (max wins) so Phase 2 sees the full author set per record.
+        # Structure: {bnf_id: {author_uri: (raw_score, combined_idf)}}
+        raw_data = {}  # keyed by bnf_id
+
+        for candidate, matched_authors_dict in results:
+            for bnf_id in candidate_to_bnf_ids[candidate]:
+                if bnf_id not in raw_data:
+                    raw_data[bnf_id] = {}
+                for author_uri, (raw_score, combined_idf) in matched_authors_dict.items():
+                    existing = raw_data[bnf_id].get(author_uri)
+                    if existing is None:
+                        raw_data[bnf_id][author_uri] = (raw_score, combined_idf)
+                    else:
+                        new_boost = 1 + min(combined_idf / AUTHOR_IDF_BOOST_SCALE, AUTHOR_MAX_BOOST - 1)
+                        ex_boost = 1 + min(existing[1] / AUTHOR_IDF_BOOST_SCALE, AUTHOR_MAX_BOOST - 1)
+                        if raw_score * new_boost > existing[0] * ex_boost:
+                            raw_data[bnf_id][author_uri] = (raw_score, combined_idf)
+
+        # Store pre-reweighting scores for export/analysis
+        if not hasattr(pipeline, '_stage1_scores_pre_reweighting'):
+            pipeline._stage1_scores_pre_reweighting = {}
+        for bnf_id, author_map in raw_data.items():
+            pipeline._stage1_scores_pre_reweighting[bnf_id] = {
+                uri: score for uri, (score, _) in author_map.items()
+            }
+
+        # ── Phase 2: per-record creator reweighting then boost ─────────────────
+        # Now each bnf_id has its complete author set, so the threshold decision
+        # and reweighting are made over all candidates together.
+        for bnf_id, author_map in raw_data.items():
+
+            # Gather BNF creator fields
+            all_bnf_creators = []
+            if USE_AUTHOR_CREATOR_FIELD_MATCHING:
+                bnf_record = pipeline.bnf_records.get(bnf_id)
+                if bnf_record:
+                    bnf_creator_lat = bnf_record.get('creator_lat') if isinstance(bnf_record, dict) else getattr(bnf_record, 'creator_lat', None)
+                    bnf_creator_ara = bnf_record.get('creator_ara') if isinstance(bnf_record, dict) else getattr(bnf_record, 'creator_ara', None)
+                    bnf_creators_lat = bnf_creator_lat if isinstance(bnf_creator_lat, list) else ([bnf_creator_lat] if bnf_creator_lat else [])
+                    bnf_creators_ara = bnf_creator_ara if isinstance(bnf_creator_ara, list) else ([bnf_creator_ara] if bnf_creator_ara else [])
+                    all_bnf_creators = bnf_creators_lat + bnf_creators_ara
+
+            # Score every matched author against BNF creator fields using rare-token overlap.
+            # Strategy: filter the OpenITI author's tokens by IDF (rare tokens only), then
+            # count how many of those rare OpenITI tokens appear in the BNF creator token set.
+            # Score per script independently, take max — avoids penalising records
+            # where BNF or OpenITI has data for only one script.
+            # Per script: score = |openiti_rare_script ∩ bnf_creator_tokens| / |openiti_rare_script|
+            # Final author score = max(lat_score, ara_score).
+            # Trigger (both-sides check): BNF has creator fields AND at least one OpenITI
+            # candidate has > 1 matching rare token in either script.
+            # {author_uri: (matching_count, score)} — count kept for trigger check
+            author_creator_data = {}
+
+            if all_bnf_creators and idf_weights:
+                # Build a single flat token set from all BNF creator strings
+                bnf_creator_tokens = set()
+                for c in all_bnf_creators:
+                    if not c:
+                        continue
+                    norm = normalize_for_matching(c, split_camelcase=False, is_openiti=False)
+                    if norm:
+                        bnf_creator_tokens.update(norm.lower().split())
+
+                if bnf_creator_tokens:
+                    for author_uri in author_map:
+                        author_obj = pipeline.openiti_index.authors.get(author_uri)
+                        if not author_obj:
+                            author_creator_data[author_uri] = (0, 0.0)
+                            continue
+
+                        author_candidates = build_author_candidates_by_script(author_obj)
+                        best_matching = 0
+                        best_score = 0.0
+
+                        # Score each variant independently — accumulating across variants
+                        # inflates the denominator, diluting scores for richly-named authors.
+                        # Best-variant score wins.
+                        for script in ['lat', 'ara']:
+                            for n in author_candidates.get(script, []):
+                                if not n:
+                                    continue
+                                norm_n = normalize_for_matching(n, split_camelcase=True, is_openiti=True)
+                                if not norm_n:
+                                    continue
+                                variant_rare = {t for t in norm_n.lower().split() if idf_weights.get(t, 0.0) >= AUTHOR_CREATOR_IDF_THRESHOLD}
+                                if not variant_rare:
+                                    continue
+                                matching = len(variant_rare & bnf_creator_tokens)
+                                if matching == 0:
+                                    continue
+                                score = matching / len(variant_rare)
+                                if score > best_score:
+                                    best_score = score
+                                    best_matching = matching
+
+                        author_creator_data[author_uri] = (best_matching, best_score)
+
+            # Both-sides trigger: BNF has creator fields and at least one candidate
+            # has > 1 matching rare token.
+            apply_creator_reweighting = any(
+                count > 1 for count, _ in author_creator_data.values()
+            )
+
+            # Compute final scores and write to pipeline.
+            # Intermediate scores stored for export/analysis:
+            #   _stage1_scores_pre_reweighting : raw fuzzy score (set in Phase 1)
+            #   _stage1_scores_post_idf        : raw * idf_boost (before creator reweighting)
+            #   set_stage1_scores              : final (creator reweighted then idf boosted)
+            # When reweighting is triggered, ALL candidates for this record get the formula
+            # applied — zero-match candidates are intentionally penalised (raw * w1 + 0 * w2),
+            # which is what separates them from the creator-matched candidate.
+            final_scores = {}
+            idf_scores = {}
+            for author_uri, (raw_score, combined_idf) in author_map.items():
+                boost = 1 + min(combined_idf / AUTHOR_IDF_BOOST_SCALE, AUTHOR_MAX_BOOST - 1)
+                idf_scores[author_uri] = raw_score * boost
+                if apply_creator_reweighting:
+                    _, creator_score = author_creator_data.get(author_uri, (0, 0.0))
+                    base = raw_score * AUTHOR_FULL_STRING_WEIGHT + creator_score * AUTHOR_CREATOR_FIELD_WEIGHT
+                else:
+                    base = raw_score
+                final_scores[author_uri] = base * boost
+
+            if not hasattr(pipeline, '_stage1_scores_post_idf'):
+                pipeline._stage1_scores_post_idf = {}
+            pipeline._stage1_scores_post_idf[bnf_id] = idf_scores
+
+            pipeline.set_stage1_result(bnf_id, list(final_scores.keys()))
+            pipeline.set_stage1_scores(bnf_id, final_scores)
 
         if self.verbose:
             print(f"Stage 1 complete.")
